@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 
-	"github.com/cli/safeexec"
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark-emoji"
+	"github.com/yuin/goldmark/extension"
 )
 
 func targetFile(filename string) (string, error) {
@@ -44,15 +45,19 @@ func findReadme(dir string) (string, error) {
 }
 
 func toHTML(markdown string, param *Param) (string, error) {
-	mode := "gfm"
-	if param.markdownMode {
-		mode = "markdown"
+	ext := goldmark.WithExtensions()
+	if !param.markdownMode {
+		ext = goldmark.WithExtensions(
+			extension.GFM,
+			emoji.Emoji,
+		)
 	}
-	sout, _, err := gh("api", "-X", "POST", "/markdown", "-f", fmt.Sprintf("text=%s", markdown), "-f", fmt.Sprintf("mode=%s", mode))
-	if err != nil {
+	md := goldmark.New(ext)
+	var buf bytes.Buffer
+	if err := md.Convert([]byte(markdown), &buf); err != nil {
 		return "", err
 	}
-	return sout.String(), nil
+	return buf.String(), nil
 }
 
 func slurp(fileName string) (string, error) {
@@ -64,24 +69,4 @@ func slurp(fileName string) (string, error) {
 	b, _ := ioutil.ReadAll(f)
 	text := string(b)
 	return text, nil
-}
-
-func gh(args ...string) (sout, eout bytes.Buffer, err error) {
-	ghBin, err := safeexec.LookPath("gh")
-	if err != nil {
-		err = fmt.Errorf("could not find gh. Is it installed? error: %w", err)
-		return
-	}
-
-	cmd := exec.Command(ghBin, args...)
-	cmd.Stderr = &eout
-	cmd.Stdout = &sout
-
-	err = cmd.Run()
-	if err != nil {
-		err = fmt.Errorf("failed to run gh. error: %w, stderr: %s", err, eout.String())
-		return
-	}
-
-	return
 }
