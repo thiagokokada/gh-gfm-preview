@@ -8,7 +8,7 @@ buildGoModule {
   pname = "gh-gfm-preview";
   inherit version;
   src = lib.cleanSource ./.;
-  vendorHash = "sha256-RYEaK9/CeKlPdfPogGBpRM4FgFS6ZCFJnC2UOn7x7fg=";
+  vendorHash = "sha256-XDTBpXRogpmBQXmKD1MHBZl5XPsRdN5ZdYhoxurC5Ws=";
 
   env.CGO_ENABLED = "0";
 
