@@ -86,20 +86,20 @@ func TestWrapHandler(t *testing.T) {
 	}
 }
 
-func TestGetModeString(t *testing.T) {
-	modeString := getModeString(true, false)
+func TestGetMode(t *testing.T) {
+	modeString := getMode(&Param{forceLightMode: true})
 	expected := "light"
 	if modeString != expected {
 		t.Errorf("mode string is not: %s", modeString)
 	}
 
-	modeString = getModeString(true, false)
-	expected = "light"
+	modeString = getMode(&Param{forceDarkMode: true})
+	expected = "dark"
 	if modeString != expected {
 		t.Errorf("mode string is not: %s", modeString)
 	}
 
-	modeString = getModeString(false, false)
+	modeString = getMode(&Param{})
 	expected = "dark"
 	if modeString != expected {
 		t.Errorf("mode string is not: %s", modeString)

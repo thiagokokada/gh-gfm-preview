@@ -31,10 +31,13 @@ type loggingResponseWriter struct {
 
 //go:embed template.html
 var htmlTemplate string
+
 //go:embed static/*
 var staticDir embed.FS
 
 const defaultPort = 3333
+const darkMode = "dark"
+const lightMode = "light"
 
 func (server *Server) Serve(param *Param) error {
 	host := server.host
@@ -113,9 +116,14 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 		}
 
 		title := getTitle(filename)
-		modeString := getModeString(param.forceLightMode, param.forceDarkMode)
 
-		param := TemplateParam{Title: title, Body: html, Host: r.Host, Reload: param.reload, Mode: modeString}
+		param := TemplateParam{
+			Title:  title,
+			Body:   html,
+			Host:   r.Host,
+			Reload: param.reload,
+			Mode:   getMode(param),
+		}
 		tmpl.Execute(w, param)
 	})
 }
@@ -172,12 +180,11 @@ func getTitle(filename string) string {
 	return filepath.Base(filename)
 }
 
-func getModeString(lightMode, darkMode bool) string {
-	if lightMode {
-		return "light"
+func getMode(param *Param) string {
+	if param.forceLightMode {
+		return lightMode
 	}
-	// default
-	return "dark"
+	return darkMode
 }
 
 func getPort(host string, port int) (int, error) {

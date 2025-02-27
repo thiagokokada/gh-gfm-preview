@@ -66,7 +66,7 @@ func findReadme(dir string) (string, error) {
 
 func toHTML(markdown string, param *Param) (string, error) {
 	style := githubDark
-	if param.forceLightMode {
+	if getMode(param) == lightMode {
 		style = github
 	}
 	ext := goldmark.WithExtensions()
