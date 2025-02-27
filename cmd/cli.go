@@ -87,14 +87,14 @@ func Execute() {
 
 func init() {
 	rootCmd.Flags().IntP("port", "p", 3333, "TCP port number of this server")
-	rootCmd.Flags().StringP("host", "", "localhost", "Hostname this server will bind")
-	rootCmd.Flags().BoolP("version", "", false, "Show the version")
-	rootCmd.Flags().BoolP("disable-reload", "", false, "Disable live reloading")
-	rootCmd.Flags().BoolP("markdown-mode", "", false, "Force \"markdown\" mode (rather than default \"gfm\")")
-	rootCmd.Flags().BoolP("disable-auto-open", "", false, "Disable auto opening your browser")
-	rootCmd.Flags().BoolP("verbose", "", false, "Show verbose output")
-	rootCmd.Flags().BoolP("light-mode", "", false, "Force light mode")
-	rootCmd.Flags().BoolP("dark-mode", "", false, "Force dark mode")
+	rootCmd.Flags().StringP("host", "", "localhost", "hostname this server will bind")
+	rootCmd.Flags().BoolP("version", "", false, "show the version")
+	rootCmd.Flags().BoolP("disable-reload", "", false, "disable live reloading")
+	rootCmd.Flags().BoolP("markdown-mode", "", false, "force \"markdown\" mode (rather than default \"gfm\")")
+	rootCmd.Flags().BoolP("disable-auto-open", "", false, "disable auto opening your browser")
+	rootCmd.Flags().BoolP("verbose", "", false, "show verbose output")
+	rootCmd.Flags().BoolP("light-mode", "", false, "force light mode")
+	rootCmd.Flags().BoolP("dark-mode", "", false, "force dark mode")
 }
 
 func showVersion() {

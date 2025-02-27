@@ -65,16 +65,16 @@ Firefox, or Safari.
 Available options:
 
 ```text
-    --dark-mode           Force dark mode
-    --markdown-mode       Force "markdown" mode (rather than default "gfm")
-    --disable-auto-open   Disable auto opening your browser
-    --disable-reload      Disable live reloading
+    --dark-mode           force dark mode
+    --disable-auto-open   disable auto opening your browser
+    --disable-reload      disable live reloading
 -h, --help                help for gfm-markdown-preview
-    --host string         Hostname this server will bind (default "localhost")
-    --light-mode          Force light mode
+    --host string         hostname this server will bind (default "localhost")
+    --light-mode          force light mode
+    --markdown-mode       force "markdown" mode (rather than default "gfm")
 -p, --port int            TCP port number of this server (default 3333)
-    --verbose             Show verbose output
-    --version             Show the version
+    --verbose             show verbose output
+    --version             show the version
 ```
 
 ## Related projects
