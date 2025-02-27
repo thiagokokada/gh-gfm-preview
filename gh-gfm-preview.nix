@@ -8,16 +8,15 @@ buildGoModule {
   pname = "gh-gfm-preview";
   inherit version;
   src = lib.cleanSource ./.;
-  vendorHash = "sha256-XDTBpXRogpmBQXmKD1MHBZl5XPsRdN5ZdYhoxurC5Ws=";
+  vendorHash = "sha256-NF0ArGe34wNHUveE673EWsQ/N15TUiD0r75W4ocxkf0=";
 
   env.CGO_ENABLED = "0";
 
-  ldflags =
-    [
-      "-X=main.version=${version}"
-      "-s"
-      "-w"
-    ];
+  ldflags = [
+    "-X=main.version=${version}"
+    "-s"
+    "-w"
+  ];
 
   meta = with lib; {
     description = "A Go program to preview GitHub Flavored Markdown";
