@@ -18,7 +18,7 @@ func TestTargetFile(t *testing.T) {
 	for _, tt := range tests {
 		actual, err := targetFile(tt.input)
 		if err != nil {
-			t.Errorf(err.Error())
+			t.Errorf("%s", err.Error())
 		}
 		expected := tt.expected
 		if actual != expected {
@@ -55,7 +55,7 @@ func TestFindReadme(t *testing.T) {
 func TestSlurp(t *testing.T) {
 	string, err := slurp("../testdata/markdown-demo.md")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%s", err.Error())
 	}
 	match := "Headings"
 	r := regexp.MustCompile(match)
@@ -64,20 +64,11 @@ func TestSlurp(t *testing.T) {
 	}
 }
 
-func TestGh(t *testing.T) {
-	o, _, _ := gh("help")
-	match := "USAGE"
-	r := regexp.MustCompile(match)
-	if r.MatchString(o.String()) == false {
-		t.Errorf("content do not match %v\n", match)
-	}
-}
-
 func TestToHTML(t *testing.T) {
 	markdown := "text"
-	html, err := toHTML(markdown)
+	html, err := toHTML(markdown, &Param{})
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%s", err.Error())
 	}
 	actual := strings.TrimSpace(html)
 	expected := "<p>text</p>"
@@ -89,11 +80,11 @@ func TestToHTML(t *testing.T) {
 func TestGfmCheckboxes(t *testing.T) {
 	string, err := slurp("../testdata/gfm-checkboxes.md")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%s", err.Error())
 	}
-	html, err := toHTML(string)
+	html, err := toHTML(string, &Param{})
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%s", err.Error())
 	}
 	actual := strings.TrimSpace(html)
 
@@ -101,7 +92,7 @@ func TestGfmCheckboxes(t *testing.T) {
 	checkedCheckBoxes := 0
 	uncheckedCheckBoxes := 0
 	for _, line := range strings.Split(actual, "\n") {
-		if strings.Contains(line, "<input type=\"checkbox\"") {
+		if strings.Contains(line, "type=\"checkbox\"") {
 			checkBoxes++
 			if strings.Contains(line, "checked") {
 				checkedCheckBoxes++
@@ -124,11 +115,11 @@ func TestGfmCheckboxes(t *testing.T) {
 func TestGfmAlerts(t *testing.T) {
 	string, err := slurp("../testdata/gfm-alerts.md")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%s", err.Error())
 	}
-	html, err := toHTML(string)
+	html, err := toHTML(string, &Param{})
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%s", err.Error())
 	}
 	actual := strings.TrimSpace(html)
 

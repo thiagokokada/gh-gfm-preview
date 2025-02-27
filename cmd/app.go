@@ -3,13 +3,16 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
+	"time"
 
-	"github.com/cli/safeexec"
+	"github.com/yuin/goldmark"
+	emoji "github.com/yuin/goldmark-emoji"
+	"github.com/yuin/goldmark/extension"
+	"gitlab.com/staticnoise/goldmark-callout"
 )
 
 func targetFile(filename string) (string, error) {
@@ -32,7 +35,7 @@ func targetFile(filename string) (string, error) {
 }
 
 func findReadme(dir string) (string, error) {
-	files, _ := ioutil.ReadDir(dir)
+	files, _ := os.ReadDir(dir)
 	for _, f := range files {
 		r := regexp.MustCompile(`(?i)^readme`)
 		if r.MatchString(f.Name()) {
@@ -44,15 +47,19 @@ func findReadme(dir string) (string, error) {
 }
 
 func toHTML(markdown string, param *Param) (string, error) {
-	mode := "gfm"
-	if param.markdownMode {
-		mode = "markdown"
+	ext := goldmark.WithExtensions()
+	if !param.markdownMode {
+		ext = goldmark.WithExtensions(extension.GFM, emoji.Emoji, callout.CalloutExtention)
 	}
-	sout, _, err := gh("api", "-X", "POST", "/markdown", "-f", fmt.Sprintf("text=%s", markdown), "-f", fmt.Sprintf("mode=%s", mode))
-	if err != nil {
+	md := goldmark.New(ext)
+	var buf bytes.Buffer
+	if err := md.Convert([]byte(markdown), &buf); err != nil {
 		return "", err
 	}
-	return sout.String(), nil
+	// HACK: since we replaced the call to GitHub API with goldmark the
+	// rendering sometimes fail unless you reload, adding a sleep works
+	time.Sleep(50 * time.Millisecond)
+	return buf.String(), nil
 }
 
 func slurp(fileName string) (string, error) {
@@ -61,27 +68,7 @@ func slurp(fileName string) (string, error) {
 		return "", err
 	}
 	defer f.Close()
-	b, _ := ioutil.ReadAll(f)
+	b, _ := io.ReadAll(f)
 	text := string(b)
 	return text, nil
-}
-
-func gh(args ...string) (sout, eout bytes.Buffer, err error) {
-	ghBin, err := safeexec.LookPath("gh")
-	if err != nil {
-		err = fmt.Errorf("could not find gh. Is it installed? error: %w", err)
-		return
-	}
-
-	cmd := exec.Command(ghBin, args...)
-	cmd.Stderr = &eout
-	cmd.Stdout = &sout
-
-	err = cmd.Run()
-	if err != nil {
-		err = fmt.Errorf("failed to run gh. error: %w, stderr: %s", err, eout.String())
-		return
-	}
-
-	return
 }

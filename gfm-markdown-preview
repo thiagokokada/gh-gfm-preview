@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -e
+
+tag="2.0.0-preview"
+
+extension_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+tag_path="${extension_path}/dist/${tag}"
+exe="gfm-markdown-preview"
+
+if [ ! -e "${tag_path}/${exe}" ]; then
+  if [ "$(which go)" == "" ]; then
+    echo "go must be installed to use this gh extension on this platform"
+    exit 1
+  fi
+  mkdir -p "${tag_path}"
+  pushd "${extension_path}" > /dev/null
+  go build -o "${tag_path}/${exe}"
+  popd > /dev/null
+fi
+
+exec "${tag_path}/${exe}" "$@"

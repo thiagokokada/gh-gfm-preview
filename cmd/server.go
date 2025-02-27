@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"embed"
 	_ "embed"
 	"fmt"
 	"net"
@@ -30,6 +31,8 @@ type loggingResponseWriter struct {
 
 //go:embed template.html
 var htmlTemplate string
+//go:embed static/*
+var staticDir embed.FS
 
 const defaultPort = 3333
 
@@ -49,6 +52,7 @@ func (server *Server) Serve(param *Param) error {
 
 	r := http.NewServeMux()
 	r.Handle("/", wrapHandler(handler(filename, param, http.FileServer(http.Dir(dir)))))
+	r.Handle("/static/", wrapHandler(handler(filename, param, http.FileServer(http.FS(staticDir)))))
 	r.Handle("/__/md", wrapHandler(mdHandler(filename, param)))
 
 	watcher, err := createWatcher(dir)
@@ -181,7 +185,7 @@ func getPort(host string, port int) (int, error) {
 	var err error
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, port))
 	if err != nil {
-		logInfo(err.Error())
+		logInfo("%s", err.Error())
 		listener, err = net.Listen("tcp", fmt.Sprintf("%s:0", host))
 	}
 	port = listener.Addr().(*net.TCPAddr).Port
