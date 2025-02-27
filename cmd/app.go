@@ -3,13 +3,13 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
 
 	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark-emoji"
+	emoji "github.com/yuin/goldmark-emoji"
 	"github.com/yuin/goldmark/extension"
 )
 
@@ -33,7 +33,7 @@ func targetFile(filename string) (string, error) {
 }
 
 func findReadme(dir string) (string, error) {
-	files, _ := ioutil.ReadDir(dir)
+	files, _ := os.ReadDir(dir)
 	for _, f := range files {
 		r := regexp.MustCompile(`(?i)^readme`)
 		if r.MatchString(f.Name()) {
@@ -47,10 +47,7 @@ func findReadme(dir string) (string, error) {
 func toHTML(markdown string, param *Param) (string, error) {
 	ext := goldmark.WithExtensions()
 	if !param.markdownMode {
-		ext = goldmark.WithExtensions(
-			extension.GFM,
-			emoji.Emoji,
-		)
+		ext = goldmark.WithExtensions(extension.GFM, emoji.Emoji)
 	}
 	md := goldmark.New(ext)
 	var buf bytes.Buffer
@@ -66,7 +63,7 @@ func slurp(fileName string) (string, error) {
 		return "", err
 	}
 	defer f.Close()
-	b, _ := ioutil.ReadAll(f)
+	b, _ := io.ReadAll(f)
 	text := string(b)
 	return text, nil
 }
