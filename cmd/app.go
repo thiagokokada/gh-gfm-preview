@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"time"
 
 	"github.com/yuin/goldmark"
 	emoji "github.com/yuin/goldmark-emoji"
@@ -55,6 +56,9 @@ func toHTML(markdown string, param *Param) (string, error) {
 	if err := md.Convert([]byte(markdown), &buf); err != nil {
 		return "", err
 	}
+	// HACK: since we replaced the call to GitHub API with goldmark the
+	// rendering sometimes fail unless you reload, adding a sleep works
+	time.Sleep(50 * time.Millisecond)
 	return buf.String(), nil
 }
 
