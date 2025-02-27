@@ -21,8 +21,9 @@ type Param struct {
 	autoOpen       bool
 }
 
+var programName = "gfm-markdown-preview"
 var rootCmd = &cobra.Command{
-	Use:   "gh-markdown-preview",
+	Use:   programName,
 	Short: "GitHub CLI extension to preview Markdown",
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -97,5 +98,5 @@ func init() {
 }
 
 func showVersion() {
-	fmt.Printf("gh-markdown-preview version %s\n", Version)
+	fmt.Printf("%s version %s\n", programName, Version)
 }
