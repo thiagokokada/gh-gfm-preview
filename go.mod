@@ -8,6 +8,7 @@ require (
 	github.com/spf13/cobra v1.9.1
 	github.com/yuin/goldmark v1.7.8
 	github.com/yuin/goldmark-emoji v1.0.5
+	gitlab.com/staticnoise/goldmark-callout v0.0.0-20240609120641-6366b799e4ab
 )
 
 require (

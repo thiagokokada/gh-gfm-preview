@@ -11,6 +11,7 @@ import (
 	"github.com/yuin/goldmark"
 	emoji "github.com/yuin/goldmark-emoji"
 	"github.com/yuin/goldmark/extension"
+	"gitlab.com/staticnoise/goldmark-callout"
 )
 
 func targetFile(filename string) (string, error) {
@@ -47,7 +48,7 @@ func findReadme(dir string) (string, error) {
 func toHTML(markdown string, param *Param) (string, error) {
 	ext := goldmark.WithExtensions()
 	if !param.markdownMode {
-		ext = goldmark.WithExtensions(extension.GFM, emoji.Emoji)
+		ext = goldmark.WithExtensions(extension.GFM, emoji.Emoji, callout.CalloutExtention)
 	}
 	md := goldmark.New(ext)
 	var buf bytes.Buffer

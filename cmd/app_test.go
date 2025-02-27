@@ -92,7 +92,7 @@ func TestGfmCheckboxes(t *testing.T) {
 	checkedCheckBoxes := 0
 	uncheckedCheckBoxes := 0
 	for _, line := range strings.Split(actual, "\n") {
-		if strings.Contains(line, "<input type=\"checkbox\"") {
+		if strings.Contains(line, "type=\"checkbox\"") {
 			checkBoxes++
 			if strings.Contains(line, "checked") {
 				checkedCheckBoxes++
