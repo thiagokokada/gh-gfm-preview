@@ -63,7 +63,7 @@ This is [an example](http://example.com/ "Title") inline link.
 
 indentation 1-2
     indentation 2-1
-    
+
 
 ------------------------------------------
 
@@ -159,7 +159,7 @@ console.log(foo(5));
 
 ## Math
 
-When $a \ne 0$, there are two solutions to $(ax^2 + bx + c = 0)$ and they are 
+When $a \ne 0$, there are two solutions to $(ax^2 + bx + c = 0)$ and they are
 
 $$ x = {-b \pm \sqrt{b^2-4ac} \over 2a} $$
 
