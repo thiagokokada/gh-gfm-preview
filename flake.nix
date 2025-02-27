@@ -1,5 +1,5 @@
 {
-  description = "gfm-markdown-preview";
+  description = "gh-gfm-preview";
 
   inputs = {
     nixpkgs.url = "nixpkgs/nixpkgs-unstable";
@@ -38,8 +38,8 @@
           pkgs = nixpkgsFor.${system};
         in
         {
-          default = self.packages.${system}.gfm-markdown-preview;
-          gfm-markdown-preview = pkgs.callPackage ./gfm-markdown-preview.nix { inherit version; };
+          default = self.packages.${system}.gh-gfm-preview;
+          gh-gfm-preview = pkgs.callPackage ./gh-gfm-preview.nix { inherit version; };
         }
       );
 

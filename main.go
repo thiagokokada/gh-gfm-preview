@@ -1,7 +1,7 @@
 package main
 
 import (
-	cmd "github.com/thiagokokada/gfm-markdown-preview/cmd"
+	cmd "github.com/thiagokokada/gh-gfm-preview/cmd"
 )
 
 func main() {

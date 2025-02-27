@@ -1,4 +1,4 @@
-module github.com/thiagokokada/gfm-markdown-preview
+module github.com/thiagokokada/gh-gfm-preview
 
 go 1.17
 

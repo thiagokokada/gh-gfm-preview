@@ -1,9 +1,9 @@
-# GFM markdown-preview
+# GH gfm-preview
 
 A Go program to preview GitHub Flavored Markdown :octocat:.
 
-The `gfm-markdown-preview` command start a local web server to serve the
-markdown document. **gfm-markdown-preview** renders the HTML using
+The `gh-gfm-preview` command start a local web server to serve the markdown
+document. **gh gfm-preview** renders the HTML using
 [yuin/goldmark](https://github.com/yuin/goldmark) and some extensions to have
 similar features and look to how GitHub renders a markdown.
 
@@ -30,7 +30,7 @@ You need to have [Go](https://go.dev/) installed.
 ### Standalone
 
 ```
-go run github.com/thiagokokada/gfm-markdown-preview
+go run github.com/thiagokokada/gh-gfm-preview
 ```
 
 ### Nix
@@ -38,13 +38,13 @@ go run github.com/thiagokokada/gfm-markdown-preview
 Assuming that you have [Flakes](https://wiki.nixos.org/wiki/Flakes) enabled:
 
 ```
-nix run github:thiagokokada/gfm-markdown-preview
+nix run github:thiagokokada/gh-gfm-preview
 ```
 
 ### GitHub Extension
 
 ```
-gh extension install thiagokokada/gfm-markdown-preview
+gh extension install thiagokokada/gh-gfm-preview
 ```
 
 Upgrade:
@@ -58,13 +58,13 @@ gh extension upgrade markdown-preview
 The usage:
 
 ```
-gfm-markdown-preview README.md
+gh-gfm-preview README.md
 ```
 
 Or this command will detect README file in the directory automatically.
 
 ```
-gfm-markdown-preview
+gh-gfm-preview
 ```
 
 Then access the local web server such as `http://localhost:3333` with Chrome,
@@ -76,7 +76,7 @@ Available options:
     --dark-mode           force dark mode
     --disable-auto-open   disable auto opening your browser
     --disable-reload      disable live reloading
--h, --help                help for gfm-markdown-preview
+-h, --help                help for gh-gfm-preview
     --host string         hostname this server will bind (default "localhost")
     --light-mode          force light mode
     --markdown-mode       force "markdown" mode (rather than default "gfm")
