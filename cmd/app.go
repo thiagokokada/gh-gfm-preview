@@ -15,7 +15,9 @@ import (
 	emoji "github.com/yuin/goldmark-emoji"
 	highlighting "github.com/yuin/goldmark-highlighting/v2"
 	"github.com/yuin/goldmark/extension"
+	"github.com/yuin/goldmark/parser"
 	"gitlab.com/staticnoise/goldmark-callout"
+	"go.abhg.dev/goldmark/anchor"
 )
 
 var github = must2(
@@ -72,13 +74,14 @@ func toHTML(markdown string, param *Param) (string, error) {
 	ext := goldmark.WithExtensions()
 	if !param.markdownMode {
 		ext = goldmark.WithExtensions(
+			&anchor.Extender{Texter: anchor.Text("#")},
 			extension.GFM,
 			emoji.Emoji,
 			callout.CalloutExtention,
 			highlighting.NewHighlighting(highlighting.WithCustomStyle(style)),
 		)
 	}
-	md := goldmark.New(ext)
+	md := goldmark.New(ext, goldmark.WithParserOptions(parser.WithAutoHeadingID()))
 	var buf bytes.Buffer
 	if err := md.Convert([]byte(markdown), &buf); err != nil {
 		return "", err
