@@ -21,7 +21,7 @@ type Param struct {
 	autoOpen       bool
 }
 
-var programName = "gfm-markdown-preview"
+var programName = "gh-gfm-preview"
 var rootCmd = &cobra.Command{
 	Use:   programName,
 	Short: "GitHub CLI extension to preview Markdown",

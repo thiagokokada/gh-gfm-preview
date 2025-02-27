@@ -1,7 +1,7 @@
 builds:
   - env:
       - CGO_ENABLED=0
-    ldflags: -s -w -X github.com/thiagokokada/gfm-markdown-preview/cmd.Version={{.Tag}}
+    ldflags: -s -w -X github.com/thiagokokada/gh-gfm-preview/cmd.Version={{.Tag}}
     goos:
       - linux
       - windows

@@ -5,7 +5,7 @@ tag="0.0.1"
 
 extension_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 tag_path="${extension_path}/dist/${tag}"
-exe="gfm-markdown-preview"
+exe="gh-gfm-preview"
 
 if [ ! -e "${tag_path}/${exe}" ]; then
   if [ "$(which go)" == "" ]; then

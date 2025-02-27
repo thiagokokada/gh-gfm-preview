@@ -5,7 +5,7 @@
 }:
 
 buildGoModule {
-  pname = "gfm-markdown-preview";
+  pname = "gh-gfm-preview";
   inherit version;
   src = lib.cleanSource ./.;
   vendorHash = "sha256-RYEaK9/CeKlPdfPogGBpRM4FgFS6ZCFJnC2UOn7x7fg=";
@@ -21,8 +21,8 @@ buildGoModule {
 
   meta = with lib; {
     description = "A Go program to preview GitHub Flavored Markdown";
-    homepage = "https://github.com/thiagokokada/gfm-markdown-preview";
+    homepage = "https://github.com/thiagokokada/gh-gfm-preview";
     license = licenses.mit;
-    mainProgram = "gfm-markdown-preview";
+    mainProgram = "gh-gfm-preview";
   };
 }
