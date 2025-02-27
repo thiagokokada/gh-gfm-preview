@@ -1,0 +1,24 @@
+name: Go
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build-nix:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: DeterminateSystems/nix-installer-action@main
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Check Flake
+      run: nix flake check
+
+    - name: Build
+      run: nix build
