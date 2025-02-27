@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-tag="0.0.1"
+tag=$(git describe --always --dirty 2>/dev/null || echo "unknown")
 
 extension_path="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 tag_path="${extension_path}/dist/${tag}"
