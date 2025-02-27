@@ -75,7 +75,12 @@ func (server *Server) Serve(param *Param) error {
 
 	if param.autoOpen {
 		logInfo("Open http://%s/ on your browser\n", address)
-		go openBrowser(fmt.Sprintf("http://%s/", address))
+		go func() {
+			err := openBrowser(fmt.Sprintf("http://%s/", address))
+			if err != nil {
+				logInfo("Error while opening browser: %s\n",err)
+			}
+		}()
 	}
 
 	err = http.ListenAndServe(address, r)
@@ -124,7 +129,7 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 			Reload: param.reload,
 			Mode:   getMode(param),
 		}
-		tmpl.Execute(w, param)
+		must(tmpl.Execute(w, param))
 	})
 }
 
