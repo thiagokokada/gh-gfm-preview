@@ -9,10 +9,28 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/alecthomas/chroma/v2"
+	"github.com/alecthomas/chroma/v2/styles"
 	"github.com/yuin/goldmark"
 	emoji "github.com/yuin/goldmark-emoji"
+	highlighting "github.com/yuin/goldmark-highlighting/v2"
 	"github.com/yuin/goldmark/extension"
 	"gitlab.com/staticnoise/goldmark-callout"
+)
+
+var github = must2(
+	styles.Get("github").Builder().AddEntry(
+		chroma.Background, chroma.StyleEntry{
+			Background: chroma.NewColour(246, 248, 250),
+		},
+	).Build(),
+)
+var githubDark = must2(
+	styles.Get("github-dark").Builder().AddEntry(
+		chroma.Background, chroma.StyleEntry{
+			Background: chroma.NewColour(21, 27, 35),
+		},
+	).Build(),
 )
 
 func targetFile(filename string) (string, error) {
@@ -47,9 +65,18 @@ func findReadme(dir string) (string, error) {
 }
 
 func toHTML(markdown string, param *Param) (string, error) {
+	style := githubDark
+	if param.forceLightMode {
+		style = github
+	}
 	ext := goldmark.WithExtensions()
 	if !param.markdownMode {
-		ext = goldmark.WithExtensions(extension.GFM, emoji.Emoji, callout.CalloutExtention)
+		ext = goldmark.WithExtensions(
+			extension.GFM,
+			emoji.Emoji,
+			callout.CalloutExtention,
+			highlighting.NewHighlighting(highlighting.WithCustomStyle(style)),
+		)
 	}
 	md := goldmark.New(ext)
 	var buf bytes.Buffer

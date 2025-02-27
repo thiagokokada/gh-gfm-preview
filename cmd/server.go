@@ -175,10 +175,9 @@ func getTitle(filename string) string {
 func getModeString(lightMode, darkMode bool) string {
 	if lightMode {
 		return "light"
-	} else if darkMode {
-		return "dark"
 	}
-	return ""
+	// default
+	return "dark"
 }
 
 func getPort(host string, port int) (int, error) {
