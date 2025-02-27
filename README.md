@@ -33,6 +33,14 @@ You need to have [Go](https://go.dev/) installed.
 go run github.com/thiagokokada/gfm-markdown-preview
 ```
 
+### Nix
+
+Assuming that you have [Flakes](https://wiki.nixos.org/wiki/Flakes) enabled:
+
+```
+nix run github:thiagokokada/gfm-markdown-preview
+```
+
 ### GitHub Extension
 
 ```
