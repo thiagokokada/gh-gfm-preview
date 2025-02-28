@@ -1,6 +1,6 @@
 module github.com/thiagokokada/gh-gfm-preview
 
-go 1.18
+go 1.22
 
 require (
 	github.com/alecthomas/chroma/v2 v2.15.0
