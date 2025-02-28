@@ -36,8 +36,17 @@ func wsHandler(watcher *fsnotify.Watcher) http.Handler {
 			}
 			return
 		}
-		socket.SetReadDeadline(time.Now().Add(pongWait))
-		socket.SetPongHandler(func(string) error { socket.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+		err = socket.SetReadDeadline(time.Now().Add(pongWait))
+		if err != nil {
+			logDebug("Debug [set read deadline error]: %s", err)
+		}
+		socket.SetPongHandler(func(string) error {
+			err := socket.SetReadDeadline(time.Now().Add(pongWait))
+			if err != nil {
+				logDebug("Debug [set read deadline error in pong handler]: %s", err)
+			}
+			return nil
+		})
 
 		go wsReader(done, errorChan)
 		go wsWriter(done, errorChan, reload)
