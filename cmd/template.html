@@ -25,6 +25,52 @@
       --copy-icon-stroke-light: #59636e;
       --tick-icon-stroke-dark: #3fb950;
       --tick-icon-stroke-light: #3fb950;
+      --callout-note-rgb: 71, 139, 230;
+      --callout-tip-rgb: 52, 125, 57;
+      --callout-warning-rgb: 198, 144, 38;
+      --callout-caution-rgb: 229, 83, 75;
+      --callout-important-rgb: 152, 110, 226;
+    }
+
+    details[data-callout=NOTE] {
+      --callout-color: var(--callout-note-rgb);
+    }
+
+    details[data-callout=TIP] {
+      --callout-color: var(--callout-tip-rgb)
+    }
+
+    details[data-callout=IMPORTANT] {
+      --callout-color: var(--callout-important-rgb);
+    }
+
+    details[data-callout=WARNING] {
+      --callout-color: var(--callout-warning-rgb);
+    }
+
+    details[data-callout=CAUTION] {
+      --callout-color: var(--callout-caution-rgb);
+    }
+
+    details {
+      background: rgba(var(--callout-color), 0.3);
+
+      /* disable margin-collapse on inner elements to create
+       * space between inner elements and the border */
+      overflow: auto;
+    }
+
+    summary {
+      overflow: auto;
+      background: rgba(var(--callout-color), 0.3);
+      padding: 0.5rem;
+    }
+
+    details div {
+      padding-top: 1rem;
+      padding-left: 1rem;
+      padding-right: 1rem;
+      max-width: 100%;
     }
 
     @media (prefers-color-scheme: dark) {
