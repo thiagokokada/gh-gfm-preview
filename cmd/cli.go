@@ -27,7 +27,7 @@ var rootCmd = &cobra.Command{
 	Short: "GitHub CLI extension to preview Markdown",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		showVerionFlag, _ := cmd.Flags().GetBool("version")
+		showVerionFlag := must2(cmd.Flags().GetBool("version"))
 		if showVerionFlag {
 			showVersion()
 			os.Exit(0)
@@ -38,25 +38,25 @@ var rootCmd = &cobra.Command{
 			filename = args[0]
 		}
 
-		verbose, _ = cmd.Flags().GetBool("verbose")
+		verbose = must2(cmd.Flags().GetBool("verbose"))
 
-		host, _ := cmd.Flags().GetString("host")
-		port, _ := cmd.Flags().GetInt("port")
+		host := must2(cmd.Flags().GetString("host"))
+		port := must2(cmd.Flags().GetInt("port"))
 
 		server := Server{host: host, port: port}
 
-		disableReload, _ := cmd.Flags().GetBool("disable-reload")
+		disableReload := must2(cmd.Flags().GetBool("disable-reload"))
 		reload := true
 		if disableReload {
 			reload = false
 		}
 
-		forceLightMode, _ := cmd.Flags().GetBool("light-mode")
-		forceDarkMode, _ := cmd.Flags().GetBool("dark-mode")
+		forceLightMode := must2(cmd.Flags().GetBool("light-mode"))
+		forceDarkMode := must2(cmd.Flags().GetBool("dark-mode"))
 
-		markdownMode, _ := cmd.Flags().GetBool("markdown-mode")
+		markdownMode := must2(cmd.Flags().GetBool("markdown-mode"))
 
-		disableAutoOpen, _ := cmd.Flags().GetBool("disable-auto-open")
+		disableAutoOpen := must2(cmd.Flags().GetBool("disable-auto-open"))
 		autoOpen := true
 		if disableAutoOpen {
 			autoOpen = false
