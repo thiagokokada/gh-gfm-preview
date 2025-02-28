@@ -13,7 +13,6 @@ buildGoModule {
   env.CGO_ENABLED = "0";
 
   ldflags = [
-    "-X=main.version=${version}"
     "-s"
     "-w"
   ];
