@@ -78,7 +78,7 @@ func (server *Server) Serve(param *Param) error {
 		go func() {
 			err := openBrowser(fmt.Sprintf("http://%s/", address))
 			if err != nil {
-				logInfo("Error while opening browser: %s\n",err)
+				logInfo("Error while opening browser: %s\n", err)
 			}
 		}()
 	}
@@ -93,7 +93,6 @@ func (server *Server) Serve(param *Param) error {
 
 func handler(filename string, param *Param, h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		if !strings.HasSuffix(r.URL.Path, ".md") && r.URL.Path != "/" {
 			h.ServeHTTP(w, r)
 			return
@@ -101,12 +100,7 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-		tmpl, err := template.New("HTML Template").Parse(htmlTemplate)
-		if err != nil {
-			logInfo("Warn: %v", err)
-			http.NotFound(w, r)
-			return
-		}
+		tmpl := template.Must(template.New("HTML Template").Parse(htmlTemplate))
 
 		markdown, err := slurp(filename)
 		if err != nil {
@@ -120,16 +114,18 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 			return
 		}
 
-		title := getTitle(filename)
-
 		param := TemplateParam{
-			Title:  title,
+			Title:  getTitle(filename),
 			Body:   html,
 			Host:   r.Host,
 			Reload: param.reload,
 			Mode:   getMode(param),
 		}
-		must(tmpl.Execute(w, param))
+		err = tmpl.Execute(w, param)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	})
 }
 
