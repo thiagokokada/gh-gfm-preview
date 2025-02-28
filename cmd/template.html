@@ -25,30 +25,30 @@
       --copy-icon-stroke-light: #59636e;
       --tick-icon-stroke-dark: #3fb950;
       --tick-icon-stroke-light: #3fb950;
-      --callout-note-rgb: 71, 139, 230;
-      --callout-tip-rgb: 52, 125, 57;
-      --callout-warning-rgb: 198, 144, 38;
-      --callout-caution-rgb: 229, 83, 75;
-      --callout-important-rgb: 152, 110, 226;
+      --callout-note-rgb: 68, 147, 248;
+      --callout-tip-rgb: 63, 185, 80;
+      --callout-important-rgb: 171, 125, 248;
+      --callout-warning-rgb: 210, 153, 34;
+      --callout-caution-rgb: 248, 81, 73;
     }
 
-    details[data-callout=NOTE] {
+    details[data-callout=NOTE i] {
       --callout-color: var(--callout-note-rgb);
     }
 
-    details[data-callout=TIP] {
+    details[data-callout=TIP i] {
       --callout-color: var(--callout-tip-rgb)
     }
 
-    details[data-callout=IMPORTANT] {
+    details[data-callout=IMPORTANT i] {
       --callout-color: var(--callout-important-rgb);
     }
 
-    details[data-callout=WARNING] {
+    details[data-callout=WARNING i] {
       --callout-color: var(--callout-warning-rgb);
     }
 
-    details[data-callout=CAUTION] {
+    details[data-callout=CAUTION i] {
       --callout-color: var(--callout-caution-rgb);
     }
 
@@ -61,6 +61,7 @@
     }
 
     summary {
+      text-transform: uppercase;
       overflow: auto;
       background: rgba(var(--callout-color), 0.3);
       padding: 0.5rem;
