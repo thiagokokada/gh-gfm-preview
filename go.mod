@@ -10,8 +10,9 @@ require (
 	github.com/yuin/goldmark v1.7.8
 	github.com/yuin/goldmark-emoji v1.0.5
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
-	gitlab.com/staticnoise/goldmark-callout v0.0.0-20240609120641-6366b799e4ab
 )
+
+require github.com/thiagokokada/goldmark-gh-alerts v0.0.0-20250301112918-0aa84c1602aa
 
 require (
 	github.com/dlclark/regexp2 v1.11.5 // indirect
