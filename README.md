@@ -1,18 +1,22 @@
-# GH gfm-preview
+# gh gfm-preview
 
-A Go program to preview GitHub Flavored Markdown :octocat:.
+A Go program to preview GitHub Flavored Markdown (GFM) :notebook:.
 
 The `gh-gfm-preview` command start a local web server to serve the markdown
 document. **gh gfm-preview** renders the HTML using
-[yuin/goldmark](https://github.com/yuin/goldmark) and some extensions to have
-similar features and look to how GitHub renders a markdown.
+[yuin/goldmark](https://github.com/yuin/goldmark) and some extensions and
+frontend tricks to have similar features and look to how GitHub renders a
+markdown.
 
 It may also be used as a [GitHub CLI](https://cli.github.com) extension.
 
 This is a hard fork of
 [yusukebe/gh-markdown-preview](https://github.com/yusukebe/gh-markdown-preview/),
 that uses the [GitHub Markdown API](https://docs.github.com/en/rest/markdown),
-but this means it doesn't work offline.
+but this means it doesn't work offline. The code of this repository tries to
+emulate the look of GitHub Markdown rendering as close as possible, but the
+original project will be even closer to the actual result if you don't need
+offline rendering.
 
 ## Features
 
@@ -58,13 +62,13 @@ gh extension upgrade markdown-preview
 The usage:
 
 ```
-gh-gfm-preview README.md
+gh gfm-preview README.md
 ```
 
 Or this command will detect README file in the directory automatically.
 
 ```
-gh-gfm-preview
+gh gfm-preview
 ```
 
 Then access the local web server such as `http://localhost:3333` with Chrome,
@@ -82,7 +86,6 @@ Available options:
     --markdown-mode       force "markdown" mode (rather than default "gfm")
 -p, --port int            TCP port number of this server (default 3333)
     --verbose             show verbose output
-    --version             show the version
 ```
 
 ## Related projects
