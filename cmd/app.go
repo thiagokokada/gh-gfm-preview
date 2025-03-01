@@ -10,12 +10,12 @@ import (
 
 	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/chroma/v2/styles"
+	alerts "github.com/thiagokokada/goldmark-gh-alerts"
 	"github.com/yuin/goldmark"
 	emoji "github.com/yuin/goldmark-emoji"
 	highlighting "github.com/yuin/goldmark-highlighting/v2"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
-	callout "gitlab.com/staticnoise/goldmark-callout"
 	"go.abhg.dev/goldmark/anchor"
 )
 
@@ -74,9 +74,9 @@ func toHTML(markdown string, param *Param) (string, error) {
 	if !param.markdownMode {
 		ext = goldmark.WithExtensions(
 			&anchor.Extender{Texter: anchor.Text("#")},
+			alerts.GhAlertsExtension,
 			extension.GFM,
 			emoji.Emoji,
-			callout.CalloutExtention,
 			highlighting.NewHighlighting(highlighting.WithCustomStyle(style)),
 		)
 	}
