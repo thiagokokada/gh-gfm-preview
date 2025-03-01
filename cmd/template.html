@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{ .Title }}</title>
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-  {{ $cssURL := "/static/github-markdown.css" }}
-  {{ if eq .Mode "dark" }}
-  {{ $cssURL = "/static/github-markdown-dark.css" }}
-  {{ else if eq .Mode "light" }}
+  {{ $cssURL := "/static/github-markdown-dark.css" }}
+  {{ if eq .Mode "light" }}
   {{ $cssURL = "/static/github-markdown-light.css" }}
   {{ end }}
   <link rel="stylesheet" href="{{ $cssURL }}" />
