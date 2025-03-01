@@ -101,6 +101,10 @@
       padding: 45px;
     }
 
+    .markdown-alert-title {
+      text-transform: capitalize;
+    }
+
     .copy-button {
       background-color: transparent;
       border: none;
@@ -224,11 +228,6 @@
 
         const alertClassName = `markdown-alert-${calloutType}`;
         const summaryElement = details.querySelector('summary');
-        // TITLE => Title
-        const titleText = summaryElement.textContent.trim().replace(
-          /\w\S*/g,
-          (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-        );
 
         const calloutContent = details.querySelector('.callout-content > p')?.innerHTML;
         if (!calloutContent) return;
@@ -239,7 +238,7 @@
         const svgIcon = alertIconMap[calloutType] || alertIconMap.note;
 
         alertDiv.innerHTML = `
-          <p class="markdown-alert-title">${svgIcon}${titleText}</p>
+          <p class="markdown-alert-title">${svgIcon}${calloutType}</p>
           <p>${calloutContent}</p>
         `;
 
