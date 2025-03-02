@@ -33,8 +33,8 @@ github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.10.0 h1:Xv5erBjTwe/5IxqUQTdXv5kgmIvbHo3QQyRwhJsOfJA=
 github.com/stretchr/testify v1.10.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
-github.com/thiagokokada/goldmark-gh-alerts v0.0.0-20250301112918-0aa84c1602aa h1:8doQgR921Igcr83RTSWYdJwu0ryYSdiJsxsEGV1V6wY=
-github.com/thiagokokada/goldmark-gh-alerts v0.0.0-20250301112918-0aa84c1602aa/go.mod h1:09li+48KzZ5zboCXexzU9grKMSvlvm8wn50pCiAP6Ec=
+github.com/thiagokokada/goldmark-gh-alerts v0.0.0-20250302164040-cf407c0ddfaf h1:9Iw9iwgonqXIcxOWWNFt4RM64N+ZdNaVajqehannr+o=
+github.com/thiagokokada/goldmark-gh-alerts v0.0.0-20250302164040-cf407c0ddfaf/go.mod h1:09li+48KzZ5zboCXexzU9grKMSvlvm8wn50pCiAP6Ec=
 github.com/yuin/goldmark v1.4.15/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 github.com/yuin/goldmark v1.7.1/go.mod h1:uzxRWxtg69N339t3louHJ7+O03ezfj6PlliRlaOzY1E=
 github.com/yuin/goldmark v1.7.8 h1:iERMLn0/QJeHFhxSt3p6PeN9mGnvIKSpG9YYorDMnic=
