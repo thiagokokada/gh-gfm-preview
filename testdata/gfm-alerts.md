@@ -1,9 +1,9 @@
 # Alerts
 
-> [!NOTE]
+> [!note]
 > Useful information that users should know, even when skimming content.
 
-> [!TIP]
+> [!Tip]
 > Helpful advice for doing things better or more easily.
 
 > [!IMPORTANT]
