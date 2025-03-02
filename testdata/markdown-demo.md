@@ -1,4 +1,24 @@
-This a test of all markdown possibilities:
+This is a test of all Markdown possibilities:
+
+------------------------------------------
+
+## Anchors
+
+- [Headings](#headings)
+- [Horizontal Rules](#horizontal-rules)
+- [Emphasis](#emphasis)
+- [Links](#links)
+- [Blockquotes](#blockquotes)
+- [Indentation](#indentation)
+- [Lists](#lists)
+  + [Unordered](#unordered)
+  + [Ordered](#ordered)
+    * [Numbers in sequence](#numbers-in-sequence)
+    * [Numbers not in sequence](#numbers-not-in-sequence)
+- [Images](#images)
+- [Tables](#tables)
+- [Code](#code)
+- [Math](#math)
 
 ------------------------------------------
 
@@ -64,7 +84,6 @@ This is [an example](http://example.com/ "Title") inline link.
 indentation 1-2
     indentation 2-1
 
-
 ------------------------------------------
 
 ## Lists
@@ -81,13 +100,13 @@ indentation 1-2
 
 ### Ordered
 
-#### Numers in sequence
+#### Numbers in sequence
 
 1. Lorem ipsum dolor sit amet
 2. Consectetur adipiscing elit
 3. Integer molestie lorem at massa
 
-#### Numers not in sequence
+#### Numbers not in sequence
 
 1. You can use sequential numbers...
 1. ...or keep all the numbers as `1.`
@@ -99,13 +118,9 @@ indentation 1-2
 ![Minion][3]
 ![Stormtroopocat][4]
 
-Like links, Images also have a footnote style syntax
+Like links, Images also have a footnote style syntax:
 
 ![Alt text][5]
-
-With a reference later in the document defining the URL location:
-
-
 
 ------------------------------------------
 
