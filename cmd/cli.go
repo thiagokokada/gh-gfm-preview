@@ -8,8 +8,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var verbose = false
-
 type Param struct {
 	filename       string
 	markdownMode   bool
@@ -19,6 +17,7 @@ type Param struct {
 	autoOpen       bool
 }
 
+var verbose = false
 var programName = "gh-gfm-preview"
 var rootCmd = &cobra.Command{
 	Use:   programName,
