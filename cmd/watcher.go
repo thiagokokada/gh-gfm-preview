@@ -20,7 +20,7 @@ func createWatcher(dir string) (*fsnotify.Watcher, error) {
 	return watcher, err
 }
 
-func watch(done <-chan interface{}, errorChan chan<- error, reload chan<- bool, watcher *fsnotify.Watcher) {
+func watch(done <-chan any, errorChan chan<- error, reload chan<- bool, watcher *fsnotify.Watcher) {
 	isLocked := false
 	for {
 		select {
@@ -31,7 +31,7 @@ func watch(done <-chan interface{}, errorChan chan<- error, reload chan<- bool, 
 			if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create {
 				r := regexp.MustCompile(ignorePattern)
 				if r.MatchString(event.Name) {
-					logDebug("Debug [ignore]: `%s`", event.Name)
+					logDebug("Debug [ignore]: %s", event.Name)
 				} else {
 					logInfo("Change detected in %s, refreshing", event.Name)
 					isLocked = true

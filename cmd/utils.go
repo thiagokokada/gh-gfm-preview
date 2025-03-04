@@ -13,11 +13,11 @@ func must2[T any](v T, err error) T {
 	return v
 }
 
-func logInfo(format string, v ...interface{}) {
+func logInfo(format string, v ...any) {
 	log.Printf(format, v...)
 }
 
-func logDebug(format string, v ...interface{}) {
+func logDebug(format string, v ...any) {
 	if verbose {
 		log.Printf(format, v...)
 	}

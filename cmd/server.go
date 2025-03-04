@@ -187,7 +187,11 @@ func getMode(param *Param) string {
 		return darkMode
 	} else if param.forceLightMode {
 		return lightMode
-	} else if isDarkMode() {
+	}
+
+	isDark := isDarkMode()
+	logDebug("Debug [auto-detected dark mode]: %v", isDark)
+	if isDark {
 		return darkMode
 	} else {
 		return lightMode

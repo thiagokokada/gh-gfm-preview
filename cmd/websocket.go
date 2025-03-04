@@ -23,7 +23,7 @@ var socket *websocket.Conn
 func wsHandler(watcher *fsnotify.Watcher) http.Handler {
 	reload := make(chan bool, 1)
 	errorChan := make(chan error)
-	done := make(chan interface{})
+	done := make(chan any)
 
 	go watch(done, errorChan, reload, watcher)
 
@@ -32,18 +32,18 @@ func wsHandler(watcher *fsnotify.Watcher) http.Handler {
 		socket, err = upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			if _, ok := err.(websocket.HandshakeError); !ok {
-				logDebug("Debug [handshake error]: %s", err)
+				logDebug("Debug [handshake error]: %v", err)
 			}
 			return
 		}
 		err = socket.SetReadDeadline(time.Now().Add(pongWait))
 		if err != nil {
-			logDebug("Debug [set read deadline error]: %s", err)
+			logDebug("Debug [set read deadline error]: %v", err)
 		}
 		socket.SetPongHandler(func(string) error {
 			err := socket.SetReadDeadline(time.Now().Add(pongWait))
 			if err != nil {
-				logDebug("Debug [set read deadline error in pong handler]: %s", err)
+				logDebug("Debug [set read deadline error in pong handler]: %v", err)
 			}
 			return nil
 		})
@@ -58,17 +58,17 @@ func wsHandler(watcher *fsnotify.Watcher) http.Handler {
 	})
 }
 
-func wsReader(done <-chan interface{}, errorChan chan<- error) {
+func wsReader(done <-chan any, errorChan chan<- error) {
 	for range done {
 		_, _, err := socket.ReadMessage()
 		if err != nil {
-			logDebug("Debug [read message]: %s", err)
+			logDebug("Debug [read message]: %v", err)
 			errorChan <- err
 		}
 	}
 }
 
-func wsWriter(done <-chan interface{}, errChan chan<- error, reload <-chan bool) {
+func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
 	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
 
