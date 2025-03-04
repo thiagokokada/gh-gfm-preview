@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/thiagokokada/gh-gfm-preview/internal/app"
 	"github.com/thiagokokada/gh-gfm-preview/internal/browser"
@@ -68,16 +69,16 @@ func (server *Server) Serve(param *Param) error {
 
 	dir := filepath.Dir(filename)
 
-	r := http.NewServeMux()
-	r.Handle("/", wrapHandler(handler(filename, param, http.FileServer(http.Dir(dir)))))
-	r.Handle("/static/", wrapHandler(handler(filename, param, http.FileServer(http.FS(staticDir)))))
-	r.Handle("/__/md", wrapHandler(mdHandler(filename, param)))
+	serveMux := http.NewServeMux()
+	serveMux.Handle("/", wrapHandler(handler(filename, param, http.FileServer(http.Dir(dir)))))
+	serveMux.Handle("/static/", wrapHandler(handler(filename, param, http.FileServer(http.FS(staticDir)))))
+	serveMux.Handle("/__/md", wrapHandler(mdHandler(filename, param)))
 
 	watcher, err := websocket.CreateWatcher(dir)
 	if err != nil {
 		return err
 	}
-	r.Handle("/ws", websocket.WsHandler(watcher))
+	serveMux.Handle("/ws", websocket.WsHandler(watcher))
 
 	port, err = getPort(host, port)
 	if err != nil {
@@ -98,7 +99,12 @@ func (server *Server) Serve(param *Param) error {
 		}()
 	}
 
-	err = http.ListenAndServe(address, r)
+	httpServer := &http.Server{
+		Addr:              address,
+		ReadHeaderTimeout: 10 * time.Second,
+		Handler:           serveMux,
+	}
+	err = httpServer.ListenAndServe()
 	if err != nil {
 		return err
 	}
@@ -149,13 +155,13 @@ func mdResponse(w http.ResponseWriter, filename string, param *Param) {
 
 	markdown, err := app.Slurp(filename)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	html, err := app.ToHtml(markdown, param.MarkdownMode, param.isDarkMode())
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	fmt.Fprintf(w, "%s", html)
@@ -207,9 +213,8 @@ func getMode(param *Param) string {
 	utils.LogDebug("Debug [auto-detected dark mode]: %v", isDark)
 	if isDark {
 		return darkMode
-	} else {
-		return lightMode
 	}
+	return lightMode
 }
 
 func (param *Param) isDarkMode() bool {

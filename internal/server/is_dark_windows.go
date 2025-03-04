@@ -7,7 +7,11 @@ import (
 )
 
 func autoDetectDarkMode() bool {
-	k, err := registry.OpenKey(registry.CURRENT_USER, `Software\Microsoft\Windows\CurrentVersion\Themes\Personalize`, registry.QUERY_VALUE)
+	k, err := registry.OpenKey(
+		registry.CURRENT_USER,
+		`Software\Microsoft\Windows\CurrentVersion\Themes\Personalize`,
+		registry.QUERY_VALUE,
+	)
 	if err != nil {
 		utils.LogDebug("Debug [registry open key error]: %v", err)
 		return isDarkModeDefault

@@ -14,12 +14,21 @@ func autoDetectDarkMode() bool {
 	}
 	defer conn.Close()
 
-	obj := conn.Object("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop")
+	obj := conn.Object(
+		"org.freedesktop.portal.Desktop",
+		"/org/freedesktop/portal/desktop",
+	)
 	var colorScheme uint32
-	err = obj.Call("org.freedesktop.portal.Settings.Read", 0, "org.freedesktop.appearance", "color-scheme").Store(&colorScheme)
+	err = obj.Call(
+		"org.freedesktop.portal.Settings.Read",
+		0,
+		"org.freedesktop.appearance",
+		"color-scheme",
+	).Store(&colorScheme)
 	if err != nil {
 		utils.LogDebug("Debug [dbus call error]: %v", err)
 		return isDarkModeDefault
 	}
-	return colorScheme == 0 || colorScheme == 1 // 0: no preference, 1: prefer dark mode, 2: prefer light mode
+	// 0: no preference, 1: prefer dark mode, 2: prefer light mode
+	return colorScheme == 0 || colorScheme == 1
 }
