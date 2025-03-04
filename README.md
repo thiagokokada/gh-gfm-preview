@@ -88,6 +88,49 @@ Available options:
     --verbose             show verbose output
 ```
 
+## Other usages
+
+Since the binary is static and it works offline, this is a good program to
+use to preview how a Markdown is looking in e.g.:
+[neovim](https://github.com/neovim/neovim/). For example, you can add this
+in your `$HOME/.config/nvim/init.lua`:
+
+```lua
+local function preview_markdown()
+  local file = vim.fn.expand("%")
+  local on_exit_cb = function(out)
+    print("Markdown preview process exited with code:", out.code)
+  end
+  local process = vim.system(
+    -- assuming that the extension were installed using gh
+    -- the reason we are not using `gh gfm-preview` instead is because this
+    -- can cause an issue where the gh process is killed but not the
+    -- gh-gfm-preview, since the kill signal will not reach the child process
+    {vim.fn.expand("$HOME/.local/share/gh/extensions/gh-gfm-preview/gh-gfm-preview"), file},
+    on_exit_cb
+  )
+
+  vim.api.nvim_create_autocmd({ "BufUnload", "BufDelete" }, {
+    buffer = vim.api.nvim_get_current_buf(),
+    callback = function()
+      process:kill("sigterm")
+      -- timeout (in ms), will call SIGKILL upon timeout
+      process:wait(500)
+    end,
+  })
+end
+
+-- create a shortcut only in Markdown files, mapped to `<Leader>P`
+vim.api.nvim_create_autocmd({ "FileType" }, {
+  pattern = { "markdown" },
+  callback = function()
+    vim.keymap.set("n", "<Leader>P", preview_markdown, {
+      desc = "Markdown preview", buffer = true
+    })
+  end,
+})
+```
+
 ## Related projects
 
 - GitHub CLI <https://cli.github.com>
