@@ -1,6 +1,6 @@
 //go:build !windows && !darwin && !linux
-package cmd
+package server
 
-func isDarkMode() bool {
+func autoDetectDarkMode() bool {
 	return isDarkModeDefault
 }

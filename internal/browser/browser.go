@@ -1,4 +1,4 @@
-package cmd
+package browser
 
 import (
 	"os"
@@ -38,7 +38,7 @@ func isWSL() bool {
 	return isWSLWithReader(ProcVersionReader{})
 }
 
-func openBrowser(url string) error {
+func OpenBrowser(url string) error {
 	<-time.After(100 * time.Millisecond)
 	var args []string
 	var cmd string

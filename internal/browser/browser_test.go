@@ -1,4 +1,4 @@
-package cmd
+package browser
 
 import (
 	"errors"

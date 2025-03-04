@@ -1,4 +1,4 @@
-package cmd
+package server
 
 import (
 	"embed"
@@ -9,6 +9,12 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"time"
+
+	"github.com/thiagokokada/gh-gfm-preview/internal/app"
+	"github.com/thiagokokada/gh-gfm-preview/internal/browser"
+	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
+	"github.com/thiagokokada/gh-gfm-preview/internal/websocket"
 )
 
 type TemplateParam struct {
@@ -19,9 +25,18 @@ type TemplateParam struct {
 	Mode   string
 }
 
+type Param struct {
+	Filename       string
+	MarkdownMode   bool
+	Reload         bool
+	ForceLightMode bool
+	ForceDarkMode  bool
+	AutoOpen       bool
+}
+
 type Server struct {
-	host string
-	port int
+	Host string
+	Port int
 }
 
 type loggingResponseWriter struct {
@@ -41,29 +56,29 @@ const darkMode = "dark"
 const lightMode = "light"
 
 func (server *Server) Serve(param *Param) error {
-	host := server.host
+	host := server.Host
 	port := defaultPort
-	if server.port > 0 {
-		port = server.port
+	if server.Port > 0 {
+		port = server.Port
 	}
 
-	filename, err := targetFile(param.filename)
+	filename, err := app.TargetFile(param.Filename)
 	if err != nil {
 		return err
 	}
 
 	dir := filepath.Dir(filename)
 
-	r := http.NewServeMux()
-	r.Handle("/", wrapHandler(handler(filename, param, http.FileServer(http.Dir(dir)))))
-	r.Handle("/static/", wrapHandler(handler(filename, param, http.FileServer(http.FS(staticDir)))))
-	r.Handle("/__/md", wrapHandler(mdHandler(filename, param)))
+	serveMux := http.NewServeMux()
+	serveMux.Handle("/", wrapHandler(handler(filename, param, http.FileServer(http.Dir(dir)))))
+	serveMux.Handle("/static/", wrapHandler(handler(filename, param, http.FileServer(http.FS(staticDir)))))
+	serveMux.Handle("/__/md", wrapHandler(mdHandler(filename, param)))
 
-	watcher, err := createWatcher(dir)
+	watcher, err := websocket.CreateWatcher(dir)
 	if err != nil {
 		return err
 	}
-	r.Handle("/ws", wsHandler(watcher))
+	serveMux.Handle("/ws", websocket.WsHandler(watcher))
 
 	port, err = getPort(host, port)
 	if err != nil {
@@ -72,19 +87,24 @@ func (server *Server) Serve(param *Param) error {
 
 	address := fmt.Sprintf("%s:%d", host, port)
 
-	logInfo("Accepting connections at http://%s/\n", address)
+	utils.LogInfo("Accepting connections at http://%s/\n", address)
 
-	if param.autoOpen {
-		logInfo("Open http://%s/ on your browser\n", address)
+	if param.AutoOpen {
+		utils.LogInfo("Open http://%s/ on your browser\n", address)
 		go func() {
-			err := openBrowser(fmt.Sprintf("http://%s/", address))
+			err := browser.OpenBrowser(fmt.Sprintf("http://%s/", address))
 			if err != nil {
-				logInfo("Error while opening browser: %s\n", err)
+				utils.LogInfo("Error while opening browser: %s\n", err)
 			}
 		}()
 	}
 
-	err = http.ListenAndServe(address, r)
+	httpServer := &http.Server{
+		Addr:              address,
+		ReadHeaderTimeout: 10 * time.Second,
+		Handler:           serveMux,
+	}
+	err = httpServer.ListenAndServe()
 	if err != nil {
 		return err
 	}
@@ -103,13 +123,13 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 
 		tmpl := template.Must(template.New("HTML Template").Parse(htmlTemplate))
 
-		markdown, err := slurp(filename)
+		markdown, err := app.Slurp(filename)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		html, err := toHTML(markdown, param)
+		html, err := app.ToHtml(markdown, param.MarkdownMode, param.isDarkMode())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -119,7 +139,7 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 			Title:  getTitle(filename),
 			Body:   html,
 			Host:   r.Host,
-			Reload: param.reload,
+			Reload: param.Reload,
 			Mode:   getMode(param),
 		}
 		err = tmpl.Execute(w, param)
@@ -133,15 +153,15 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 func mdResponse(w http.ResponseWriter, filename string, param *Param) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	markdown, err := slurp(filename)
+	markdown, err := app.Slurp(filename)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	html, err := toHTML(markdown, param)
+	html, err := app.ToHtml(markdown, param.MarkdownMode, param.isDarkMode())
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	fmt.Fprintf(w, "%s", html)
@@ -174,7 +194,7 @@ func wrapHandler(wrappedHandler http.Handler) http.Handler {
 		wrappedHandler.ServeHTTP(lrw, r)
 
 		statusCode := lrw.statusCode
-		logInfo("%s [%d] %s", r.Method, statusCode, r.URL)
+		utils.LogInfo("%s [%d] %s", r.Method, statusCode, r.URL)
 	})
 }
 
@@ -183,26 +203,29 @@ func getTitle(filename string) string {
 }
 
 func getMode(param *Param) string {
-	if param.forceDarkMode {
+	if param.ForceDarkMode {
 		return darkMode
-	} else if param.forceLightMode {
+	} else if param.ForceLightMode {
 		return lightMode
 	}
 
-	isDark := isDarkMode()
-	logDebug("Debug [auto-detected dark mode]: %v", isDark)
+	isDark := autoDetectDarkMode()
+	utils.LogDebug("Debug [auto-detected dark mode]: %v", isDark)
 	if isDark {
 		return darkMode
-	} else {
-		return lightMode
 	}
+	return lightMode
+}
+
+func (param *Param) isDarkMode() bool {
+	return getMode(param) == darkMode
 }
 
 func getPort(host string, port int) (int, error) {
 	var err error
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, port))
 	if err != nil {
-		logInfo("%s", err.Error())
+		utils.LogInfo("%s", err.Error())
 		listener, err = net.Listen("tcp", fmt.Sprintf("%s:0", host))
 	}
 	port = listener.Addr().(*net.TCPAddr).Port

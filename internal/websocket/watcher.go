@@ -1,26 +1,33 @@
-package cmd
+package websocket
 
 import (
 	"regexp"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
+
+	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 )
 
 const ignorePattern = `\.swp$|~$|^\.DS_Store$|^4913$`
 const lockTime = 100 * time.Millisecond
 
-func createWatcher(dir string) (*fsnotify.Watcher, error) {
+func CreateWatcher(dir string) (*fsnotify.Watcher, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return watcher, err
 	}
-	logInfo("Watching %s/ for changes", dir)
+	utils.LogInfo("Watching %s/ for changes", dir)
 	err = watcher.Add(dir)
 	return watcher, err
 }
 
-func watch(done <-chan any, errorChan chan<- error, reload chan<- bool, watcher *fsnotify.Watcher) {
+func watch(
+	done <-chan any,
+	errorChan chan<- error,
+	reload chan<- bool,
+	watcher *fsnotify.Watcher,
+) {
 	isLocked := false
 	for {
 		select {
@@ -31,9 +38,9 @@ func watch(done <-chan any, errorChan chan<- error, reload chan<- bool, watcher 
 			if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create {
 				r := regexp.MustCompile(ignorePattern)
 				if r.MatchString(event.Name) {
-					logDebug("Debug [ignore]: %s", event.Name)
+					utils.LogDebug("Debug [ignore]: %s", event.Name)
 				} else {
-					logInfo("Change detected in %s, refreshing", event.Name)
+					utils.LogInfo("Change detected in %s, refreshing", event.Name)
 					isLocked = true
 					reload <- true
 					timer := time.NewTimer(lockTime)
