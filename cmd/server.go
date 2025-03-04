@@ -36,6 +36,7 @@ var htmlTemplate string
 var staticDir embed.FS
 
 const defaultPort = 3333
+const isDarkModeDefault = true
 const darkMode = "dark"
 const lightMode = "light"
 
@@ -182,10 +183,15 @@ func getTitle(filename string) string {
 }
 
 func getMode(param *Param) string {
-	if param.forceLightMode {
+	if param.forceDarkMode {
+		return darkMode
+	} else if param.forceLightMode {
+		return lightMode
+	} else if isDarkMode() {
+		return darkMode
+	} else {
 		return lightMode
 	}
-	return darkMode
 }
 
 func getPort(host string, port int) (int, error) {
