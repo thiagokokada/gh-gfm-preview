@@ -7,6 +7,7 @@ toolchain go1.23.6
 require (
 	github.com/alecthomas/chroma/v2 v2.15.0
 	github.com/fsnotify/fsnotify v1.8.0
+	github.com/godbus/dbus/v5 v5.1.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/spf13/cobra v1.9.1
 	github.com/thiagokokada/goldmark-gh-alerts v0.0.0-20250302164040-cf407c0ddfaf
