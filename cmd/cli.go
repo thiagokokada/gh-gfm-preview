@@ -6,18 +6,11 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+
+	"github.com/thiagokokada/gh-gfm-preview/internal/server"
+	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 )
 
-type Param struct {
-	filename       string
-	markdownMode   bool
-	reload         bool
-	forceLightMode bool
-	forceDarkMode  bool
-	autoOpen       bool
-}
-
-var verbose = false
 var programName = "gh-gfm-preview"
 var rootCmd = &cobra.Command{
 	Use:   programName,
@@ -28,40 +21,40 @@ var rootCmd = &cobra.Command{
 			filename = args[0]
 		}
 
-		verbose = must2(cmd.Flags().GetBool("verbose"))
+		utils.Verbose = utils.Must(cmd.Flags().GetBool("verbose"))
 
-		host := must2(cmd.Flags().GetString("host"))
-		port := must2(cmd.Flags().GetInt("port"))
+		host := utils.Must(cmd.Flags().GetString("host"))
+		port := utils.Must(cmd.Flags().GetInt("port"))
+		httpServer := server.Server{Host: host, Port: port}
 
-		server := Server{host: host, port: port}
-
-		disableReload := must2(cmd.Flags().GetBool("disable-reload"))
+		disableReload := utils.Must(cmd.Flags().GetBool("disable-reload"))
 		reload := true
 		if disableReload {
 			reload = false
 		}
 
-		forceLightMode := must2(cmd.Flags().GetBool("light-mode"))
-		forceDarkMode := must2(cmd.Flags().GetBool("dark-mode"))
+		forceLightMode := utils.Must(cmd.Flags().GetBool("light-mode"))
+		forceDarkMode := utils.Must(cmd.Flags().GetBool("dark-mode"))
 
-		markdownMode := must2(cmd.Flags().GetBool("markdown-mode"))
+		markdownMode := utils.Must(cmd.Flags().GetBool("markdown-mode"))
 
-		disableAutoOpen := must2(cmd.Flags().GetBool("disable-auto-open"))
+		disableAutoOpen := utils.Must(cmd.Flags().GetBool("disable-auto-open"))
+
 		autoOpen := true
 		if disableAutoOpen {
 			autoOpen = false
 		}
 
-		param := &Param{
-			filename:       filename,
-			markdownMode:   markdownMode,
-			reload:         reload,
-			forceLightMode: forceLightMode,
-			forceDarkMode:  forceDarkMode,
-			autoOpen:       autoOpen,
+		param := &server.Param{
+			Filename:       filename,
+			MarkdownMode:   markdownMode,
+			Reload:         reload,
+			ForceLightMode: forceLightMode,
+			ForceDarkMode:  forceDarkMode,
+			AutoOpen:       autoOpen,
 		}
 
-		err := server.Serve(param)
+		err := httpServer.Serve(param)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}

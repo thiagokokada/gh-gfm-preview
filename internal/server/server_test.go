@@ -1,4 +1,4 @@
-package cmd
+package server
 
 import (
 	"fmt"
@@ -9,10 +9,10 @@ import (
 )
 
 func TestHandler(t *testing.T) {
-	filename := "../testdata/markdown-demo.md"
+	filename := "../../testdata/markdown-demo.md"
 	dir := filepath.Dir(filename)
 	param := &Param{
-		reload: false,
+		Reload: false,
 	}
 	ts := httptest.NewServer(handler(filename, param, http.FileServer(http.Dir(dir))))
 	defer ts.Close()
@@ -21,7 +21,7 @@ func TestHandler(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected: %v\n", err)
 	}
-	if res.StatusCode != 200 {
+	if res.StatusCode != http.StatusOK {
 		t.Errorf("server status error, got: %v", res.StatusCode)
 	}
 	if res.Header.Get("Content-Type") != "text/html; charset=utf-8" {
@@ -32,7 +32,7 @@ func TestHandler(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected: %v\n", err)
 	}
-	if r2.StatusCode != 200 {
+	if r2.StatusCode != http.StatusOK {
 		t.Errorf("server status error, got: %v", res.StatusCode)
 	}
 	if r2.Header.Get("Content-Type") != "image/png" {
@@ -42,7 +42,7 @@ func TestHandler(t *testing.T) {
 }
 
 func TestMdHandler(t *testing.T) {
-	filename := "../testdata/markdown-demo.md"
+	filename := "../../testdata/markdown-demo.md"
 	ts := httptest.NewServer(mdHandler(filename, &Param{}))
 	defer ts.Close()
 
@@ -50,7 +50,7 @@ func TestMdHandler(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected: %v\n", err)
 	}
-	if res.StatusCode != 200 {
+	if res.StatusCode != http.StatusOK {
 		t.Errorf("server status error, got: %v", res.StatusCode)
 	}
 	if res.Header.Get("Content-Type") != "text/html; charset=utf-8" {
@@ -69,7 +69,7 @@ func TestWrapHandler(t *testing.T) {
 		statusCode := lrw.statusCode
 
 		// XXX
-		if statusCode != 200 {
+		if statusCode != http.StatusOK {
 			t.Errorf("logging response status code error, got: %v", statusCode)
 		}
 
@@ -81,26 +81,26 @@ func TestWrapHandler(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected: %v\n", err)
 	}
-	if res.StatusCode != 200 {
+	if res.StatusCode != http.StatusOK {
 		t.Errorf("server status error, got: %v", res.StatusCode)
 	}
 }
 
 func TestGetMode(t *testing.T) {
-	modeString := getMode(&Param{forceLightMode: true})
+	modeString := getMode(&Param{ForceLightMode: true})
 	expected := "light"
 	if modeString != expected {
 		t.Errorf("mode string is not: %s", modeString)
 	}
 
-	modeString = getMode(&Param{forceDarkMode: true})
+	modeString = getMode(&Param{ForceDarkMode: true})
 	expected = "dark"
 	if modeString != expected {
 		t.Errorf("mode string is not: %s", modeString)
 	}
 
 	modeString = getMode(&Param{})
-	if isDarkMode() {
+	if autoDetectDarkMode() {
 		expected = "dark"
 	} else {
 		expected = "light"

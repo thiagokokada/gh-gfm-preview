@@ -1,4 +1,4 @@
-package cmd
+package app
 
 import (
 	"regexp"
@@ -11,12 +11,12 @@ func TestTargetFile(t *testing.T) {
 		input    string
 		expected string
 	}{
-		{"../testdata/markdown-demo.md", "../testdata/markdown-demo.md"},
-		{"../README.md", "../README.md"},
-		{"../", "../README.md"},
+		{"../../testdata/markdown-demo.md", "../../testdata/markdown-demo.md"},
+		{"../../README.md", "../../README.md"},
+		{"../../", "../../README.md"},
 	}
 	for _, tt := range tests {
-		actual, err := targetFile(tt.input)
+		actual, err := TargetFile(tt.input)
 		if err != nil {
 			t.Errorf("%s", err.Error())
 		}
@@ -25,35 +25,35 @@ func TestTargetFile(t *testing.T) {
 			t.Errorf("got %v\n want %v", actual, expected)
 		}
 	}
-	_, err := targetFile("../notfound.md")
+	_, err := TargetFile("../../notfound.md")
 	if err == nil {
 		t.Errorf("err is nil")
 	}
-	_, err = targetFile("./")
+	_, err = TargetFile("./")
 	if err == nil {
 		t.Errorf("err is nil")
 	}
 }
 
 func TestFindReadme(t *testing.T) {
-	actual, _ := findReadme("../")
-	expected := "../README.md"
+	actual, _ := findReadme("../../")
+	expected := "../../README.md"
 	if actual != expected {
 		t.Errorf("got %v\n want %v", actual, expected)
 	}
-	actual, _ = findReadme("../testdata")
-	expected = "../testdata/README"
+	actual, _ = findReadme("../../testdata")
+	expected = "../../testdata/README"
 	if actual != expected {
 		t.Errorf("got %v\n want %v", actual, expected)
 	}
-	_, err := findReadme("../cmd")
+	_, err := findReadme("../../cmd")
 	if err == nil {
 		t.Errorf("err is nil")
 	}
 }
 
 func TestSlurp(t *testing.T) {
-	string, err := slurp("../testdata/markdown-demo.md")
+	string, err := Slurp("../../testdata/markdown-demo.md")
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}
@@ -66,7 +66,7 @@ func TestSlurp(t *testing.T) {
 
 func TestToHTML(t *testing.T) {
 	markdown := "text"
-	html, err := toHTML(markdown, &Param{})
+	html, err := ToHtml(markdown, false, false)
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}
@@ -78,11 +78,11 @@ func TestToHTML(t *testing.T) {
 }
 
 func TestGfmCheckboxes(t *testing.T) {
-	string, err := slurp("../testdata/gfm-checkboxes.md")
+	string, err := Slurp("../../testdata/gfm-checkboxes.md")
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}
-	html, err := toHTML(string, &Param{})
+	html, err := ToHtml(string, false, true)
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}
@@ -113,11 +113,11 @@ func TestGfmCheckboxes(t *testing.T) {
 }
 
 func TestGfmAlerts(t *testing.T) {
-	string, err := slurp("../testdata/gfm-alerts.md")
+	string, err := Slurp("../../testdata/gfm-alerts.md")
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}
-	html, err := toHTML(string, &Param{})
+	html, err := ToHtml(string, false, true)
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}

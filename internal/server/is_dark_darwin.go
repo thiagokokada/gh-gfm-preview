@@ -1,4 +1,4 @@
-package cmd
+package server
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func isDarkMode() bool {
+func autoDetectDarkMode() bool {
 	cmd := exec.Command("defaults", "read", "-g", "AppleInterfaceStyle")
 	var out bytes.Buffer
 	cmd.Stdout = &out

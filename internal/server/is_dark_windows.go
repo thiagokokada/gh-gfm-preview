@@ -1,20 +1,22 @@
-package cmd
+package server
 
 import (
 	"golang.org/x/sys/windows/registry"
+
+	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 )
 
-func isDarkMode() bool {
+func autoDetectDarkMode() bool {
 	k, err := registry.OpenKey(registry.CURRENT_USER, `Software\Microsoft\Windows\CurrentVersion\Themes\Personalize`, registry.QUERY_VALUE)
 	if err != nil {
-		logDebug("Debug [registry open key error]: %v", err)
+		utils.LogDebug("Debug [registry open key error]: %v", err)
 		return isDarkModeDefault
 	}
 	defer k.Close()
 
 	v, _, err := k.GetIntegerValue("AppsUseLightTheme")
 	if err != nil {
-		logDebug("Debug [get integer value error]: %v", err)
+		utils.LogDebug("Debug [get integer value error]: %v", err)
 		return isDarkModeDefault
 	}
 
