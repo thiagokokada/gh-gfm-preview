@@ -8,3 +8,15 @@ flowchart TD
     C -->|Two| E[iPhone]
     C -->|Three| F[fa:fa-car Car]
 ```
+
+# test
+
+```mermaid
+stateDiagram
+  s1-->s2
+```
+
+```mermaid
+stateDiagram
+  s1-->s2
+```
