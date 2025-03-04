@@ -11,9 +11,8 @@ import (
 	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 )
 
-var programName = "gh-gfm-preview"
 var rootCmd = &cobra.Command{
-	Use:   programName,
+	Use:   "gh-gfm-preview",
 	Short: "GitHub CLI extension to preview Markdown",
 	Run: func(cmd *cobra.Command, args []string) {
 		filename := ""
