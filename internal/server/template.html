@@ -110,12 +110,6 @@
       addCopyButtons();
     }
 
-    function typesetMathJax() {
-      if (window.MathJax) {
-        MathJax.typeset();
-      }
-    }
-
     async function renderMermaidDiagrams() {
       {{ if eq .Mode "dark" }}
         const mermaidJsTheme = 'dark';
@@ -125,6 +119,12 @@
 
       mermaid.initialize({ startOnLoad: false, theme: mermaidJsTheme });
       await mermaid.run({ querySelector: 'pre > code.language-mermaid' });
+    }
+
+    function typesetMathJax() {
+      if (window.MathJax) {
+        MathJax.typeset();
+      }
     }
 
     function addCopyButtons() {
@@ -149,7 +149,7 @@
     }
 
     // --- Main Execution ---
-    (async function() {  //IIFE
+    (async function() {
       await loadMarkdown(); // Load and process markdown
 
       {{ if .Reload }}
@@ -165,7 +165,6 @@
         };
       {{ end }}
     })();
-
   </script>
 </body>
 
