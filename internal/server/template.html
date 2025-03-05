@@ -94,17 +94,15 @@
   <script type="text/javascript" src="/static/tex-mml-chtml.min.js"></script>
   <script type="text/javascript" src="/static/mermaid.min.js"></script>
   <script type="text/javascript">
-    // --- Helper Functions ---
     const copyIcon = `<svg class="copy-icon" aria-hidden="true" fill="none" height="18" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="18" style="color:"currentColor";"><path d="M8 17.929H6c-1.105 0-2-.912-2-2.036V5.036C4 3.91 4.895 3 6 3h8c1.105 0 2 .911 2 2.036v1.866m-6 .17h8c1.105 0 2 .91 2 2.035v10.857C20 21.09 19.105 22 18 22h-8c-1.105 0-2-.911-2-2.036V9.107c0-1.124.895-2.036 2-2.036z"></path></svg>`;
     const tickIcon = `<svg class="tick-icon" aria-hidden="true" fill="none" height="18" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="18" style="color: "currentColor";"><path d="M5 13l4 4L19 7"></path></svg>`;
 
     async function loadMarkdown() {
       const response = await fetch(`/__/md?path=${window.location.pathname.slice(1)}`);
       const result = await response.text();
-      const markdownBody = document.getElementById('markdown-body');
+      const markdownBody = document.getElementById("markdown-body");
       markdownBody.innerHTML = result;
 
-      // --- Post-processing ---
       await renderMermaidDiagrams();
       typesetMathJax();
       addCopyButtons();
@@ -112,13 +110,13 @@
 
     async function renderMermaidDiagrams() {
       {{ if eq .Mode "dark" }}
-        const mermaidJsTheme = 'dark';
+        const mermaidJsTheme = "dark";
       {{ else }}
-        const mermaidJsTheme = 'default';
+        const mermaidJsTheme = "default";
       {{ end }}
 
       mermaid.initialize({ startOnLoad: false, theme: mermaidJsTheme });
-      await mermaid.run({ querySelector: 'pre > code.language-mermaid' });
+      await mermaid.run({ querySelector: "pre > code.language-mermaid" });
     }
 
     function typesetMathJax() {
@@ -128,35 +126,41 @@
     }
 
     function addCopyButtons() {
-      document.querySelectorAll('.markdown-body pre').forEach(pre => {
-        const code = pre.querySelector('code');
-        const button = document.createElement('button');
-        button.classList.add('copy-button');
-        button.setAttribute('aria-label', 'Copy code to clipboard');
+      document.querySelectorAll(".markdown-body pre").forEach(pre => {
+        const code = pre.querySelector("code");
+        const button = document.createElement("button");
+        button.classList.add("copy-button");
+        button.setAttribute("aria-label", "Copy code to clipboard");
         button.innerHTML = copyIcon;
-        pre.style.position = 'relative';
+        pre.style.position = "relative";
         pre.appendChild(button);
 
-        button.addEventListener('click', () => {
+        button.addEventListener("click", () => {
           navigator.clipboard.writeText(code.textContent).then(() => {
             button.innerHTML = tickIcon;
             setTimeout(() => { button.innerHTML = copyIcon; }, 1000);
           }).catch(() => {
-            alert('Failed to copy');
+            alert("Failed to copy");
           });
         });
       });
     }
 
-    // --- Main Execution ---
+    // Reload page if theme changes, so we can re-render it
+    const darkModeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    darkModeMediaQuery.addEventListener("change", () => {
+      console.log("Theme changed, reload page!");
+      setTimeout(() => { location.reload(); }, 200);
+    });
+
     (async function() {
-      await loadMarkdown(); // Load and process markdown
+      await loadMarkdown();
 
       {{ if .Reload }}
         const conn = new WebSocket("ws://{{.Host}}/ws");
-        conn.onopen = () => conn.send('Ping');
-        conn.onerror = (e) => console.log("Connection error " + e);
-        conn.onclose = (e) => console.log("Connection closed " + e);
+        conn.onopen = () => conn.send("Ping");
+        conn.onerror = (e) => console.log(`Connection error: ${e}`);
+        conn.onclose = (e) => console.log(`Connection closed: ${e}`);
         conn.onmessage = (e) => {
           if (e.data === "reload") {
             console.log("Reload page!");
