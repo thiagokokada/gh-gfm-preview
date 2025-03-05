@@ -5,7 +5,6 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
-	"time"
 )
 
 type FileReader interface {
@@ -39,7 +38,6 @@ func isWSL() bool {
 }
 
 func OpenBrowser(url string) error {
-	<-time.After(100 * time.Millisecond)
 	var args []string
 	var cmd string
 	switch runtime.GOOS {
