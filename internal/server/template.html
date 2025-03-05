@@ -127,12 +127,6 @@
       mermaid.run({ querySelector: 'pre > code.language-mermaid' });
     }
 
-    function typesetMathJax() {
-      if (window.MathJax) {
-        MathJax.typeset();
-      }
-    }
-
     function addCopyButtons() {
       document.querySelectorAll('.markdown-body pre').forEach(pre => {
         const code = pre.querySelector('code');
