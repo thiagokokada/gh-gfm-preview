@@ -100,7 +100,7 @@
     async function loadMarkdown() {
       const response = await fetch(`/__/md?path=${window.location.pathname.slice(1)}`);
       const result = await response.text();
-      const markdownBody = document.getElementById('markdown-body');
+      const markdownBody = document.getElementById("markdown-body");
       markdownBody.innerHTML = result;
 
       await renderMermaidDiagrams();
@@ -110,13 +110,13 @@
 
     async function renderMermaidDiagrams() {
       {{ if eq .Mode "dark" }}
-        const mermaidJsTheme = 'dark';
+        const mermaidJsTheme = "dark";
       {{ else }}
-        const mermaidJsTheme = 'default';
+        const mermaidJsTheme = "default";
       {{ end }}
 
       mermaid.initialize({ startOnLoad: false, theme: mermaidJsTheme });
-      await mermaid.run({ querySelector: 'pre > code.language-mermaid' });
+      await mermaid.run({ querySelector: "pre > code.language-mermaid" });
     }
 
     function typesetMathJax() {
@@ -126,30 +126,30 @@
     }
 
     function addCopyButtons() {
-      document.querySelectorAll('.markdown-body pre').forEach(pre => {
-        const code = pre.querySelector('code');
-        const button = document.createElement('button');
-        button.classList.add('copy-button');
-        button.setAttribute('aria-label', 'Copy code to clipboard');
+      document.querySelectorAll(".markdown-body pre").forEach(pre => {
+        const code = pre.querySelector("code");
+        const button = document.createElement("button");
+        button.classList.add("copy-button");
+        button.setAttribute("aria-label", "Copy code to clipboard");
         button.innerHTML = copyIcon;
-        pre.style.position = 'relative';
+        pre.style.position = "relative";
         pre.appendChild(button);
 
-        button.addEventListener('click', () => {
+        button.addEventListener("click", () => {
           navigator.clipboard.writeText(code.textContent).then(() => {
             button.innerHTML = tickIcon;
             setTimeout(() => { button.innerHTML = copyIcon; }, 1000);
           }).catch(() => {
-            alert('Failed to copy');
+            alert("Failed to copy");
           });
         });
       });
     }
 
     // Reload page if theme changes, so we can re-render it
-    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    darkModeMediaQuery.addEventListener('change', () => {
-      console.log("Theme changed, reload page!")
+    const darkModeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    darkModeMediaQuery.addEventListener("change", () => {
+      console.log("Theme changed, reload page!");
       setTimeout(() => { location.reload(); }, 200);
     });
 
@@ -158,9 +158,9 @@
 
       {{ if .Reload }}
         const conn = new WebSocket("ws://{{.Host}}/ws");
-        conn.onopen = () => conn.send('Ping');
-        conn.onerror = (e) => console.log("Connection error " + e);
-        conn.onclose = (e) => console.log("Connection closed " + e);
+        conn.onopen = () => conn.send("Ping");
+        conn.onerror = (e) => console.log(`Connection error: ${e}`);
+        conn.onclose = (e) => console.log(`Connection closed: ${e}`);
         conn.onmessage = (e) => {
           if (e.data === "reload") {
             console.log("Reload page!");
