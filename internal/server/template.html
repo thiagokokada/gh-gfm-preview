@@ -105,12 +105,18 @@
       markdownBody.innerHTML = result;
 
       // --- Post-processing ---
-      await renderMermaidDiagrams();
       typesetMathJax();
+      renderMermaidDiagrams();
       addCopyButtons();
     }
 
-    async function renderMermaidDiagrams() {
+    function typesetMathJax() {
+      if (window.MathJax) {
+        MathJax.typeset();
+      }
+    }
+
+    function renderMermaidDiagrams() {
       {{ if eq .Mode "dark" }}
         const mermaidJsTheme = 'dark';
       {{ else }}
@@ -118,7 +124,7 @@
       {{ end }}
 
       mermaid.initialize({ startOnLoad: false, theme: mermaidJsTheme });
-      await mermaid.run({ querySelector: 'pre > code.language-mermaid' });
+      mermaid.run({ querySelector: 'pre > code.language-mermaid' });
     }
 
     function typesetMathJax() {
@@ -160,7 +166,7 @@
         conn.onmessage = (e) => {
           if (e.data === "reload") {
             console.log("Reload page!");
-            await loadMarkdown();
+            loadMarkdown();
           }
         };
       {{ end }}
