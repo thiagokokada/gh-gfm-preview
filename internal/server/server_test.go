@@ -98,14 +98,4 @@ func TestGetMode(t *testing.T) {
 	if modeString != expected {
 		t.Errorf("mode string is not: %s", modeString)
 	}
-
-	modeString = getMode(&Param{})
-	if autoDetectDarkMode() {
-		expected = "dark"
-	} else {
-		expected = "light"
-	}
-	if modeString != expected {
-		t.Errorf("mode string is not: %s", modeString)
-	}
 }

@@ -11,6 +11,8 @@ import (
 	"text/template"
 	"time"
 
+	dark "github.com/thiagokokada/dark-mode-go"
+
 	"github.com/thiagokokada/gh-gfm-preview/internal/app"
 	"github.com/thiagokokada/gh-gfm-preview/internal/browser"
 	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
@@ -51,9 +53,9 @@ var htmlTemplate string
 var staticDir embed.FS
 
 const defaultPort = 3333
-const isDarkModeDefault = true
 const darkMode = "dark"
 const lightMode = "light"
+const defaultMode = darkMode
 
 func (server *Server) Serve(param *Param) error {
 	host := server.Host
@@ -209,8 +211,11 @@ func getMode(param *Param) string {
 		return lightMode
 	}
 
-	isDark := autoDetectDarkMode()
-	utils.LogDebug("Debug [auto-detected dark mode]: %v", isDark)
+	isDark, err := dark.IsDarkMode()
+	utils.LogDebug("Debug [auto-detected dark mode]: isDark=%v, err=%v", isDark, err)
+	if err != nil {
+		return defaultMode
+	}
 	if isDark {
 		return darkMode
 	}
