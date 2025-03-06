@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"regexp"
+	"sync"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -28,26 +29,23 @@ func watch(
 	reload chan<- bool,
 	watcher *fsnotify.Watcher,
 ) {
-	isLocked := false
+	r := regexp.MustCompile(ignorePattern)
+	once := sync.Once{}
 	for {
 		select {
 		case event := <-watcher.Events:
-			if isLocked {
-				break
-			}
 			if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create {
-				r := regexp.MustCompile(ignorePattern)
 				if r.MatchString(event.Name) {
 					utils.LogDebug("Debug [ignore]: %s", event.Name)
 				} else {
-					utils.LogInfo("Change detected in %s, refreshing", event.Name)
-					isLocked = true
-					reload <- true
-					timer := time.NewTimer(lockTime)
-					go func() {
-						<-timer.C
-						isLocked = false
-					}()
+					once.Do(func() {
+						utils.LogInfo("Change detected in %s, refreshing", event.Name)
+						reload <- true
+						go func() {
+							time.Sleep(lockTime)
+							once = sync.Once{}
+						}()
+					})
 				}
 			}
 		case err := <-watcher.Errors:
