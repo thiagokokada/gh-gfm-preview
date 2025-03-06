@@ -64,7 +64,7 @@ func TestWrapHandler(t *testing.T) {
 	})
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		lrw := NewLoggingResponseWriter(w)
+		lrw := newLoggingResponseWriter(w)
 		wrappedHandler.ServeHTTP(lrw, r)
 		statusCode := lrw.statusCode
 

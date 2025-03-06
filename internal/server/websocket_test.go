@@ -1,4 +1,4 @@
-package websocket
+package server
 
 import (
 	"net/http"
@@ -22,13 +22,13 @@ func TestWriter(t *testing.T) {
 	_, _ = testFile.Write([]byte("BEFORE.\n"))
 	dir := filepath.Dir(testFile.Name())
 
-	watcher, err := CreateWatcher(dir)
+	watcher, err := createWatcher(dir)
 
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
 
-	s := httptest.NewServer(http.Handler(WsHandler(watcher)))
+	s := httptest.NewServer(http.Handler(wsHandler(watcher)))
 
 	u := "ws" + strings.TrimPrefix(s.URL, "http")
 	ws, _, err := websocket.DefaultDialer.Dial(u, nil)

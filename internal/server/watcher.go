@@ -1,4 +1,4 @@
-package websocket
+package server
 
 import (
 	"regexp"
@@ -13,7 +13,7 @@ import (
 const ignorePattern = `\.swp$|~$|^\.DS_Store$|^4913$`
 const lockTime = 100 * time.Millisecond
 
-func CreateWatcher(dir string) (*fsnotify.Watcher, error) {
+func createWatcher(dir string) (*fsnotify.Watcher, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return watcher, err
