@@ -1,4 +1,4 @@
-package websocket
+package server
 
 import (
 	"net/http"
@@ -22,7 +22,7 @@ var upgrader = websocket.Upgrader{
 
 var socket *websocket.Conn
 
-func WsHandler(watcher *fsnotify.Watcher) http.Handler {
+func wsHandler(watcher *fsnotify.Watcher) http.Handler {
 	reload := make(chan bool, 1)
 	errorChan := make(chan error)
 	done := make(chan any)

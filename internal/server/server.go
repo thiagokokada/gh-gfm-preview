@@ -15,35 +15,7 @@ import (
 	"github.com/thiagokokada/gh-gfm-preview/internal/app"
 	"github.com/thiagokokada/gh-gfm-preview/internal/browser"
 	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
-	"github.com/thiagokokada/gh-gfm-preview/internal/websocket"
 )
-
-type TemplateParam struct {
-	Title  string
-	Body   string
-	Host   string
-	Reload bool
-	Mode   string
-}
-
-type Param struct {
-	Filename       string
-	MarkdownMode   bool
-	Reload         bool
-	ForceLightMode bool
-	ForceDarkMode  bool
-	AutoOpen       bool
-}
-
-type Server struct {
-	Host string
-	Port int
-}
-
-type loggingResponseWriter struct {
-	http.ResponseWriter
-	statusCode int
-}
 
 //go:embed template.html
 var htmlTemplate string
@@ -75,11 +47,11 @@ func (server *Server) Serve(param *Param) error {
 	serveMux.Handle("/static/", wrapHandler(handler(filename, param, http.FileServer(http.FS(staticDir)))))
 	serveMux.Handle("/__/md", wrapHandler(mdHandler(filename, param)))
 
-	watcher, err := websocket.CreateWatcher(dir)
+	watcher, err := createWatcher(dir)
 	if err != nil {
 		return err
 	}
-	serveMux.Handle("/ws", websocket.WsHandler(watcher))
+	serveMux.Handle("/ws", wsHandler(watcher))
 
 	port, err = getPort(host, port)
 	if err != nil {
@@ -180,7 +152,7 @@ func mdHandler(filename string, param *Param) http.Handler {
 	})
 }
 
-func NewLoggingResponseWriter(w http.ResponseWriter) *loggingResponseWriter {
+func newLoggingResponseWriter(w http.ResponseWriter) *loggingResponseWriter {
 	return &loggingResponseWriter{w, http.StatusOK}
 }
 
@@ -191,7 +163,7 @@ func (lrw *loggingResponseWriter) WriteHeader(code int) {
 
 func wrapHandler(wrappedHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		lrw := NewLoggingResponseWriter(w)
+		lrw := newLoggingResponseWriter(w)
 		wrappedHandler.ServeHTTP(lrw, r)
 
 		statusCode := lrw.statusCode
