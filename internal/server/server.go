@@ -130,7 +130,7 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 			return
 		}
 
-		html, err := app.ToHtml(markdown, param.MarkdownMode, param.isDarkMode())
+		html, err := app.ToHtml(markdown, param.MarkdownMode, isDarkMode(param))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -160,7 +160,7 @@ func mdResponse(w http.ResponseWriter, filename string, param *Param) {
 		return
 	}
 
-	html, err := app.ToHtml(markdown, param.MarkdownMode, param.isDarkMode())
+	html, err := app.ToHtml(markdown, param.MarkdownMode, isDarkMode(param))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -221,7 +221,7 @@ func getMode(param *Param) string {
 	return lightMode
 }
 
-func (param *Param) isDarkMode() bool {
+func isDarkMode(param *Param) bool {
 	return getMode(param) == darkMode
 }
 
