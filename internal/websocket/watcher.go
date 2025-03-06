@@ -34,7 +34,7 @@ func watch(
 	for {
 		select {
 		case event := <-watcher.Events:
-			if event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create {
+			if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
 				if r.MatchString(event.Name) {
 					utils.LogDebug("Debug [ignore]: %s", event.Name)
 				} else {
