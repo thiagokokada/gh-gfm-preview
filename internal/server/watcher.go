@@ -33,22 +33,27 @@ func watch(
 	m := sync.Mutex{}
 	for {
 		select {
-		case event := <-watcher.Events:
-			if !m.TryLock() {
+		case event, ok := <-watcher.Events:
+			if !ok {
 				break
 			}
-			go func() {
-				defer m.Unlock()
-				if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
-					if r.MatchString(event.Name) {
-						utils.LogDebug("Debug [ignore]: %s", event.Name)
-					} else {
-						utils.LogInfo("Change detected in %s, refreshing", event.Name)
-						reload <- true
-						time.Sleep(lockTime)
-					}
+			utils.LogDebug("Debug [event]: op=%s name=%s", event.Op, event.Name)
+			if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
+				if r.MatchString(event.Name) {
+					utils.LogDebug("Debug [ignore]: %s", event.Name)
+					break
 				}
-			}()
+				if !m.TryLock() {
+					utils.LogDebug("Debug [event ignored]: op=%s name=%s", event.Op, event.Name)
+					break
+				}
+				go func() {
+					defer m.Unlock()
+					utils.LogInfo("Change detected in %s, refreshing", event.Name)
+					reload <- true
+					time.Sleep(lockTime)
+				}()
+			}
 		case err := <-watcher.Errors:
 			errorChan <- err
 		case <-done:
