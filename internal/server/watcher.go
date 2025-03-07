@@ -30,24 +30,25 @@ func watch(
 	watcher *fsnotify.Watcher,
 ) {
 	r := regexp.MustCompile(ignorePattern)
-	once := sync.Once{}
+	m := sync.Mutex{}
 	for {
 		select {
 		case event := <-watcher.Events:
-			if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
-				if r.MatchString(event.Name) {
-					utils.LogDebug("Debug [ignore]: %s", event.Name)
-				} else {
-					once.Do(func() {
+			if !m.TryLock() {
+				break
+			}
+			go func() {
+				defer m.Unlock()
+				if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
+					if r.MatchString(event.Name) {
+						utils.LogDebug("Debug [ignore]: %s", event.Name)
+					} else {
 						utils.LogInfo("Change detected in %s, refreshing", event.Name)
 						reload <- true
-						go func() {
-							time.Sleep(lockTime)
-							once = sync.Once{}
-						}()
-					})
+						time.Sleep(lockTime)
+					}
 				}
-			}
+			}()
 		case err := <-watcher.Errors:
 			errorChan <- err
 		case <-done:
