@@ -22,6 +22,7 @@ var htmlTemplate string
 
 //go:embed static/*
 var staticDir embed.FS
+var tmpl = template.Must(template.New("HTML Template").Parse(htmlTemplate))
 
 const defaultPort = 3333
 const darkMode = "dark"
@@ -93,8 +94,6 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 		}
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-		tmpl := template.Must(template.New("HTML Template").Parse(htmlTemplate))
 
 		markdown, err := app.Slurp(filename)
 		if err != nil {
