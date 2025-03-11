@@ -18,26 +18,28 @@ func TestHandler(t *testing.T) {
 	ts := httptest.NewServer(handler(filename, param, http.FileServer(http.Dir(dir))))
 	defer ts.Close()
 
-	res, err := http.Get(ts.URL)
+	r1, err := http.Get(ts.URL)
 	if err != nil {
 		t.Fatalf("unexpected: %v\n", err)
 	}
+	defer r1.Body.Close()
 
-	if res.StatusCode != http.StatusOK {
-		t.Errorf("server status error, got: %v", res.StatusCode)
+	if r1.StatusCode != http.StatusOK {
+		t.Errorf("server status error, got: %v", r1.StatusCode)
 	}
 
-	if res.Header.Get("Content-Type") != "text/html; charset=utf-8" {
-		t.Errorf("content type error, got: %s\n", res.Header.Get("Content-Type"))
+	if r1.Header.Get("Content-Type") != "text/html; charset=utf-8" {
+		t.Errorf("content type error, got: %s\n", r1.Header.Get("Content-Type"))
 	}
 
 	r2, err := http.Get(ts.URL + "/images/dinotocat.png")
 	if err != nil {
 		t.Fatalf("unexpected: %v\n", err)
 	}
+	defer r2.Body.Close()
 
 	if r2.StatusCode != http.StatusOK {
-		t.Errorf("server status error, got: %v", res.StatusCode)
+		t.Errorf("server status error, got: %v", r1.StatusCode)
 	}
 
 	if r2.Header.Get("Content-Type") != "image/png" {
@@ -55,6 +57,7 @@ func TestMdHandler(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected: %v\n", err)
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		t.Errorf("server status error, got: %v", res.StatusCode)
@@ -88,6 +91,7 @@ func TestWrapHandler(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected: %v\n", err)
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		t.Errorf("server status error, got: %v", res.StatusCode)
