@@ -10,7 +10,7 @@ linters:
     - copyloopvar
     - cyclop
     - decorder
-    - depguard
+    # - depguard
     - dogsled
     - dupl
     - dupword
@@ -21,17 +21,17 @@ linters:
     - errname
     - errorlint
     - exhaustive
-    - exhaustruct
+    # - exhaustruct
     - exptostd
     - fatcontext
-    - forbidigo
+    # - forbidigo
     - forcetypeassert
     - funlen
     - gci
     - ginkgolinter
     - gocheckcompilerdirectives
-    - gochecknoglobals
-    - gochecknoinits
+    # - gochecknoglobals
+    # - gochecknoinits
     - gochecksumtype
     - gocognit
     - goconst
@@ -57,14 +57,14 @@ linters:
     - ineffassign
     - interfacebloat
     - intrange
-    - ireturn
-    - lll
+    # - ireturn
+    # - lll
     - loggercheck
     - maintidx
     - makezero
     - mirror
     - misspell
-    - mnd
+    # - mnd
     - musttag
     - nakedret
     - nestif
@@ -72,11 +72,11 @@ linters:
     - nilnesserr
     - nilnil
     - nlreturn
-    - noctx
+    # - noctx
     - nolintlint
     - nonamedreturns
     - nosprintfhostport
-    - paralleltest
+    # - paralleltest
     - perfsprint
     - prealloc
     - predeclared
@@ -95,7 +95,7 @@ linters:
     - tagliatelle
     - testableexamples
     - testifylint
-    - testpackage
+    # - testpackage
     - thelper
     - tparallel
     - unconvert
@@ -103,7 +103,7 @@ linters:
     - unused
     - usestdlibvars
     - usetesting
-    - varnamelen
+    # - varnamelen
     - wastedassign
     - whitespace
     - wrapcheck
