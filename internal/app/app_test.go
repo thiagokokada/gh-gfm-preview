@@ -60,7 +60,7 @@ func TestFindReadme(t *testing.T) {
 }
 
 func TestSlurp(t *testing.T) {
-	string, err := Slurp("../../testdata/markdown-demo.md")
+	result, err := Slurp("../../testdata/markdown-demo.md")
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}
@@ -68,7 +68,7 @@ func TestSlurp(t *testing.T) {
 	match := "Headings"
 	r := regexp.MustCompile(match)
 
-	if r.MatchString(string) == false {
+	if r.MatchString(result) == false {
 		t.Errorf("content do not match %v\n", match)
 	}
 }
@@ -76,7 +76,7 @@ func TestSlurp(t *testing.T) {
 func TestToHTML(t *testing.T) {
 	markdown := "text"
 
-	html, err := ToHtml(markdown, false, false)
+	html, err := ToHTML(markdown, false, false)
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}
@@ -90,12 +90,12 @@ func TestToHTML(t *testing.T) {
 }
 
 func TestGfmCheckboxes(t *testing.T) {
-	string, err := Slurp("../../testdata/gfm-checkboxes.md")
+	result, err := Slurp("../../testdata/gfm-checkboxes.md")
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}
 
-	html, err := ToHtml(string, false, true)
+	html, err := ToHTML(result, false, true)
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}
@@ -132,12 +132,12 @@ func TestGfmCheckboxes(t *testing.T) {
 }
 
 func TestGfmAlerts(t *testing.T) {
-	string, err := Slurp("../../testdata/gfm-alerts.md")
+	result, err := Slurp("../../testdata/gfm-alerts.md")
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}
 
-	html, err := ToHtml(string, false, true)
+	html, err := ToHTML(result, false, true)
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}

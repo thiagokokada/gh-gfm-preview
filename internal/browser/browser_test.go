@@ -10,7 +10,7 @@ type MockFileReader struct {
 	err     error
 }
 
-func (m MockFileReader) ReadFile(path string) (string, error) {
+func (m MockFileReader) ReadFile(_ string) (string, error) {
 	return m.content, m.err
 }
 

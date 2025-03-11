@@ -108,7 +108,7 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 			return
 		}
 
-		html, err := app.ToHtml(markdown, param.MarkdownMode, isDarkMode(param))
+		html, err := app.ToHTML(markdown, param.MarkdownMode, isDarkMode(param))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 
@@ -142,7 +142,7 @@ func mdResponse(w http.ResponseWriter, filename string, param *Param) {
 		return
 	}
 
-	html, err := app.ToHtml(markdown, param.MarkdownMode, isDarkMode(param))
+	html, err := app.ToHTML(markdown, param.MarkdownMode, isDarkMode(param))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 

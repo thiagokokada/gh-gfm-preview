@@ -70,7 +70,7 @@ func TargetFile(filename string) (string, error) {
 	return filename, err
 }
 
-func ToHtml(markdown string, isMarkdownMode bool, isDarkMode bool) (string, error) {
+func ToHTML(markdown string, isMarkdownMode bool, isDarkMode bool) (string, error) {
 	style := githubStyle
 	if isDarkMode {
 		style = githubStyleDark

@@ -66,7 +66,7 @@ func TestMdHandler(t *testing.T) {
 }
 
 func TestWrapHandler(t *testing.T) {
-	wrappedHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	wrappedHandler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		fmt.Fprintln(w, "Hello")
 	})
 
