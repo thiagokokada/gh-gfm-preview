@@ -2,6 +2,7 @@ package app
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -46,6 +47,8 @@ var githubStyleDark = utils.Must(
 	).Build(),
 )
 
+var errFileNotFound = errors.New("file not found")
+
 func TargetFile(filename string) (string, error) {
 	var err error
 
@@ -64,7 +67,7 @@ func TargetFile(filename string) (string, error) {
 	}
 
 	if err != nil {
-		err = fmt.Errorf("%s is not found", filename)
+		err = fmt.Errorf("%w: %s", errFileNotFound, filename)
 	}
 
 	return filename, err
@@ -120,7 +123,7 @@ func findReadme(dir string) (string, error) {
 		}
 	}
 
-	err := fmt.Errorf("README file is not found in %s/", dir)
+	err := fmt.Errorf("%w: README file not found in %s/", errFileNotFound, dir)
 
 	return "", err
 }

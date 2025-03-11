@@ -43,6 +43,7 @@ func OpenBrowser(url string) error {
 	var args []string
 
 	var cmd string
+
 	switch runtime.GOOS {
 	case "windows":
 		cmd = "cmd"
