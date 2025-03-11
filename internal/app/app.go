@@ -115,7 +115,13 @@ func Slurp(fileName string) (string, error) {
 }
 
 func findReadme(dir string) (string, error) {
-	files, _ := os.ReadDir(dir)
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		// Not returning since read dir will return the files
+		// that it read until the error
+		utils.LogDebug("Debug [read dir error]: %v", err)
+	}
+
 	for _, f := range files {
 		r := regexp.MustCompile(`(?i)^readme`)
 		if r.MatchString(f.Name()) {
@@ -123,7 +129,7 @@ func findReadme(dir string) (string, error) {
 		}
 	}
 
-	err := fmt.Errorf("%w: README file not found in %s/", errFileNotFound, dir)
+	err = fmt.Errorf("%w: README file not found in %s/", errFileNotFound, dir)
 
 	return "", err
 }
