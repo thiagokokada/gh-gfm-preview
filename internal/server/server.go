@@ -2,6 +2,7 @@ package server
 
 import (
 	"embed"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -215,13 +216,19 @@ func getPort(host string, port int) (int, error) {
 	var err error
 
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, port))
+	defer func() {
+		err = errors.Join(err, listener.Close())
+	}()
+
 	if err != nil {
 		utils.LogInfo("%s", err.Error())
 		listener, err = net.Listen("tcp", host+":0")
 	}
 
-	port = listener.Addr().(*net.TCPAddr).Port
-	listener.Close()
+	addr, ok := listener.Addr().(*net.TCPAddr)
+	if !ok {
+		panic("cannot get TCP port")
+	}
 
-	return port, err
+	return addr.Port, err
 }

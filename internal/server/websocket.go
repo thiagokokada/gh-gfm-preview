@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
@@ -33,7 +34,7 @@ func wsHandler(watcher *fsnotify.Watcher) http.Handler {
 
 		socket, err = upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			if _, ok := err.(websocket.HandshakeError); !ok {
+			if errors.Is(err, websocket.HandshakeError{}) {
 				utils.LogDebug("Debug [handshake error]: %v", err)
 			}
 
