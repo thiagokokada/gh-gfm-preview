@@ -1,6 +1,7 @@
 package browser
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
@@ -8,7 +9,7 @@ import (
 )
 
 type FileReader interface {
-	ReadFile(string) (string, error)
+	ReadFile(filename string) (string, error)
 }
 
 type ProcVersionReader struct{}
@@ -16,8 +17,9 @@ type ProcVersionReader struct{}
 func (r ProcVersionReader) ReadFile(filename string) (string, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("OS read file error: %w", err)
 	}
+
 	return string(data), nil
 }
 
@@ -30,6 +32,7 @@ func isWSLWithReader(reader FileReader) bool {
 	if err != nil {
 		return false
 	}
+
 	return isContainWSL(data)
 }
 
@@ -39,7 +42,9 @@ func isWSL() bool {
 
 func OpenBrowser(url string) error {
 	var args []string
+
 	var cmd string
+
 	switch runtime.GOOS {
 	case "windows":
 		cmd = "cmd"
@@ -54,6 +59,13 @@ func OpenBrowser(url string) error {
 			cmd = "xdg-open"
 		}
 	}
+
 	args = append(args, url)
-	return exec.Command(cmd, args...).Start()
+
+	err := exec.Command(cmd, args...).Start()
+	if err != nil {
+		return fmt.Errorf("exec command error: %w", err)
+	}
+
+	return nil
 }

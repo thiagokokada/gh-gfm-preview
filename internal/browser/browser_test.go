@@ -10,7 +10,7 @@ type MockFileReader struct {
 	err     error
 }
 
-func (m MockFileReader) ReadFile(path string) (string, error) {
+func (m MockFileReader) ReadFile(_ string) (string, error) {
 	return m.content, m.err
 }
 
@@ -42,6 +42,8 @@ func TestIsContainWSL(t *testing.T) {
 	}
 }
 
+var errMock = errors.New("mock error")
+
 func TestIsWSL(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -59,8 +61,8 @@ func TestIsWSL(t *testing.T) {
 			expected: false,
 		},
 		{
-			name:     "Read error",
-			reader:   MockFileReader{err: errors.New("read error")},
+			name:     "Mock error",
+			reader:   MockFileReader{err: errMock},
 			expected: false,
 		},
 	}

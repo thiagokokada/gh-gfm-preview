@@ -1,12 +1,12 @@
 package server
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/websocket"
-
 	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 )
 
@@ -31,22 +31,27 @@ func wsHandler(watcher *fsnotify.Watcher) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
+
 		socket, err = upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			if _, ok := err.(websocket.HandshakeError); !ok {
+			if errors.Is(err, websocket.HandshakeError{}) {
 				utils.LogDebug("Debug [handshake error]: %v", err)
 			}
+
 			return
 		}
+
 		err = socket.SetReadDeadline(time.Now().Add(pongWait))
 		if err != nil {
 			utils.LogDebug("Debug [set read deadline error]: %v", err)
 		}
+
 		socket.SetPongHandler(func(string) error {
 			err := socket.SetReadDeadline(time.Now().Add(pongWait))
 			if err != nil {
 				utils.LogDebug("Debug [set read deadline error in pong handler]: %v", err)
 			}
+
 			return nil
 		})
 
@@ -54,6 +59,7 @@ func wsHandler(watcher *fsnotify.Watcher) http.Handler {
 		go wsWriter(done, errorChan, reload)
 
 		err = <-errorChan
+
 		close(done)
 		utils.LogInfo("Close WebSocket: %v\n", err)
 		socket.Close()
@@ -84,10 +90,11 @@ func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
 			}
 		case <-ticker.C:
 			utils.LogDebug("Debug [ping send]: ping to client")
+
 			err := socket.WriteMessage(websocket.PingMessage, []byte{})
 			if err != nil {
-				utils.LogDebug("Debug [ping error]: %v", err)
 				// Do nothing
+				utils.LogDebug("Debug [ping error]: %v", err)
 			}
 		case <-done:
 			return

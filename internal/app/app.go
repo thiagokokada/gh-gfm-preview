@@ -2,6 +2,7 @@ package app
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/chroma/v2/styles"
+	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 	alerts "github.com/thiagokokada/goldmark-gh-alerts"
 	"github.com/yuin/goldmark"
 	emoji "github.com/yuin/goldmark-emoji"
@@ -17,8 +19,6 @@ import (
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 	"go.abhg.dev/goldmark/anchor"
-
-	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 )
 
 const anchorIcon = `<svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>`
@@ -30,6 +30,7 @@ var alertIconMap = map[string]string{
 	"warning":   `<svg class="octicon octicon-alert mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>`,
 	"caution":   `<svg class="octicon octicon-stop mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M4.47.22A.749.749 0 0 1 5 0h6c.199 0 .389.079.53.22l4.25 4.25c.141.14.22.331.22.53v6a.749.749 0 0 1-.22.53l-4.25 4.25A.749.749 0 0 1 11 16H5a.749.749 0 0 1-.53-.22L.22 11.53A.749.749 0 0 1 0 11V5c0-.199.079-.389.22-.53Zm.84 1.28L1.5 5.31v5.38l3.81 3.81h5.38l3.81-3.81V5.31L10.69 1.5ZM8 4a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>`,
 }
+
 var githubStyle = utils.Must(
 	styles.Get("github").Builder().AddEntry(
 		chroma.Background, chroma.StyleEntry{
@@ -37,6 +38,7 @@ var githubStyle = utils.Must(
 		},
 	).Build(),
 )
+
 var githubStyleDark = utils.Must(
 	styles.Get("github-dark").Builder().AddEntry(
 		chroma.Background, chroma.StyleEntry{
@@ -45,30 +47,38 @@ var githubStyleDark = utils.Must(
 	).Build(),
 )
 
+var errFileNotFound = errors.New("file not found")
+
 func TargetFile(filename string) (string, error) {
 	var err error
+
 	if filename == "" {
 		filename = "."
 	}
+
 	info, err := os.Stat(filename)
 	if err == nil && info.IsDir() {
 		readme, err := findReadme(filename)
 		if err != nil {
 			return "", err
 		}
+
 		filename = readme
 	}
+
 	if err != nil {
-		err = fmt.Errorf("%s is not found", filename)
+		err = fmt.Errorf("%w: %s", errFileNotFound, filename)
 	}
+
 	return filename, err
 }
 
-func ToHtml(markdown string, isMarkdownMode bool, isDarkMode bool) (string, error) {
+func ToHTML(markdown string, isMarkdownMode bool, isDarkMode bool) (string, error) {
 	style := githubStyle
 	if isDarkMode {
 		style = githubStyleDark
 	}
+
 	extensions := goldmark.WithExtensions()
 	if !isMarkdownMode {
 		extensions = goldmark.WithExtensions(
@@ -79,34 +89,47 @@ func ToHtml(markdown string, isMarkdownMode bool, isDarkMode bool) (string, erro
 			highlighting.NewHighlighting(highlighting.WithCustomStyle(style)),
 		)
 	}
+
 	md := goldmark.New(extensions, goldmark.WithParserOptions(parser.WithAutoHeadingID()))
+
 	var buf bytes.Buffer
+
 	if err := md.Convert([]byte(markdown), &buf); err != nil {
-		return "", err
+		return "", fmt.Errorf("markdown convert error: %w", err)
 	}
+
 	return buf.String(), nil
 }
 
 func Slurp(fileName string) (string, error) {
 	f, err := os.Open(fileName)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("OS open error: %w", err)
 	}
+
 	defer f.Close()
 	b, _ := io.ReadAll(f)
 	text := string(b)
+
 	return text, nil
 }
 
 func findReadme(dir string) (string, error) {
-	files, _ := os.ReadDir(dir)
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		// Not returning since read dir will return the files
+		// that it read until the error
+		utils.LogDebug("Debug [read dir error]: %v", err)
+	}
+
 	for _, f := range files {
 		r := regexp.MustCompile(`(?i)^readme`)
 		if r.MatchString(f.Name()) {
 			return filepath.Join(dir, f.Name()), nil
 		}
 	}
-	err := fmt.Errorf("README file is not found in %s/", dir)
+
+	err = fmt.Errorf("%w: README file not found in %s/", errFileNotFound, dir)
+
 	return "", err
 }
-
