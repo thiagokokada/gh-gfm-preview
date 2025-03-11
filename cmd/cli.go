@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-
 	"github.com/thiagokokada/gh-gfm-preview/internal/server"
 	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 )

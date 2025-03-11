@@ -18,6 +18,7 @@ func (r ProcVersionReader) ReadFile(filename string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return string(data), nil
 }
 
@@ -30,6 +31,7 @@ func isWSLWithReader(reader FileReader) bool {
 	if err != nil {
 		return false
 	}
+
 	return isContainWSL(data)
 }
 
@@ -39,6 +41,7 @@ func isWSL() bool {
 
 func OpenBrowser(url string) error {
 	var args []string
+
 	var cmd string
 	switch runtime.GOOS {
 	case "windows":
@@ -54,6 +57,8 @@ func OpenBrowser(url string) error {
 			cmd = "xdg-open"
 		}
 	}
+
 	args = append(args, url)
+
 	return exec.Command(cmd, args...).Start()
 }

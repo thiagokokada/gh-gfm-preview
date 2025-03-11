@@ -11,7 +11,6 @@ import (
 	"time"
 
 	dark "github.com/thiagokokada/dark-mode-go"
-
 	"github.com/thiagokokada/gh-gfm-preview/internal/app"
 	"github.com/thiagokokada/gh-gfm-preview/internal/browser"
 	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
@@ -24,13 +23,16 @@ var htmlTemplate string
 var staticDir embed.FS
 var tmpl = template.Must(template.New("HTML Template").Parse(htmlTemplate))
 
-const defaultPort = 3333
-const darkMode = "dark"
-const lightMode = "light"
-const defaultMode = darkMode
+const (
+	defaultPort = 3333
+	darkMode    = "dark"
+	lightMode   = "light"
+	defaultMode = darkMode
+)
 
 func (server *Server) Serve(param *Param) error {
 	host := server.Host
+
 	port := defaultPort
 	if server.Port > 0 {
 		port = server.Port
@@ -52,6 +54,7 @@ func (server *Server) Serve(param *Param) error {
 	if err != nil {
 		return err
 	}
+
 	serveMux.Handle("/ws", wsHandler(watcher))
 
 	port, err = getPort(host, port)
@@ -65,6 +68,7 @@ func (server *Server) Serve(param *Param) error {
 
 	if param.AutoOpen {
 		utils.LogInfo("Open http://%s/ on your browser\n", address)
+
 		go func() {
 			err := browser.OpenBrowser(fmt.Sprintf("http://%s/", address))
 			if err != nil {
@@ -78,6 +82,7 @@ func (server *Server) Serve(param *Param) error {
 		ReadHeaderTimeout: 10 * time.Second,
 		Handler:           serveMux,
 	}
+
 	err = httpServer.ListenAndServe()
 	if err != nil {
 		return err
@@ -90,6 +95,7 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !strings.HasSuffix(r.URL.Path, ".md") && r.URL.Path != "/" {
 			h.ServeHTTP(w, r)
+
 			return
 		}
 
@@ -98,12 +104,14 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 		markdown, err := app.Slurp(filename)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+
 			return
 		}
 
 		html, err := app.ToHtml(markdown, param.MarkdownMode, isDarkMode(param))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+
 			return
 		}
 
@@ -114,9 +122,11 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 			Reload: param.Reload,
 			Mode:   getMode(param),
 		}
+
 		err = tmpl.Execute(w, param)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+
 			return
 		}
 	})
@@ -128,16 +138,18 @@ func mdResponse(w http.ResponseWriter, filename string, param *Param) {
 	markdown, err := app.Slurp(filename)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+
 		return
 	}
 
 	html, err := app.ToHtml(markdown, param.MarkdownMode, isDarkMode(param))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+
 		return
 	}
-	fmt.Fprintf(w, "%s", html)
 
+	fmt.Fprintf(w, "%s", html)
 }
 
 func mdHandler(filename string, param *Param) http.Handler {
@@ -183,12 +195,15 @@ func getMode(param *Param) string {
 
 	isDark, err := dark.IsDarkMode()
 	utils.LogDebug("Debug [auto-detected dark mode]: isDark=%v, err=%v", isDark, err)
+
 	if err != nil {
 		return defaultMode
 	}
+
 	if isDark {
 		return darkMode
 	}
+
 	return lightMode
 }
 
@@ -198,12 +213,15 @@ func isDarkMode(param *Param) bool {
 
 func getPort(host string, port int) (int, error) {
 	var err error
+
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, port))
 	if err != nil {
 		utils.LogInfo("%s", err.Error())
-		listener, err = net.Listen("tcp", fmt.Sprintf("%s:0", host))
+		listener, err = net.Listen("tcp", host+":0")
 	}
+
 	port = listener.Addr().(*net.TCPAddr).Port
 	listener.Close()
+
 	return port, err
 }
