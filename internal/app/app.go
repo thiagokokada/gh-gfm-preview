@@ -95,7 +95,7 @@ func ToHTML(markdown string, isMarkdownMode bool, isDarkMode bool) (string, erro
 	var buf bytes.Buffer
 
 	if err := md.Convert([]byte(markdown), &buf); err != nil {
-		return "", err
+		return "", fmt.Errorf("markdown convert error: %w", err)
 	}
 
 	return buf.String(), nil
@@ -104,7 +104,7 @@ func ToHTML(markdown string, isMarkdownMode bool, isDarkMode bool) (string, erro
 func Slurp(fileName string) (string, error) {
 	f, err := os.Open(fileName)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("OS open error: %w", err)
 	}
 
 	defer f.Close()

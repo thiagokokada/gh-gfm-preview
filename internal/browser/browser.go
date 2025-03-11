@@ -1,6 +1,7 @@
 package browser
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
@@ -16,7 +17,7 @@ type ProcVersionReader struct{}
 func (r ProcVersionReader) ReadFile(filename string) (string, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("OS read file error: %w", err)
 	}
 
 	return string(data), nil
@@ -61,5 +62,10 @@ func OpenBrowser(url string) error {
 
 	args = append(args, url)
 
-	return exec.Command(cmd, args...).Start()
+	err := exec.Command(cmd, args...).Start()
+	if err != nil {
+		return fmt.Errorf("exec command error: %w", err)
+	}
+
+	return nil
 }

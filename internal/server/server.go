@@ -24,6 +24,8 @@ var htmlTemplate string
 var staticDir embed.FS
 var tmpl = template.Must(template.New("HTML Template").Parse(htmlTemplate))
 
+var errTCPPort = errors.New("cannot get TCP port")
+
 const (
 	defaultPort = 3333
 	darkMode    = "dark"
@@ -41,7 +43,7 @@ func (server *Server) Serve(param *Param) error {
 
 	filename, err := app.TargetFile(param.Filename)
 	if err != nil {
-		return err
+		return fmt.Errorf("target file error: %w", err)
 	}
 
 	dir := filepath.Dir(filename)
@@ -86,7 +88,7 @@ func (server *Server) Serve(param *Param) error {
 
 	err = httpServer.ListenAndServe()
 	if err != nil {
-		return err
+		return fmt.Errorf("listen and serve error: %w", err)
 	}
 
 	return nil
@@ -221,13 +223,13 @@ func getPort(host string, port int) (int, error) {
 	}()
 
 	if err != nil {
-		utils.LogInfo("%s", err.Error())
+		utils.LogInfo("Skipping port %d: %v", port, err)
 		listener, err = net.Listen("tcp", host+":0")
 	}
 
 	addr, ok := listener.Addr().(*net.TCPAddr)
 	if !ok {
-		panic("cannot get TCP port")
+		err = errTCPPort
 	}
 
 	return addr.Port, err

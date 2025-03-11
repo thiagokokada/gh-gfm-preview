@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"regexp"
 	"sync"
 	"time"
@@ -17,13 +18,17 @@ const (
 func createWatcher(dir string) (*fsnotify.Watcher, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		return watcher, err
+		return watcher, fmt.Errorf("failed to create watcher: %w", err)
 	}
 
 	utils.LogInfo("Watching %s/ for changes", dir)
-	err = watcher.Add(dir)
 
-	return watcher, err
+	err = watcher.Add(dir)
+	if err != nil {
+		return watcher, fmt.Errorf("failed to add dir %s to watcher: %w", dir, err)
+	}
+
+	return watcher, nil
 }
 
 func watch(
