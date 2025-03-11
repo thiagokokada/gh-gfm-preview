@@ -1,7 +1,6 @@
 package server
 
 import (
-	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
@@ -27,7 +26,7 @@ func TestWriter(t *testing.T) {
 		t.Fatalf("%v", err)
 	}
 
-	s := httptest.NewServer(http.Handler(wsHandler(watcher)))
+	s := httptest.NewServer(wsHandler(watcher))
 
 	u := "ws" + strings.TrimPrefix(s.URL, "http")
 

@@ -92,8 +92,8 @@ func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
 
 			err := socket.WriteMessage(websocket.PingMessage, []byte{})
 			if err != nil {
-				utils.LogDebug("Debug [ping error]: %v", err)
 				// Do nothing
+				utils.LogDebug("Debug [ping error]: %v", err)
 			}
 		case <-done:
 			return

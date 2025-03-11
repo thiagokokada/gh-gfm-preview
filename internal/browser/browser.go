@@ -8,7 +8,7 @@ import (
 )
 
 type FileReader interface {
-	ReadFile(string) (string, error)
+	ReadFile(filename string) (string, error)
 }
 
 type ProcVersionReader struct{}
