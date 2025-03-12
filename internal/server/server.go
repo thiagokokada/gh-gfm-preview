@@ -2,7 +2,6 @@ package server
 
 import (
 	"embed"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -23,8 +22,6 @@ var htmlTemplate string
 //go:embed static/*
 var staticDir embed.FS
 var tmpl = template.Must(template.New("HTML Template").Parse(htmlTemplate))
-
-var errTCPPort = errors.New("cannot get TCP port")
 
 const (
 	defaultPort = 3333
@@ -218,19 +215,21 @@ func getPort(host string, port int) (int, error) {
 	var err error
 
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, port))
-	defer func() {
-		err = errors.Join(err, listener.Close())
-	}()
-
 	if err != nil {
 		utils.LogInfo("Skipping port %d: %v", port, err)
 		listener, err = net.Listen("tcp", host+":0")
 	}
 
+	_ = listener.Close()
+
 	addr, ok := listener.Addr().(*net.TCPAddr)
 	if !ok {
-		err = errTCPPort
+		panic("could not cast Addr to TCPAddr")
 	}
 
-	return addr.Port, err
+	if err != nil {
+		return addr.Port, fmt.Errorf("TCP listener error: %w", err)
+	}
+
+	return addr.Port, nil
 }
