@@ -57,7 +57,7 @@ linters:
     - ineffassign
     - interfacebloat
     - intrange
-    # - ireturn
+    - ireturn
     # - lll
     - loggercheck
     - maintidx
@@ -72,7 +72,7 @@ linters:
     - nilnesserr
     - nilnil
     - nlreturn
-    # - noctx
+    - noctx
     - nolintlint
     - nonamedreturns
     - nosprintfhostport
@@ -109,3 +109,8 @@ linters:
     - wrapcheck
     - wsl
     - zerologlint
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - noctx

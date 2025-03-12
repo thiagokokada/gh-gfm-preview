@@ -4,7 +4,7 @@ import "log"
 
 var Verbose bool
 
-func Must[T any](v T, err error) T {
+func Must[T any](v T, err error) T { //nolint:ireturn
 	if err != nil {
 		panic(err)
 	}
