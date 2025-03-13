@@ -147,9 +147,10 @@
     }
 
     // Reload page if theme changes, so we can re-render it
-    const darkModeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    darkModeMediaQuery.addEventListener("change", () => {
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
       console.log("Theme changed, reload page!");
+      // Can't just call loadMarkdown() here because we need to re-render
+      // the template server side
       setTimeout(() => { location.reload(); }, 200);
     });
 
