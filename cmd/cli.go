@@ -13,50 +13,8 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "gh-gfm-preview",
 	Short: "GitHub CLI extension to preview Markdown",
-	Run: func(cmd *cobra.Command, args []string) {
-		filename := ""
-		if len(args) > 0 {
-			filename = args[0]
-		}
-
-		utils.Verbose = utils.Must(cmd.Flags().GetBool("verbose"))
-
-		host := utils.Must(cmd.Flags().GetString("host"))
-		port := utils.Must(cmd.Flags().GetInt("port"))
-		httpServer := server.Server{Host: host, Port: port}
-
-		disableReload := utils.Must(cmd.Flags().GetBool("disable-reload"))
-		reload := true
-		if disableReload {
-			reload = false
-		}
-
-		forceLightMode := utils.Must(cmd.Flags().GetBool("light-mode"))
-		forceDarkMode := utils.Must(cmd.Flags().GetBool("dark-mode"))
-
-		markdownMode := utils.Must(cmd.Flags().GetBool("markdown-mode"))
-
-		disableAutoOpen := utils.Must(cmd.Flags().GetBool("disable-auto-open"))
-
-		autoOpen := true
-		if disableAutoOpen {
-			autoOpen = false
-		}
-
-		param := &server.Param{
-			Filename:       filename,
-			MarkdownMode:   markdownMode,
-			Reload:         reload,
-			ForceLightMode: forceLightMode,
-			ForceDarkMode:  forceDarkMode,
-			AutoOpen:       autoOpen,
-		}
-
-		err := httpServer.Serve(param)
-		if err != nil {
-			log.Fatalf("Error: %v", err)
-		}
-	},
+	Run:   run,
+	Args:  cobra.RangeArgs(0, 1),
 }
 
 func Execute() {
@@ -75,4 +33,43 @@ func init() {
 	rootCmd.Flags().BoolP("verbose", "", false, "show verbose output")
 	rootCmd.Flags().BoolP("light-mode", "", false, "force light mode")
 	rootCmd.Flags().BoolP("dark-mode", "", false, "force dark mode")
+}
+
+func run(cmd *cobra.Command, args []string) {
+	filename := ""
+	if len(args) > 0 {
+		filename = args[0]
+	}
+
+	flags := cmd.Flags()
+
+	verbose := utils.Must(flags.GetBool("verbose"))
+	utils.SetVerbose(verbose)
+
+	host := utils.Must(flags.GetString("host"))
+	port := utils.Must(flags.GetInt("port"))
+	httpServer := server.Server{Host: host, Port: port}
+
+	disableReload := utils.Must(flags.GetBool("disable-reload"))
+
+	forceLightMode := utils.Must(flags.GetBool("light-mode"))
+	forceDarkMode := utils.Must(flags.GetBool("dark-mode"))
+
+	markdownMode := utils.Must(flags.GetBool("markdown-mode"))
+
+	disableAutoOpen := utils.Must(flags.GetBool("disable-auto-open"))
+
+	param := &server.Param{
+		Filename:       filename,
+		MarkdownMode:   markdownMode,
+		Reload:         !disableReload,
+		ForceLightMode: forceLightMode,
+		ForceDarkMode:  forceDarkMode,
+		AutoOpen:       !disableAutoOpen,
+	}
+
+	err := httpServer.Serve(param)
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
 }

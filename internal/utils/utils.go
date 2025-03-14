@@ -2,7 +2,7 @@ package utils
 
 import "log"
 
-var Verbose bool
+var verbose bool
 
 func Must[T any](v T, err error) T { //nolint:ireturn
 	if err != nil {
@@ -17,7 +17,11 @@ func LogInfo(format string, v ...any) {
 }
 
 func LogDebug(format string, v ...any) {
-	if Verbose {
+	if verbose {
 		log.Printf(format, v...)
 	}
+}
+
+func SetVerbose(v bool) {
+	verbose = v
 }
