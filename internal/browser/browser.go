@@ -8,13 +8,13 @@ import (
 	"strings"
 )
 
-type FileReader interface {
-	ReadFile(filename string) (string, error)
+type fileReader interface {
+	readFile(filename string) (string, error)
 }
 
-type ProcVersionReader struct{}
+type procVersionReader struct{}
 
-func (r ProcVersionReader) ReadFile(filename string) (string, error) {
+func (r procVersionReader) readFile(filename string) (string, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return "", fmt.Errorf("OS read file error: %w", err)
@@ -27,8 +27,8 @@ func isContainWSL(data string) bool {
 	return strings.Contains(data, "WSL")
 }
 
-func isWSLWithReader(reader FileReader) bool {
-	data, err := reader.ReadFile("/proc/version")
+func isWSLWithReader(reader fileReader) bool {
+	data, err := reader.readFile("/proc/version")
 	if err != nil {
 		return false
 	}
@@ -37,7 +37,7 @@ func isWSLWithReader(reader FileReader) bool {
 }
 
 func isWSL() bool {
-	return isWSLWithReader(ProcVersionReader{})
+	return isWSLWithReader(procVersionReader{})
 }
 
 func OpenBrowser(url string) error {

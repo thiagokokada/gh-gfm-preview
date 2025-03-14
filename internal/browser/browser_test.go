@@ -5,12 +5,12 @@ import (
 	"testing"
 )
 
-type MockFileReader struct {
+type mockFileReader struct {
 	content string
 	err     error
 }
 
-func (m MockFileReader) ReadFile(_ string) (string, error) {
+func (m mockFileReader) readFile(_ string) (string, error) {
 	return m.content, m.err
 }
 
@@ -47,22 +47,22 @@ var errMock = errors.New("mock error")
 func TestIsWSL(t *testing.T) {
 	tests := []struct {
 		name     string
-		reader   FileReader
+		reader   fileReader
 		expected bool
 	}{
 		{
 			name:     "WSL Data",
-			reader:   MockFileReader{content: "Linux version 4.19.128-microsoft-standard (WSL2)"},
+			reader:   mockFileReader{content: "Linux version 4.19.128-microsoft-standard (WSL2)"},
 			expected: true,
 		},
 		{
 			name:     "Non-WSL Data",
-			reader:   MockFileReader{content: "Linux version 4.15.0-72-generic"},
+			reader:   mockFileReader{content: "Linux version 4.15.0-72-generic"},
 			expected: false,
 		},
 		{
 			name:     "Mock error",
-			reader:   MockFileReader{err: errMock},
+			reader:   mockFileReader{err: errMock},
 			expected: false,
 		},
 	}
