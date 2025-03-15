@@ -54,6 +54,7 @@ func (server *Server) Serve(param *Param) error {
 	if err != nil {
 		return err
 	}
+	defer watcher.Close()
 
 	serveMux.Handle("/ws", wsHandler(watcher))
 
