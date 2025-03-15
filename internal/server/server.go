@@ -221,12 +221,8 @@ func getPort(host string, port int) (int, error) {
 		listener, err = net.Listen("tcp", host+":0")
 	}
 
-	_ = listener.Close()
-
-	addr, ok := listener.Addr().(*net.TCPAddr)
-	if !ok {
-		panic("could not cast Addr to TCPAddr")
-	}
+	listener.Close()
+	addr := listener.Addr().(*net.TCPAddr) //nolint:forcetypeassert
 
 	if err != nil {
 		return addr.Port, fmt.Errorf("TCP listener error: %w", err)
