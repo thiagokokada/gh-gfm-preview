@@ -44,7 +44,7 @@ func watch(
 		select {
 		case event, ok := <-watcher.Events:
 			if !ok {
-				break
+				continue
 			}
 
 			utils.LogDebug("Debug [event]: op=%s name=%s", event.Op, event.Name)
@@ -53,13 +53,13 @@ func watch(
 				if r.MatchString(event.Name) {
 					utils.LogDebug("Debug [ignore]: %s", event.Name)
 
-					break
+					continue
 				}
 
 				if !m.TryLock() {
 					utils.LogDebug("Debug [event ignored]: op=%s name=%s", event.Op, event.Name)
 
-					break
+					continue
 				}
 
 				go func() {
