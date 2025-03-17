@@ -10,7 +10,6 @@ import (
 	"text/template"
 	"time"
 
-	dark "github.com/thiagokokada/dark-mode-go"
 	"github.com/thiagokokada/gh-gfm-preview/internal/app"
 	"github.com/thiagokokada/gh-gfm-preview/internal/browser"
 	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
@@ -23,12 +22,7 @@ var htmlTemplate string
 var staticDir embed.FS
 var tmpl = template.Must(template.New("HTML Template").Parse(htmlTemplate))
 
-const (
-	defaultPort = 3333
-	darkMode    = "dark"
-	lightMode   = "light"
-	defaultMode = darkMode
-)
+const defaultPort = 3333
 
 func (server *Server) Serve(param *Param) error {
 	host := server.Host
@@ -109,7 +103,7 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 			return
 		}
 
-		html, err := app.ToHTML(markdown, param.MarkdownMode, isDarkMode(param))
+		html, err := app.ToHTML(markdown, param.MarkdownMode, param.isDarkMode())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 
@@ -121,7 +115,7 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 			Body:   html,
 			Host:   r.Host,
 			Reload: param.Reload,
-			Mode:   getMode(param),
+			Mode:   param.getMode(),
 		}
 
 		err = tmpl.Execute(w, param)
@@ -143,7 +137,7 @@ func mdResponse(w http.ResponseWriter, filename string, param *Param) {
 		return
 	}
 
-	html, err := app.ToHTML(markdown, param.MarkdownMode, isDarkMode(param))
+	html, err := app.ToHTML(markdown, param.MarkdownMode, param.isDarkMode())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
@@ -185,31 +179,6 @@ func wrapHandler(wrappedHandler http.Handler) http.Handler {
 
 func getTitle(filename string) string {
 	return filepath.Base(filename)
-}
-
-func getMode(param *Param) string {
-	if param.ForceDarkMode {
-		return darkMode
-	} else if param.ForceLightMode {
-		return lightMode
-	}
-
-	isDark, err := dark.IsDarkMode()
-	utils.LogDebug("Debug [auto-detected dark mode]: isDark=%v, err=%v", isDark, err)
-
-	if err != nil {
-		return defaultMode
-	}
-
-	if isDark {
-		return darkMode
-	}
-
-	return lightMode
-}
-
-func isDarkMode(param *Param) bool {
-	return getMode(param) == darkMode
 }
 
 func getTCPListener(host string, port int) (net.Listener, error) {
