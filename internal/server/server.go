@@ -99,7 +99,7 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 			Body:   mdResponse(w, filename, param),
 			Host:   r.Host,
 			Reload: param.Reload,
-			Mode:   param.getMode(),
+			Mode:   param.getMode().String(),
 		}
 
 		err := tmpl.Execute(w, param)

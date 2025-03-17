@@ -5,13 +5,19 @@ import (
 	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 )
 
+type mode int
+
 const (
-	darkMode    = "dark"
-	lightMode   = "light"
+	darkMode mode = iota
+	lightMode
 	defaultMode = darkMode
 )
 
-func (param *Param) getMode() string {
+func (m mode) String() string {
+	return [...]string{"dark", "light"}[m]
+}
+
+func (param *Param) getMode() mode {
 	if param.ForceDarkMode {
 		return darkMode
 	} else if param.ForceLightMode {

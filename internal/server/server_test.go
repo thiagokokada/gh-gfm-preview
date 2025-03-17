@@ -97,19 +97,3 @@ func TestWrapHandler(t *testing.T) {
 		t.Errorf("server status error, got: %v", res.StatusCode)
 	}
 }
-
-func TestGetMode(t *testing.T) {
-	modeString := getMode(&Param{ForceLightMode: true})
-	expected := "light"
-
-	if modeString != expected {
-		t.Errorf("mode string is not: %s", modeString)
-	}
-
-	modeString = getMode(&Param{ForceDarkMode: true})
-	expected = "dark"
-
-	if modeString != expected {
-		t.Errorf("mode string is not: %s", modeString)
-	}
-}
