@@ -58,12 +58,12 @@ func (server *Server) Serve(param *Param) error {
 
 	serveMux.Handle("/ws", wsHandler(watcher))
 
-	port, err = getPort(host, port)
+	listener, err := getTCPListener(host, port)
 	if err != nil {
 		return err
 	}
 
-	address := fmt.Sprintf("%s:%d", host, port)
+	address := listener.Addr()
 
 	utils.LogInfo("Accepting connections at http://%s/\n", address)
 
@@ -78,15 +78,15 @@ func (server *Server) Serve(param *Param) error {
 		}()
 	}
 
-	httpServer := &http.Server{
-		Addr:              address,
-		ReadHeaderTimeout: 10 * time.Second,
-		Handler:           serveMux,
+	hs := &http.Server{
+		Handler:      serveMux,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
 	}
 
-	err = httpServer.ListenAndServe()
+	err = hs.Serve(listener)
 	if err != nil {
-		return fmt.Errorf("listen and serve error: %w", err)
+		return fmt.Errorf("http server error: %w", err)
 	}
 
 	return nil
@@ -212,7 +212,7 @@ func isDarkMode(param *Param) bool {
 	return getMode(param) == darkMode
 }
 
-func getPort(host string, port int) (int, error) {
+func getTCPListener(host string, port int) (net.Listener, error) {
 	var err error
 
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, port))
@@ -221,12 +221,9 @@ func getPort(host string, port int) (int, error) {
 		listener, err = net.Listen("tcp", host+":0")
 	}
 
-	listener.Close()
-	addr := listener.Addr().(*net.TCPAddr) //nolint:forcetypeassert
-
 	if err != nil {
-		return addr.Port, fmt.Errorf("TCP listener error: %w", err)
+		return nil, fmt.Errorf("TCP listener error: %w", err)
 	}
 
-	return addr.Port, nil
+	return listener, nil
 }
