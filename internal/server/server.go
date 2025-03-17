@@ -94,31 +94,15 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 			return
 		}
 
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-		markdown, err := app.Slurp(filename)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-
-			return
-		}
-
-		html, err := app.ToHTML(markdown, param.MarkdownMode, param.isDarkMode())
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-
-			return
-		}
-
 		param := TemplateParam{
 			Title:  getTitle(filename),
-			Body:   html,
+			Body:   mdResponse(w, filename, param),
 			Host:   r.Host,
 			Reload: param.Reload,
 			Mode:   param.getMode(),
 		}
 
-		err = tmpl.Execute(w, param)
+		err := tmpl.Execute(w, param)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 
@@ -127,34 +111,36 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 	})
 }
 
-func mdResponse(w http.ResponseWriter, filename string, param *Param) {
+func mdResponse(w http.ResponseWriter, filename string, param *Param) string {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	markdown, err := app.Slurp(filename)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
-		return
+		return ""
 	}
 
 	html, err := app.ToHTML(markdown, param.MarkdownMode, param.isDarkMode())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
-		return
+		return ""
 	}
 
-	fmt.Fprintf(w, "%s", html)
+	return html
 }
 
 func mdHandler(filename string, param *Param) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		pathParam := r.URL.Query().Get("path")
+		var html string
 		if pathParam != "" {
-			mdResponse(w, pathParam, param)
+			html = mdResponse(w, pathParam, param)
 		} else {
-			mdResponse(w, filename, param)
+			html = mdResponse(w, filename, param)
 		}
+		fmt.Fprintf(w, "%s", html)
 	})
 }
 
