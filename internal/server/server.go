@@ -134,12 +134,15 @@ func mdResponse(w http.ResponseWriter, filename string, param *Param) string {
 func mdHandler(filename string, param *Param) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		pathParam := r.URL.Query().Get("path")
+
 		var html string
+
 		if pathParam != "" {
 			html = mdResponse(w, pathParam, param)
 		} else {
 			html = mdResponse(w, filename, param)
 		}
+
 		fmt.Fprintf(w, "%s", html)
 	})
 }
