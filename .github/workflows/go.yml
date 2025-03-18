@@ -16,7 +16,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go_version_file: go.mod
+        go-version-file: go.mod
 
     - name: Build
       run: go build -v ./...
