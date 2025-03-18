@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime/debug"
 
 	"github.com/spf13/cobra"
 	"github.com/thiagokokada/gh-gfm-preview/internal/server"
@@ -11,10 +12,11 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "gh-gfm-preview",
-	Short: "GitHub CLI extension to preview Markdown",
-	Run:   run,
-	Args:  cobra.RangeArgs(0, 1),
+	Use:     "gh-gfm-preview",
+	Short:   "GitHub CLI extension to preview Markdown",
+	Run:     run,
+	Args:    cobra.RangeArgs(0, 1),
+	Version: version(),
 }
 
 func Execute() {
@@ -72,4 +74,13 @@ func run(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
+}
+
+func version() string {
+	buildInfo, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "unknown"
+	}
+
+	return buildInfo.Main.Version
 }
