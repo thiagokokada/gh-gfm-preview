@@ -7,7 +7,6 @@ package main
 
 import (
 	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
@@ -177,9 +176,7 @@ func getAsset(url string, dest string, wantSum string) {
 	bs := fatal(io.ReadAll(resp.Body))
 
 	// Check file checksum
-	h := sha256.New()
-	fatal(h.Write(bs))
-	gotSum := hex.EncodeToString(h.Sum(nil))
+	gotSum := fmt.Sprintf("%x", sha256.Sum256(bs))
 	if wantSum != gotSum {
 		log.Fatalf(`Invalid sha256sum for %s:
 Want: %s
