@@ -20,6 +20,7 @@ func main() {
 	getAsset(
 		"https://github.githubassets.com/favicons/favicon.svg",
 		"./internal/server/static/favicon.svg",
+		// since the URL is unversioned it is expected that this may change in future
 		"6a9577cd4f7fa6b75bde1025af85b944e9dd1388373b55ccba6e9f80ac2eae60",
 	)
 	getAsset(
