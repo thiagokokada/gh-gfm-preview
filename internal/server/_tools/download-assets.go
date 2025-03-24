@@ -178,7 +178,6 @@ func getAsset(url string, dest string, wantSum string) {
 		log.Fatalf(`Invalid sha256sum for %s:
 Want: %s
 Got: %s
-Delete the file to download it again or fix the hash.
 `, url, wantSum, gotSum)
 	}
 
