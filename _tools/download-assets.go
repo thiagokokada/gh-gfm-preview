@@ -1,11 +1,11 @@
 /* Script to download assets.
  * Usage:
- * $ go run ./_tools/download-assets.go */
+ * $ go run ./_tools/download-assets.go
+ */
 
 package main
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -178,7 +178,7 @@ func getAsset(url string, dest string, wantSum string) {
 
 	// Check file checksum
 	h := sha256.New()
-	fatal(io.Copy(h, bytes.NewBuffer(bs)))
+	fatal(h.Write(bs))
 	gotSum := hex.EncodeToString(h.Sum(nil))
 	if wantSum != gotSum {
 		log.Fatalf(`Invalid sha256sum for %s:
@@ -191,7 +191,7 @@ Got: %s
 	os.MkdirAll(filepath.Dir(dest), os.ModePerm)
 	out := fatal(os.Create(dest))
 	defer out.Close()
-	fatal(io.Copy(out, bytes.NewBuffer(bs)))
+	fatal(out.Write(bs))
 
 	fmt.Printf("Generated %s successfully\n", dest)
 }
