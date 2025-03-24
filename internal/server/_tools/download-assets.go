@@ -165,15 +165,22 @@ func fatal[T any](v T, err error) T {
 }
 
 func getAsset(url string, dest string, wantSum string) {
-	// Download file
-	resp := fatal(http.Get(url))
-	defer resp.Body.Close()
-
-	// Copy result to a buffer
-	bs := fatal(io.ReadAll(resp.Body))
+	var reader io.Reader
+	file, err := os.Open(dest)
+	if err != nil {
+		// Download file
+		resp := fatal(http.Get(url))
+		defer resp.Body.Close()
+		reader = resp.Body
+	} else {
+		// Read existing file
+		defer file.Close()
+		reader = file
+	}
+	buf := fatal(io.ReadAll(reader))
 
 	// Check file checksum
-	gotSum := fmt.Sprintf("%x", sha256.Sum256(bs))
+	gotSum := fmt.Sprintf("%x", sha256.Sum256(buf))
 	if wantSum != gotSum {
 		log.Fatalf(`Invalid sha256sum for %s:
 Want: %s
@@ -185,7 +192,7 @@ Got: %s
 	os.MkdirAll(filepath.Dir(dest), os.ModePerm)
 	out := fatal(os.Create(dest))
 	defer out.Close()
-	fatal(out.Write(bs))
+	fatal(out.Write(buf))
 
 	fmt.Printf("Generated %s successfully\n", dest)
 }
