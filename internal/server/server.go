@@ -15,6 +15,8 @@ import (
 	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 )
 
+//go:generate go run _tools/download-assets.go
+
 //go:embed template.html
 var htmlTemplate string
 

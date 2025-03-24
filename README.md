@@ -33,7 +33,7 @@ You need to have [Go](https://go.dev/) installed.
 
 ### Standalone
 
-```
+```console
 go run github.com/thiagokokada/gh-gfm-preview
 ```
 
@@ -41,19 +41,19 @@ go run github.com/thiagokokada/gh-gfm-preview
 
 Assuming that you have [Flakes](https://wiki.nixos.org/wiki/Flakes) enabled:
 
-```
+```console
 nix run github:thiagokokada/gh-gfm-preview
 ```
 
 ### GitHub Extension
 
-```
+```console
 gh extension install thiagokokada/gh-gfm-preview
 ```
 
 Upgrade:
 
-```
+```console
 gh extension upgrade markdown-preview
 ```
 
@@ -61,13 +61,13 @@ gh extension upgrade markdown-preview
 
 The usage:
 
-```
+```console
 gh gfm-preview README.md
 ```
 
 Or this command will detect README file in the directory automatically.
 
-```
+```console
 gh gfm-preview
 ```
 
@@ -76,7 +76,7 @@ Firefox, or Safari.
 
 Available options:
 
-```text
+```
     --dark-mode           force dark mode
     --disable-auto-open   disable auto opening your browser
     --disable-reload      disable live reloading
@@ -129,6 +129,20 @@ vim.api.nvim_create_autocmd({ "FileType" }, {
     })
   end,
 })
+```
+
+## Development
+
+You can run the following command to (re-)generate assets:
+
+```console
+go generate ./...
+```
+
+And you can run the following command to build:
+
+```console
+go build
 ```
 
 ## Related projects

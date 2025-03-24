@@ -18,8 +18,11 @@ jobs:
       with:
         go-version-file: go.mod
 
+    - name: Generate
+      run: go generate -v ./... && git diff --exit-code
+
     - name: Build
-      run: go build -v ./...
+      run: go build -v -o /dev/null ./...
 
     - name: Test
       run: go test -v ./...
