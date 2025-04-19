@@ -8,11 +8,31 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/alecthomas/chroma/v2"
+	"github.com/alecthomas/chroma/v2/formatters/html"
+	"github.com/alecthomas/chroma/v2/styles"
 )
 
 const assetsDir = "./static"
 
 func main() {
+	githubStyle := fatal(
+		styles.Get("github").Builder().AddEntry(
+			chroma.Background,
+			chroma.StyleEntry{Background: chroma.NewColour(246, 248, 250)},
+		).Build(),
+	)
+	genChromaCss(githubStyle, assetsDir+"/chroma-github-light.css")
+
+	githubStyleDark := fatal(
+		styles.Get("github-dark").Builder().AddEntry(
+			chroma.Background,
+			chroma.StyleEntry{Background: chroma.NewColour(21, 27, 35)},
+		).Build(),
+	)
+	genChromaCss(githubStyleDark, assetsDir+"/chroma-github-dark.css")
+
 	getAsset(
 		"https://github.githubassets.com/favicons/favicon.svg",
 		assetsDir+"/favicon.svg",
@@ -156,11 +176,14 @@ func main() {
 	)
 }
 
-func fatal[T any](v T, err error) T {
+func fatal0(err error) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
 
+func fatal[T any](v T, err error) T {
+	fatal0(err)
 	return v
 }
 
@@ -186,6 +209,15 @@ Got: %s
 	out := fatal(os.Create(dest))
 	defer out.Close()
 	fatal(out.Write(bs))
+
+	fmt.Printf("Generated %s successfully\n", dest)
+}
+
+func genChromaCss(style *chroma.Style, dest string) {
+	formatter := html.New(html.WithClasses(true))
+	file := fatal(os.Create(dest))
+	defer file.Close()
+	fatal0(formatter.WriteCSS(file, style))
 
 	fmt.Printf("Generated %s successfully\n", dest)
 }

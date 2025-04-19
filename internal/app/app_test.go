@@ -76,7 +76,7 @@ func TestSlurp(t *testing.T) {
 func TestToHTML(t *testing.T) {
 	markdown := "text"
 
-	html, err := ToHTML(markdown, false, false)
+	html, err := ToHTML(markdown, false)
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}
@@ -95,7 +95,7 @@ func TestGfmCheckboxes(t *testing.T) {
 		t.Errorf("%s", err.Error())
 	}
 
-	html, err := ToHTML(result, false, true)
+	html, err := ToHTML(result, false)
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}
@@ -137,7 +137,7 @@ func TestGfmAlerts(t *testing.T) {
 		t.Errorf("%s", err.Error())
 	}
 
-	html, err := ToHTML(result, false, true)
+	html, err := ToHTML(result, false)
 	if err != nil {
 		t.Errorf("%s", err.Error())
 	}

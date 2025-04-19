@@ -4,47 +4,83 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{ .Title }}</title>
-  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-  {{ $cssURL := "/static/github-markdown-dark.css" }}
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+  {{ $cssChromaURL := "/static/chroma-github-dark.css" }}
+  {{ $cssMarkdownURL := "/static/github-markdown-dark.css" }}
   {{ if eq .Mode "light" }}
-  {{ $cssURL = "/static/github-markdown-light.css" }}
+    {{ $cssChromaURL = "/static/chroma-github-light.css" }}
+    {{ $cssMarkdownURL = "/static/github-markdown-light.css" }}
   {{ end }}
-  <link rel="stylesheet" href="{{ $cssURL }}" />
-  <style>
-    {{ if eq .Mode "dark" }}
-    body {
-      background-color: #0d1117;
-      color: #c9d1d9;
-    }
-    {{ end }}
+  <link rel="stylesheet" href="{{ $cssChromaURL }}" id="chroma-stylesheet" />
+  <link rel="stylesheet" href="{{ $cssMarkdownURL }}" id="markdown-stylesheet" />
 
+  <style>
     :root {
+      --background-dark: #0d1117;
+      --background-light: #ffffff;
+      --color-dark: #c9d1d9;
+      --color-light: #1f2328;
       --copy-icon-stroke-dark: #9198a1;
       --copy-icon-stroke-light: #59636e;
       --tick-icon-stroke-dark: #3fb950;
       --tick-icon-stroke-light: #3fb950;
     }
 
+    {{ if eq .Mode "dark" }}
+    body {
+      background-color: var(--background-dark);
+      color: var(--color-dark);
+    }
+    .copy-button svg.copy-icon {
+      stroke: var(--copy-icon-stroke-dark);
+      color: var(--copy-icon-stroke-dark);
+    }
+    .copy-button svg.tick-icon {
+      stroke: var(--tick-icon-stroke-dark);
+    }
+    {{ end }}
+
+    {{ if eq .Mode "light" }}
+    body {
+      background-color: var(--background-light);
+      color: var(--color-light);
+    }
+    .copy-button svg.copy-icon {
+      stroke: var(--copy-icon-stroke-light);
+    }
+    .copy-button svg.tick-icon {
+      stroke: var(--tick-icon-stroke-light);
+    }
+    {{ end }}
+
+    {{ if eq .Mode "auto" }}
     @media (prefers-color-scheme: dark) {
+      body {
+        background-color: var(--background-dark);
+        color: var(--color-dark);
+      }
       .copy-button svg.copy-icon {
         stroke: var(--copy-icon-stroke-dark);
         color: var(--copy-icon-stroke-dark);
       }
-
       .copy-button svg.tick-icon {
         stroke: var(--tick-icon-stroke-dark);
       }
     }
 
     @media (prefers-color-scheme: light) {
+      body {
+        background-color: var(--background-light);
+        color: var(--color-light);
+      }
       .copy-button svg.copy-icon {
         stroke: var(--copy-icon-stroke-light);
       }
-
       .copy-button svg.tick-icon {
         stroke: var(--tick-icon-stroke-light);
       }
     }
+    {{ end }}
 
     .markdown-body {
       box-sizing: border-box;
@@ -72,6 +108,29 @@
       }
     }
   </style>
+
+  {{ if eq .Mode "auto" }}
+  <script type="text/javascript">
+    function applyTheme(isDark) {
+      if (isDark) {
+        document.getElementById("chroma-stylesheet").href="/static/chroma-github-dark.css";
+        document.getElementById("markdown-stylesheet").href="/static/github-markdown-dark.css";
+      } else {
+        document.getElementById("chroma-stylesheet").href="/static/chroma-github-light.css";
+        document.getElementById("markdown-stylesheet").href="/static/github-markdown-light.css";
+      }
+    }
+
+    const prefersDarkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    // Apply on page load
+    applyTheme(prefersDarkQuery.matches);
+    // Change CSS when the theme changes
+    prefersDarkQuery.addEventListener("change", e => {
+      console.log("Theme changed, reload page!");
+      applyTheme(e.matches);
+    });
+  </script>
+  {{ end }}
 </head>
 
 <body>
@@ -145,14 +204,6 @@
         });
       });
     }
-
-    // Reload page if theme changes, so we can re-render it
-    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
-      console.log("Theme changed, reload page!");
-      // Can't just call loadMarkdown() here because we need to re-render
-      // the template server side
-      setTimeout(() => { location.reload(); }, 200);
-    });
 
     (async function() {
       await loadMarkdown();
