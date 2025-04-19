@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 
 	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/chroma/v2/formatters/html"
@@ -17,6 +16,8 @@ import (
 const assetsDir = "./static"
 
 func main() {
+	fatal0(os.MkdirAll(assetsDir, os.ModePerm))
+
 	githubStyle := fatal(
 		styles.Get("github").Builder().AddEntry(
 			chroma.Background,
@@ -205,10 +206,9 @@ Got: %s
 	}
 
 	// Copy file to destination
-	os.MkdirAll(filepath.Dir(dest), os.ModePerm)
-	out := fatal(os.Create(dest))
-	defer out.Close()
-	fatal(out.Write(bs))
+	file := fatal(os.Create(dest))
+	defer file.Close()
+	fatal(file.Write(bs))
 
 	fmt.Printf("Generated %s successfully\n", dest)
 }
