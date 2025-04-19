@@ -15,7 +15,7 @@ import (
 	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 )
 
-//go:generate go run _tools/download-assets.go
+//go:generate go run _tools/generate-assets.go
 
 //go:embed template.html
 var htmlTemplate string
@@ -123,7 +123,7 @@ func mdResponse(w http.ResponseWriter, filename string, param *Param) string {
 		return ""
 	}
 
-	html, err := app.ToHTML(markdown, param.MarkdownMode, param.isDarkMode())
+	html, err := app.ToHTML(markdown, param.MarkdownMode)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
