@@ -18,5 +18,6 @@ func (param *Param) getMode() mode {
 	} else if param.ForceLightMode {
 		return lightMode
 	}
+
 	return autoMode
 }
