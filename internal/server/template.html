@@ -54,18 +54,16 @@
     {{ end }}
 
     {{ if eq .Mode "auto" }}
-    @media (prefers-color-scheme: dark) {
-      body {
-        background-color: var(--background-dark);
-        color: var(--color-dark);
-      }
-      .copy-button svg.copy-icon {
-        stroke: var(--copy-icon-stroke-dark);
-        color: var(--copy-icon-stroke-dark);
-      }
-      .copy-button svg.tick-icon {
-        stroke: var(--tick-icon-stroke-dark);
-      }
+    body {
+      background-color: var(--background-dark);
+      color: var(--color-dark);
+    }
+    .copy-button svg.copy-icon {
+      stroke: var(--copy-icon-stroke-dark);
+      color: var(--copy-icon-stroke-dark);
+    }
+    .copy-button svg.tick-icon {
+      stroke: var(--tick-icon-stroke-dark);
     }
 
     @media (prefers-color-scheme: light) {
