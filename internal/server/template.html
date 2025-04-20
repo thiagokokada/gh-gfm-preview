@@ -5,14 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{ .Title }}</title>
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
-  {{ $cssChromaURL := "/static/chroma-github-dark.css" }}
-  {{ $cssMarkdownURL := "/static/github-markdown-dark.css" }}
-  {{ if eq .Mode "light" }}
-    {{ $cssChromaURL = "/static/chroma-github-light.css" }}
-    {{ $cssMarkdownURL = "/static/github-markdown-light.css" }}
+  {{ if eq .Mode "auto" }}
+  <link rel="stylesheet" href="/static/chroma-github-light.css" media="(prefers-color-scheme: light)" />
+  <link rel="stylesheet" href="/static/github-markdown-light.css" media="(prefers-color-scheme: light)" />
+  <link rel="stylesheet" href="/static/chroma-github-dark.css" media="(prefers-color-scheme: no-preference),(prefers-color-scheme: dark)" />
+  <link rel="stylesheet" href="/static/github-markdown-dark.css" media="(prefers-color-scheme: no-preference),(prefers-color-scheme: dark)" />
+  {{ else }}
+    {{ $cssChromaURL := "/static/chroma-github-dark.css" }}
+    {{ $cssMarkdownURL := "/static/github-markdown-dark.css" }}
+    {{ if eq .Mode "light" }}
+      {{ $cssChromaURL = "/static/chroma-github-light.css" }}
+      {{ $cssMarkdownURL = "/static/github-markdown-light.css" }}
+    {{ end }}
+  <link rel="stylesheet" href="{{ $cssChromaURL }}" />
+  <link rel="stylesheet" href="{{ $cssMarkdownURL }}" />
   {{ end }}
-  <link rel="stylesheet" href="{{ $cssChromaURL }}" id="chroma-stylesheet" />
-  <link rel="stylesheet" href="{{ $cssMarkdownURL }}" id="markdown-stylesheet" />
 
   <style>
     :root {
@@ -106,29 +113,6 @@
       }
     }
   </style>
-
-  {{ if eq .Mode "auto" }}
-  <script type="text/javascript">
-    function applyTheme(isLight) {
-      if (isLight) {
-        document.getElementById("chroma-stylesheet").href="/static/chroma-github-light.css";
-        document.getElementById("markdown-stylesheet").href="/static/github-markdown-light.css";
-      } else {
-        document.getElementById("chroma-stylesheet").href="/static/chroma-github-dark.css";
-        document.getElementById("markdown-stylesheet").href="/static/github-markdown-dark.css";
-      }
-    }
-
-    const prefersLightQuery = window.matchMedia("(prefers-color-scheme: light)");
-    // Apply on page load
-    applyTheme(prefersLightQuery.matches);
-    // Change CSS when the theme changes
-    prefersLightQuery.addEventListener("change", e => {
-      console.log(`Theme changed, is light theme: ${e.matches}`);
-      applyTheme(e.matches);
-    });
-  </script>
-  {{ end }}
 </head>
 
 <body>
