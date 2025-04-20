@@ -18,14 +18,33 @@ emulate the look of GitHub Markdown rendering as close as possible, but the
 original project will be even closer to the actual result if you don't need
 offline rendering.
 
-## Features
+## Highlights
 
 - **Works offline** - You don't need an internet connection.
-- **No-dependencies** - You need `gh` command only.
+- **Fast** - Since it doesn't rely on external services it is really fast.
+- **No-dependencies** - You can just run the standalone binary (or optionally
+  via `gh` as an extension).
 - **Zero-configuration** - You don't have to set the GitHub access token.
 - **Live reloading** - You don't need reload the browser.
 - **Auto open browser** - Your browser will be opened automatically.
 - **Auto find port** - You don't need find an available port if default is used.
+- **Graceful degradation** - Basic functionality works even without JavaScript.
+
+## Supported GFM features
+
+- [x] : [Most (all?) of GitHub Flavored Markdown spec](https://github.github.com/gfm/)
+- [x] : [Emojis](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#using-emojis):
+  not all of GitHub emojis are supported since a few of them are extensions to
+  the Unicode spec, but the majority of them works
+- [x] : [Alerts](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#alerts)
+- [x] : [Code blocks with syntax highlighting](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks)
+- [x] : [Section links](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#section-links)
+- [x] : [MathJax](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/writing-mathematical-expressions)
+- [x] : [Mermaid diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams)
+- [ ] : Mentioning people/Referencing issues and Pull Requests/Other features
+  that depends in GitHub access
+- [ ] : [GeoJSON/TopoJSON diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams)
+- [ ] : [STL 3D diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams)
 
 ## Installation
 
