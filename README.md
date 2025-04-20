@@ -33,18 +33,22 @@ offline rendering.
 ## Supported GFM features
 
 - [x] : [Most (all?) of GitHub Flavored Markdown spec](https://github.github.com/gfm/)
-- [x] : [Emojis](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#using-emojis):
-  not all of GitHub emojis are supported since a few of them are extensions to
-  the Unicode spec, but the majority of them works
+- [x] : [Emojis](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#using-emojis)
+  + not all of GitHub emojis are supported since a few of them are extensions
+    to the Unicode spec, but the majority of them works
 - [x] : [Alerts](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#alerts)
-- [x] : [Code blocks with syntax highlighting](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks)
+- [x] : [Code blocks with syntax
+  highlighting](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks)
+  + highlighting is done via
+    [alecthomas/chroma](https://github.com/alecthomas/chroma); not all GitHub
+    languages are supported and there are slightly differences in highlighting
 - [x] : [Section links](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#section-links)
 - [x] : [MathJax](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/writing-mathematical-expressions)
 - [x] : [Mermaid diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams)
-- [ ] : Mentioning people/Referencing issues and Pull Requests/Other features
-  that depends in GitHub access
 - [ ] : [GeoJSON/TopoJSON diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams)
 - [ ] : [STL 3D diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams)
+- [ ] : Mentioning people/Referencing issues and Pull Requests/Other features
+  that depends in GitHub access
 
 ## Installation
 
