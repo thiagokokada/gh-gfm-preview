@@ -28,6 +28,6 @@ jobs:
       run: go test -v ./...
 
     - name: golangci-lint
-      uses: golangci/golangci-lint-action@v6
+      uses: golangci/golangci-lint-action@v7
       with:
-        version: v1.64
+        version: v2.1.2
