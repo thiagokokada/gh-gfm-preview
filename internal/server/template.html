@@ -5,20 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{ .Title }}</title>
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
-  {{ if eq .Mode "auto" }}
+  {{ if eq .Mode "dark" }}
+  <link rel="stylesheet" href="/static/chroma-github-dark.css" />
+  <link rel="stylesheet" href="/static/github-markdown-dark.css" />
+  {{ else if eq .Mode "light" }}
+  <link rel="stylesheet" href="/static/chroma-github-light.css" />
+  <link rel="stylesheet" href="/static/github-markdown-light.css" />
+  {{ else }}
   <link rel="stylesheet" href="/static/chroma-github-light.css" media="(prefers-color-scheme: light)" />
   <link rel="stylesheet" href="/static/github-markdown-light.css" media="(prefers-color-scheme: light)" />
   <link rel="stylesheet" href="/static/chroma-github-dark.css" media="(prefers-color-scheme: no-preference),(prefers-color-scheme: dark)" />
   <link rel="stylesheet" href="/static/github-markdown-dark.css" media="(prefers-color-scheme: no-preference),(prefers-color-scheme: dark)" />
-  {{ else }}
-    {{ $cssChromaURL := "/static/chroma-github-dark.css" }}
-    {{ $cssMarkdownURL := "/static/github-markdown-dark.css" }}
-    {{ if eq .Mode "light" }}
-      {{ $cssChromaURL = "/static/chroma-github-light.css" }}
-      {{ $cssMarkdownURL = "/static/github-markdown-light.css" }}
-    {{ end }}
-  <link rel="stylesheet" href="{{ $cssChromaURL }}" />
-  <link rel="stylesheet" href="{{ $cssMarkdownURL }}" />
   {{ end }}
 
   <style>
