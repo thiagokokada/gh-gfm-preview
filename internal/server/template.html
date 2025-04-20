@@ -109,22 +109,22 @@
 
   {{ if eq .Mode "auto" }}
   <script type="text/javascript">
-    function applyTheme(isDark) {
-      if (isDark) {
-        document.getElementById("chroma-stylesheet").href="/static/chroma-github-dark.css";
-        document.getElementById("markdown-stylesheet").href="/static/github-markdown-dark.css";
-      } else {
+    function applyTheme(isLight) {
+      if (isLight) {
         document.getElementById("chroma-stylesheet").href="/static/chroma-github-light.css";
         document.getElementById("markdown-stylesheet").href="/static/github-markdown-light.css";
+      } else {
+        document.getElementById("chroma-stylesheet").href="/static/chroma-github-dark.css";
+        document.getElementById("markdown-stylesheet").href="/static/github-markdown-dark.css";
       }
     }
 
-    const prefersDarkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const prefersLightQuery = window.matchMedia("(prefers-color-scheme: light)");
     // Apply on page load
-    applyTheme(prefersDarkQuery.matches);
+    applyTheme(prefersLightQuery.matches);
     // Change CSS when the theme changes
-    prefersDarkQuery.addEventListener("change", e => {
-      console.log("Theme changed, reload page!");
+    prefersLightQuery.addEventListener("change", e => {
+      console.log(`Theme changed, is light theme: ${e.matches}`);
       applyTheme(e.matches);
     });
   </script>
