@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/alecthomas/chroma/v2/formatters/html"
+	chromahtml "github.com/alecthomas/chroma/v2/formatters/html"
 	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 	alerts "github.com/thiagokokada/goldmark-gh-alerts"
 	"github.com/yuin/goldmark"
@@ -17,6 +17,7 @@ import (
 	highlighting "github.com/yuin/goldmark-highlighting/v2"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/renderer/html"
 	"go.abhg.dev/goldmark/anchor"
 )
 
@@ -60,17 +61,26 @@ func ToHTML(markdown string, isMarkdownMode bool) (string, error) {
 	extensions := goldmark.WithExtensions()
 	if !isMarkdownMode {
 		extensions = goldmark.WithExtensions(
-			&anchor.Extender{Texter: anchor.Text(anchorIcon), Unsafe: true},
+			&anchor.Extender{
+				Texter: anchor.Text(anchorIcon),
+				Unsafe: true,
+			},
 			&alerts.GhAlerts{Icons: alertIconMap},
 			extension.GFM,
 			emoji.Emoji,
 			highlighting.NewHighlighting(
-				highlighting.WithFormatOptions(html.WithClasses(true)),
+				highlighting.WithFormatOptions(
+					chromahtml.WithClasses(true),
+				),
 			),
 		)
 	}
 
-	md := goldmark.New(extensions, goldmark.WithParserOptions(parser.WithAutoHeadingID()))
+	md := goldmark.New(
+		extensions,
+		goldmark.WithParserOptions(parser.WithAutoHeadingID()),
+		goldmark.WithRendererOptions(html.WithUnsafe()),
+	)
 
 	var buf bytes.Buffer
 

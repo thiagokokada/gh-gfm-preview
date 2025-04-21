@@ -19,6 +19,7 @@ This is a test of all Markdown possibilities:
 - [Tables](#tables)
 - [Code](#code)
 - [Math](#math)
+- [Raw HTML](#raw-html)
 
 ------------------------------------------
 
@@ -177,6 +178,27 @@ console.log(foo(5));
 When $a \ne 0$, there are two solutions to $(ax^2 + bx + c = 0)$ and they are
 
 $$ x = {-b \pm \sqrt{b^2-4ac} \over 2a} $$
+
+------------------------------------------
+
+## Raw HTML
+
+<!-- https://github.com/svengreb/styleguide-markdown/blob/main/rules/raw-html.md -->
+<p align="center">The winter is winter is sparkling and frozen!</p>
+
+Sparkling <img src="https://raw.githubusercontent.com/nordtheme/assets/main/static/images/artworks/arctic/nature/dark/snowfall.svg?sanitize=true" width=16 height=16 align="center" /> snowflakes falling down in the winter!
+
+<details>
+  <summary>Winter</summary>
+  <p>Sparkling and frozen!</p>
+</details>
+
+<!-- https://gist.github.com/seanh/13a93686bf4c2cb16e658b3cf96807f2#file-html_tags_you_can_use_on_github-md -->
+User input with `<kbd>`: <kbd>help mycommand</kbd>.
+
+Subscripts<sub>sub</sub> and superscripts<sup>sup</sup> with `<sub>` and `<sup>`.
+
+You can use `<sup>` to create linked footnotes.<sup id="backToMyFootnote"><a href="#myFootnote">1</a></sup>
 
 ------------------------------------------
 

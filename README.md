@@ -43,6 +43,9 @@ offline rendering.
     [alecthomas/chroma](https://github.com/alecthomas/chroma); not all GitHub
     languages are supported and there are slightly differences in highlighting
 - [x] : [Section links](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#section-links)
+- [x] : [Raw HTML](https://gist.github.com/seanh/13a93686bf4c2cb16e658b3cf96807f2)
+  + no filtering is done so you can pass any arbitrary HTML, different from
+    GitHub where only a subset of HTML is allowed
 - [x] : [MathJax](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/writing-mathematical-expressions)
 - [x] : [Mermaid diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams)
 - [ ] : [GeoJSON/TopoJSON diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams)
