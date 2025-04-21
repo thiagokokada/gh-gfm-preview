@@ -132,6 +132,75 @@
   <script type="text/javascript" src="/static/tex-mml-chtml.min.js"></script>
   <script type="text/javascript" src="/static/mermaid.min.js"></script>
   <script type="text/javascript">
+    // Workaround issue with MermaidJS that doesn't allow changing theme on
+    // re-initialization
+    // https://github.com/mermaid-js/mermaid/issues/1945#issuecomment-1661264708
+    (function(window) {
+      "use strict"
+
+      const querySelector = "code.language-mermaid";
+
+      const loadMermaid = function(isLight) {
+        const theme = isLight ? "default" : "dark";
+        window.mermaid.initialize({startOnLoad: false, theme});
+        window.mermaid.run({querySelector});
+      }
+
+      const saveOriginalData = function() {
+        return new Promise((resolve, reject) => {
+          try {
+            var els = document.querySelectorAll(querySelector);
+            els.forEach(element => {
+              element.setAttribute("data-original-code", element.innerHTML);
+            });
+            resolve();
+          } catch (error) {
+           reject(error);
+          }
+        })
+      }
+
+      const resetProcessed = function() {
+        return new Promise((resolve, reject) => {
+          try {
+            var els = document.querySelectorAll(querySelector);
+            els.forEach(element => {
+              if(element.getAttribute("data-original-code") != null) {
+                element.removeAttribute("data-processed");
+                element.innerHTML = element.getAttribute("data-original-code");
+              }
+            });
+            resolve()
+          } catch (error) {
+           reject(error);
+          }
+        })
+      }
+
+      const init = function() {
+        saveOriginalData().catch(console.error)
+
+        {{ if eq .Mode "light" }}
+        loadMermaid(true);
+        {{ else if eq .Mode "dark" }}
+        loadMermaid(false);
+        {{ else }}
+        const prefersLightQuery = window.matchMedia("(prefers-color-scheme: light)");
+        loadMermaid(prefersLightQuery.matches);
+        // Change CSS when the theme changes
+        prefersLightQuery.addEventListener("change", e => {
+          resetProcessed()
+            .then(loadMermaid(e.matches))
+            .catch(console.error);
+        });
+        {{ end }}
+      }
+      window.initMermaid = init
+    })(window);
+  </script>
+  <script type="text/javascript">
+    "use strict"
+
     const copyIcon = `<svg class="copy-icon" aria-hidden="true" fill="none" height="18" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="18" style="color:"currentColor";"><path d="M8 17.929H6c-1.105 0-2-.912-2-2.036V5.036C4 3.91 4.895 3 6 3h8c1.105 0 2 .911 2 2.036v1.866m-6 .17h8c1.105 0 2 .91 2 2.035v10.857C20 21.09 19.105 22 18 22h-8c-1.105 0-2-.911-2-2.036V9.107c0-1.124.895-2.036 2-2.036z"></path></svg>`;
     const tickIcon = `<svg class="tick-icon" aria-hidden="true" fill="none" height="18" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="18" style="color: "currentColor";"><path d="M5 13l4 4L19 7"></path></svg>`;
 
@@ -141,20 +210,9 @@
       const markdownBody = document.getElementById("markdown-body");
       markdownBody.innerHTML = result;
 
-      await renderMermaidDiagrams();
+      initMermaid();
       typesetMathJax();
       addCopyButtons();
-    }
-
-    async function renderMermaidDiagrams() {
-      {{ if eq .Mode "dark" }}
-      const mermaidJsTheme = "dark";
-      {{ else }}
-      const mermaidJsTheme = "default";
-      {{ end }}
-
-      mermaid.initialize({ startOnLoad: false, theme: mermaidJsTheme });
-      await mermaid.run({ querySelector: "pre > code.language-mermaid" });
     }
 
     function typesetMathJax() {
