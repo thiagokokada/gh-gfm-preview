@@ -144,7 +144,40 @@ func TestGfmAlerts(t *testing.T) {
 
 	actual := strings.TrimSpace(html)
 
-	if strings.Contains(actual, "<blockquote") {
-		t.Error("got blockquote tag instead of alerts")
+	for _, target := range []string{
+		"markdown-alert-note",
+		"markdown-alert-tip",
+		"markdown-alert-important",
+		"markdown-alert-warning",
+		"markdown-alert-caution",
+	} {
+		if !strings.Contains(actual, target) {
+			t.Errorf("expected but not found: %s", target)
+		}
+	}
+}
+
+func TestRawHTML(t *testing.T) {
+	result, err := Slurp("../../testdata/markdown-demo.md")
+	if err != nil {
+		t.Errorf("%s", err.Error())
+	}
+
+	html, err := ToHTML(result, false)
+	if err != nil {
+		t.Errorf("%s", err.Error())
+	}
+
+	actual := strings.TrimSpace(html)
+
+	for _, target := range []string{
+		`<p align="center">`,
+		"<details>",
+		"<summary>",
+		`<sup id="backToMyFootnote">`,
+	} {
+		if !strings.Contains(actual, target) {
+			t.Errorf("expected but not found: %s", target)
+		}
 	}
 }
