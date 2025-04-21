@@ -55,23 +55,9 @@ offline rendering.
 
 ## Installation
 
-You need to have [Go](https://go.dev/) installed.
-
-### Standalone
-
-```console
-go run github.com/thiagokokada/gh-gfm-preview
-```
-
-### Nix
-
-Assuming that you have [Flakes](https://wiki.nixos.org/wiki/Flakes) enabled:
-
-```console
-nix run github:thiagokokada/gh-gfm-preview
-```
-
 ### GitHub Extension
+
+You need to have [gh](https://github.com/cli/cli#installation) installed.
 
 ```console
 gh extension install thiagokokada/gh-gfm-preview
@@ -81,6 +67,22 @@ Upgrade:
 
 ```console
 gh extension upgrade markdown-preview
+```
+
+### Standalone
+
+You need to have [Go](https://go.dev/) installed.
+
+```console
+go install github.com/thiagokokada/gh-gfm-preview@latest
+```
+
+### Nix
+
+Assuming that you have [Flakes](https://wiki.nixos.org/wiki/Flakes) enabled:
+
+```console
+nix run github:thiagokokada/gh-gfm-preview
 ```
 
 ## Usage
