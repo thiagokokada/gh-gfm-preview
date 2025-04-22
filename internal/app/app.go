@@ -58,16 +58,18 @@ func TargetFile(filename string) (string, error) {
 }
 
 func ToHTML(markdown string, isMarkdownMode bool) (string, error) {
-	extensions := goldmark.WithExtensions()
-	if !isMarkdownMode {
+	var extensions goldmark.Option
+	if isMarkdownMode {
+		extensions = goldmark.WithExtensions()
+	} else {
 		extensions = goldmark.WithExtensions(
+			&alerts.GhAlerts{Icons: alertIconMap},
 			&anchor.Extender{
 				Texter: anchor.Text(anchorIcon),
-				Unsafe: true,
+				Unsafe: true, // anchorIcon is a <svg> and needs to be added unescaped
 			},
-			&alerts.GhAlerts{Icons: alertIconMap},
-			extension.GFM,
 			emoji.Emoji,
+			extension.GFM,
 			highlighting.NewHighlighting(
 				highlighting.WithFormatOptions(
 					chromahtml.WithClasses(true),
@@ -84,7 +86,8 @@ func ToHTML(markdown string, isMarkdownMode bool) (string, error) {
 
 	var buf bytes.Buffer
 
-	if err := md.Convert([]byte(markdown), &buf); err != nil {
+	err := md.Convert([]byte(markdown), &buf)
+	if err != nil {
 		return "", fmt.Errorf("markdown convert error: %w", err)
 	}
 
