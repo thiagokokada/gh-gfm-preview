@@ -18,6 +18,16 @@ emulate the look of GitHub Markdown rendering as close as possible, but the
 original project will be even closer to the actual result if you don't need
 offline rendering.
 
+## Screenshots
+
+Open your browser:
+
+<img width="2013" alt="Screenshot 2025-04-24 at 19 44 45" src="https://github.com/user-attachments/assets/d31d3665-9f75-4ddc-a7c9-526c561eb472" />
+
+Live reloading:
+
+https://github.com/user-attachments/assets/0219ac01-71d3-4568-bff4-c9de092ca4e3
+
 ## Highlights
 
 - **Works offline** - You don't need an internet connection.
