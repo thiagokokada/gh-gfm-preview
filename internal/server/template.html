@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{{ .Title }}</title>
-  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
-  {{ if eq .Mode "dark" }}
-  <link rel="stylesheet" href="/static/chroma-github-dark.css" />
-  <link rel="stylesheet" href="/static/github-markdown-dark.css" />
-  {{ else if eq .Mode "light" }}
-  <link rel="stylesheet" href="/static/chroma-github-light.css" />
-  <link rel="stylesheet" href="/static/github-markdown-light.css" />
-  {{ else }}
-  <link rel="stylesheet" href="/static/chroma-github-light.css" media="(prefers-color-scheme: light)" />
-  <link rel="stylesheet" href="/static/github-markdown-light.css" media="(prefers-color-scheme: light)" />
-  <link rel="stylesheet" href="/static/chroma-github-dark.css" media="(prefers-color-scheme: no-preference),(prefers-color-scheme: dark)" />
-  <link rel="stylesheet" href="/static/github-markdown-dark.css" media="(prefers-color-scheme: no-preference),(prefers-color-scheme: dark)" />
-  {{ end }}
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ .Title }}</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    {{ if eq .Mode "dark" }}
+    <link rel="stylesheet" href="/static/chroma-github-dark.css" />
+    <link rel="stylesheet" href="/static/github-markdown-dark.css" />
+    {{ else if eq .Mode "light" }}
+    <link rel="stylesheet" href="/static/chroma-github-light.css" />
+    <link rel="stylesheet" href="/static/github-markdown-light.css" />
+    {{ else }}
+    <link rel="stylesheet" href="/static/chroma-github-light.css" media="(prefers-color-scheme: light)" />
+    <link rel="stylesheet" href="/static/github-markdown-light.css" media="(prefers-color-scheme: light)" />
+    <link rel="stylesheet" href="/static/chroma-github-dark.css" media="(prefers-color-scheme: no-preference),(prefers-color-scheme: dark)" />
+    <link rel="stylesheet" href="/static/github-markdown-dark.css" media="(prefers-color-scheme: no-preference),(prefers-color-scheme: dark)" />
+    {{ end }}
 
-  <style>
+    <style>
     :root {
       --background-dark: #0d1117;
       --background-light: #ffffff;
@@ -109,35 +109,35 @@
         padding: 15px;
       }
     }
-  </style>
-</head>
+    </style>
+  </head>
 
-<body>
-  <article id="markdown-body" class="markdown-body">{{ .Body }}</article>
+  <body>
+    <article id="markdown-body" class="markdown-body">{{ .Body }}</article>
 
-  <script type="text/javascript">
-    Param = {
-      host: "{{ .Host }}", // type: string
-      mode: "{{ .Mode }}", // type: string
-      reload: {{ .Reload }}, // type: bool
-    };
+    <script type="text/javascript">
+      Param = {
+        host: "{{ .Host }}", // type: string
+        mode: "{{ .Mode }}", // type: string
+        reload: {{ .Reload }}, // type: bool
+      };
 
-    MathJax = {
-      tex: {
-        inlineMath: [
-          ['$', '$'],
-          ['\\(', '\\)'],
-        ],
-        displayMath: [
-          ['$$', '$$'],
-          ['\\[', '\\]'],
-        ],
-      },
-    };
-  </script>
-  <script type="text/javascript" src="/static/tex-mml-chtml.min.js"></script>
-  <script type="text/javascript" src="/static/mermaid.min.js"></script>
-  <script type="text/javascript" src="/static/script.js"></script>
-</body>
+      MathJax = {
+        tex: {
+          inlineMath: [
+            ['$', '$'],
+            ['\\(', '\\)'],
+          ],
+          displayMath: [
+            ['$$', '$$'],
+            ['\\[', '\\]'],
+          ],
+        },
+      };
+    </script>
+    <script type="text/javascript" src="/static/tex-mml-chtml.min.js"></script>
+    <script type="text/javascript" src="/static/mermaid.min.js"></script>
+    <script type="text/javascript" src="/static/script.js"></script>
+  </body>
 
 </html>
