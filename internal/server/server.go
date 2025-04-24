@@ -2,6 +2,7 @@ package server
 
 import (
 	"embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -25,6 +26,11 @@ var htmlTemplate string
 //go:embed static/*
 var staticDir embed.FS
 var tmpl = template.Must(template.New("HTML Template").Parse(htmlTemplate))
+
+type mdResponseJson struct {
+	Title string `json:"title"`
+	Html  string `json:"html"`
+}
 
 const defaultPort = 3333
 
@@ -143,15 +149,22 @@ func mdHandler(filename string, param *Param) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		pathParam := r.URL.Query().Get("path")
 
-		var html string
+		var html, title string
 
 		if pathParam != "" {
 			html = mdResponse(w, pathParam, param)
+			title = getTitle(pathParam)
 		} else {
 			html = mdResponse(w, filename, param)
+			title = getTitle(filename)
 		}
 
-		fmt.Fprintf(w, "%s", html)
+		body, err := json.Marshal(mdResponseJson{Html: html, Title: title})
+		if err != nil {
+			utils.LogDebug("Debug [JSON marshal error]: %v", err)
+		}
+
+		fmt.Fprintf(w, "%s", body)
 	})
 }
 
