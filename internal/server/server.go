@@ -28,9 +28,9 @@ var htmlTemplate string
 var staticDir embed.FS
 var tmpl = template.Must(template.New("HTML Template").Parse(htmlTemplate))
 
-type mdResponseJson struct {
+type mdResponseJSON struct {
+	HTML  string `json:"html"`
 	Title string `json:"title"`
-	Html  string `json:"html"`
 }
 
 const defaultPort = 3333
@@ -154,7 +154,7 @@ func mdHandler(filename string, param *Param) http.Handler {
 		html := mdResponse(w, file, param)
 		title := getTitle(file)
 
-		body, err := json.Marshal(mdResponseJson{Html: html, Title: title})
+		body, err := json.Marshal(mdResponseJSON{HTML: html, Title: title})
 		if err != nil {
 			utils.LogDebug("Debug [JSON marshal error]: %v", err)
 		}
