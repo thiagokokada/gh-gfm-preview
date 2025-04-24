@@ -95,11 +95,6 @@ func ToHTML(markdown string, isMarkdownMode bool) (string, error) {
 }
 
 func Slurp(fileName string) (string, error) {
-	_, err := os.Stat(fileName)
-	if err != nil {
-		return "", fmt.Errorf("OS stat error: %w", err)
-	}
-
 	f, err := os.Open(fileName)
 	if err != nil {
 		return "", fmt.Errorf("OS open error: %w", err)
