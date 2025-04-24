@@ -156,7 +156,7 @@ func mdHandler(filename string, param *Param) http.Handler {
 
 		body, err := json.Marshal(mdResponseJSON{HTML: html, Title: title})
 		if err != nil {
-			utils.LogDebug("Debug [JSON marshal error]: %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
 		fmt.Fprintf(w, "%s", body)
