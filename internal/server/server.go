@@ -1,6 +1,7 @@
 package server
 
 import (
+	"cmp"
 	"embed"
 	"encoding/json"
 	"errors"
@@ -149,15 +150,9 @@ func mdHandler(filename string, param *Param) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		pathParam := r.URL.Query().Get("path")
 
-		var html, title string
-
-		if pathParam != "" {
-			html = mdResponse(w, pathParam, param)
-			title = getTitle(pathParam)
-		} else {
-			html = mdResponse(w, filename, param)
-			title = getTitle(filename)
-		}
+		file := cmp.Or(pathParam, filename)
+		html := mdResponse(w, file, param)
+		title := getTitle(file)
 
 		body, err := json.Marshal(mdResponseJson{Html: html, Title: title})
 		if err != nil {
