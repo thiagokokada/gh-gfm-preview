@@ -1,6 +1,8 @@
 package app
 
 import (
+	"errors"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -70,6 +72,11 @@ func TestSlurp(t *testing.T) {
 
 	if r.MatchString(result) == false {
 		t.Errorf("content do not match %v\n", match)
+	}
+
+	_, err = Slurp("non-existing-file.md")
+	if !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("wrong error for non-existing-file %v\n", err)
 	}
 }
 

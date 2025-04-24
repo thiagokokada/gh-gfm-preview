@@ -2,9 +2,11 @@ package server
 
 import (
 	"embed"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -118,7 +120,11 @@ func mdResponse(w http.ResponseWriter, filename string, param *Param) string {
 
 	markdown, err := app.Slurp(filename)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if errors.Is(err, os.ErrNotExist) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 
 		return ""
 	}
