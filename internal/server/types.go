@@ -28,3 +28,8 @@ type loggingResponseWriter struct {
 	http.ResponseWriter
 	statusCode int
 }
+
+type mdResponseJSON struct {
+	HTML  string `json:"html"`
+	Title string `json:"title"`
+}

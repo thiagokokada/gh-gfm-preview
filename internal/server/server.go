@@ -28,11 +28,6 @@ var htmlTemplate string
 var staticDir embed.FS
 var tmpl = template.Must(template.New("HTML Template").Parse(htmlTemplate))
 
-type mdResponseJSON struct {
-	HTML  string `json:"html"`
-	Title string `json:"title"`
-}
-
 const defaultPort = 3333
 
 func (server *Server) Serve(param *Param) error {
