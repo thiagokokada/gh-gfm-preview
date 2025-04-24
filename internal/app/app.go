@@ -122,7 +122,7 @@ func findReadme(dir string) (string, error) {
 		}
 	}
 
-	err = fmt.Errorf("%w: README file not found in %s/", errFileNotFound, dir)
+	err = fmt.Errorf("%w: README file in %s directory", errFileNotFound, dir)
 
 	return "", err
 }
