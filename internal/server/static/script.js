@@ -1,5 +1,5 @@
 /*jslint browser,long,fart,indent2*/
-/*global alert,console,window,WebSocket*/
+/*global alert,console,window,WebSocket,JSON*/
 
 (function () {
   "use strict";
@@ -72,8 +72,13 @@
   async function loadMarkdown() {
     const response = await fetch(`/__/md?path=${window.location.pathname.slice(1)}`);
     const result = await response.text();
+    const parsedResult = JSON.parse(result);
+
     const markdownBody = document.getElementById("markdown-body");
-    markdownBody.innerHTML = result;
+    markdownBody.innerHTML = parsedResult.html;
+
+    const markdownTitle = document.getElementById("markdown-title");
+    markdownTitle.innerHTML = parsedResult.title;
 
     initMermaid();
     typesetMathJax();

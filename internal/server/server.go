@@ -1,7 +1,9 @@
 package server
 
 import (
+	"cmp"
 	"embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -25,6 +27,11 @@ var htmlTemplate string
 //go:embed static/*
 var staticDir embed.FS
 var tmpl = template.Must(template.New("HTML Template").Parse(htmlTemplate))
+
+type mdResponseJSON struct {
+	HTML  string `json:"html"`
+	Title string `json:"title"`
+}
 
 const defaultPort = 3333
 
@@ -143,15 +150,16 @@ func mdHandler(filename string, param *Param) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		pathParam := r.URL.Query().Get("path")
 
-		var html string
+		file := cmp.Or(pathParam, filename)
+		html := mdResponse(w, file, param)
+		title := getTitle(file)
 
-		if pathParam != "" {
-			html = mdResponse(w, pathParam, param)
-		} else {
-			html = mdResponse(w, filename, param)
+		body, err := json.Marshal(mdResponseJSON{HTML: html, Title: title})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
-		fmt.Fprintf(w, "%s", html)
+		fmt.Fprintf(w, "%s", body)
 	})
 }
 
