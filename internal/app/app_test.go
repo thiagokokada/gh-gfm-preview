@@ -2,7 +2,6 @@ package app
 
 import (
 	"errors"
-	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -75,7 +74,7 @@ func TestSlurp(t *testing.T) {
 	}
 
 	_, err = Slurp("non-existing-file.md")
-	if !errors.Is(err, os.ErrNotExist) {
+	if !errors.Is(err, ErrFileNotFound) {
 		t.Errorf("wrong error for non-existing-file %v\n", err)
 	}
 }
