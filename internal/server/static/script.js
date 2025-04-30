@@ -71,14 +71,13 @@
 
   async function loadMarkdown() {
     const response = await fetch(`/__/md?path=${window.location.pathname.slice(1)}`);
-    const result = await response.text();
-    const parsedResult = JSON.parse(result);
+    const result = await response.json();
 
     const markdownBody = document.getElementById("markdown-body");
-    markdownBody.innerHTML = parsedResult.html;
+    markdownBody.innerHTML = result.html;
 
     const markdownTitle = document.getElementById("markdown-title");
-    markdownTitle.innerHTML = parsedResult.title;
+    markdownTitle.innerHTML = result.title;
 
     initMermaid();
     typesetMathJax();
