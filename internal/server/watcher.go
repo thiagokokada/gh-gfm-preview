@@ -21,7 +21,7 @@ func createWatcher(dir string) (*fsnotify.Watcher, error) {
 		return watcher, fmt.Errorf("failed to create watcher: %w", err)
 	}
 
-	utils.LogInfo("Watching %s/ for changes", dir)
+	utils.LogInfof("Watching %s/ for changes", dir)
 
 	err = watcher.Add(dir)
 	if err != nil {
@@ -47,24 +47,26 @@ func watch(
 				continue
 			}
 
-			utils.LogDebug("Debug [event]: op=%s name=%s", event.Op, event.Name)
+			utils.LogDebugf("Debug [event]: op=%s name=%s", event.Op, event.Name)
 
 			if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
 				if r.MatchString(event.Name) {
-					utils.LogDebug("Debug [ignore]: %s", event.Name)
+					utils.LogDebugf("Debug [ignore]: %s", event.Name)
 
 					continue
 				}
 
 				if !m.TryLock() {
-					utils.LogDebug("Debug [event ignored]: op=%s name=%s", event.Op, event.Name)
+					utils.LogDebugf("Debug [event ignored]: op=%s name=%s", event.Op, event.Name)
 
 					continue
 				}
 
 				go func() {
 					defer m.Unlock()
-					utils.LogInfo("Change detected in %s, refreshing", event.Name)
+
+					utils.LogInfof("Change detected in %s, refreshing", event.Name)
+
 					reload <- true
 
 					time.Sleep(lockTime)

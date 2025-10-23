@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"runtime/debug"
@@ -37,6 +38,29 @@ func init() {
 	rootCmd.Flags().BoolP("dark-mode", "", false, "force dark mode")
 }
 
+func detectStdin(filename string) (bool, string) {
+	switch filename {
+	case "-":
+		data, err := io.ReadAll(os.Stdin)
+		if err != nil {
+			log.Fatalf("Error reading stdin: %v", err)
+		}
+
+		return true, string(data)
+	case "":
+		if fi, _ := os.Stdin.Stat(); (fi.Mode() & os.ModeCharDevice) == 0 {
+			data, err := io.ReadAll(os.Stdin)
+			if err != nil {
+				log.Fatalf("Error reading stdin: %v", err)
+			}
+
+			return true, string(data)
+		}
+	}
+
+	return false, ""
+}
+
 func run(cmd *cobra.Command, args []string) {
 	filename := ""
 	if len(args) > 0 {
@@ -61,6 +85,9 @@ func run(cmd *cobra.Command, args []string) {
 
 	disableAutoOpen := utils.Must(flags.GetBool("disable-auto-open"))
 
+	// Detect stdin usage
+	useStdin, stdinContent := detectStdin(filename)
+
 	param := &server.Param{
 		Filename:       filename,
 		MarkdownMode:   markdownMode,
@@ -68,6 +95,8 @@ func run(cmd *cobra.Command, args []string) {
 		ForceLightMode: forceLightMode,
 		ForceDarkMode:  forceDarkMode,
 		AutoOpen:       !disableAutoOpen,
+		UseStdin:       useStdin,
+		StdinContent:   stdinContent,
 	}
 
 	err := httpServer.Serve(param)

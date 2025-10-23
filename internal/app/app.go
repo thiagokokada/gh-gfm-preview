@@ -105,6 +105,7 @@ func Slurp(fileName string) (string, error) {
 	}
 
 	defer f.Close()
+
 	b, _ := io.ReadAll(f)
 	text := string(b)
 
@@ -116,7 +117,7 @@ func findReadme(dir string) (string, error) {
 	if err != nil {
 		// Not returning since read dir will return the files
 		// that it read until the error
-		utils.LogDebug("Debug [read dir error]: %v", err)
+		utils.LogDebugf("Debug [read dir error]: %v", err)
 	}
 
 	for _, f := range files {
