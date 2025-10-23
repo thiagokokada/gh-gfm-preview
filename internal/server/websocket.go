@@ -35,7 +35,7 @@ func wsHandler(watcher *fsnotify.Watcher) http.Handler {
 		socket, err = upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			if errors.Is(err, websocket.HandshakeError{}) {
-				utils.LogDebug("Debug [handshake error]: %v", err)
+				utils.LogDebugf("Debug [handshake error]: %v", err)
 			}
 
 			return
@@ -43,13 +43,13 @@ func wsHandler(watcher *fsnotify.Watcher) http.Handler {
 
 		err = socket.SetReadDeadline(time.Now().Add(pongWait))
 		if err != nil {
-			utils.LogDebug("Debug [set read deadline error]: %v", err)
+			utils.LogDebugf("Debug [set read deadline error]: %v", err)
 		}
 
 		socket.SetPongHandler(func(string) error {
 			err := socket.SetReadDeadline(time.Now().Add(pongWait))
 			if err != nil {
-				utils.LogDebug("Debug [set read deadline error in pong handler]: %v", err)
+				utils.LogDebugf("Debug [set read deadline error in pong handler]: %v", err)
 			}
 
 			return nil
@@ -61,7 +61,7 @@ func wsHandler(watcher *fsnotify.Watcher) http.Handler {
 		err = <-errorChan
 
 		close(done)
-		utils.LogInfo("Close WebSocket: %v\n", err)
+		utils.LogInfof("Close WebSocket: %v\n", err)
 		socket.Close()
 	})
 }
@@ -70,7 +70,8 @@ func wsReader(done <-chan any, errorChan chan<- error) {
 	for range done {
 		_, _, err := socket.ReadMessage()
 		if err != nil {
-			utils.LogDebug("Debug [read message]: %v", err)
+			utils.LogDebugf("Debug [read message]: %v", err)
+
 			errorChan <- err
 		}
 	}
@@ -85,16 +86,17 @@ func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
 		case <-reload:
 			err := socket.WriteMessage(websocket.TextMessage, []byte("reload"))
 			if err != nil {
-				utils.LogDebug("Debug [reload error]: %v", err)
+				utils.LogDebugf("Debug [reload error]: %v", err)
+
 				errChan <- err
 			}
 		case <-ticker.C:
-			utils.LogDebug("Debug [ping send]: ping to client")
+			utils.LogDebugf("Debug [ping send]: ping to client")
 
 			err := socket.WriteMessage(websocket.PingMessage, []byte{})
 			if err != nil {
 				// Do nothing
-				utils.LogDebug("Debug [ping error]: %v", err)
+				utils.LogDebugf("Debug [ping error]: %v", err)
 			}
 		case <-done:
 			return

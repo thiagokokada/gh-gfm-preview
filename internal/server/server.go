@@ -29,7 +29,7 @@ var tmpl = template.Must(template.New("HTML Template").Parse(htmlTemplate))
 
 const defaultPort = 3333
 
-func (server *Server) Serve(param *Param) (err error) {
+func (server *Server) Serve(param *Param) error {
 	host := server.Host
 
 	port := defaultPort
@@ -38,6 +38,8 @@ func (server *Server) Serve(param *Param) (err error) {
 	}
 
 	filename := ""
+
+	var err error
 	if !param.UseStdin {
 		filename, err = app.TargetFile(param.Filename)
 		if err != nil {
@@ -67,15 +69,15 @@ func (server *Server) Serve(param *Param) (err error) {
 
 	address := listener.Addr()
 
-	utils.LogInfo("Accepting connections at http://%s/\n", address)
+	utils.LogInfof("Accepting connections at http://%s/\n", address)
 
 	if param.AutoOpen {
-		utils.LogInfo("Open http://%s/ on your browser\n", address)
+		utils.LogInfof("Open http://%s/ on your browser\n", address)
 
 		go func() {
 			err := browser.OpenBrowser(fmt.Sprintf("http://%s/", address))
 			if err != nil {
-				utils.LogInfo("Error while opening browser: %s\n", err)
+				utils.LogInfof("Error while opening browser: %s\n", err)
 			}
 		}()
 	}
@@ -189,7 +191,7 @@ func wrapHandler(wrappedHandler http.Handler) http.Handler {
 		wrappedHandler.ServeHTTP(lrw, r)
 
 		statusCode := lrw.statusCode
-		utils.LogInfo("%s [%d] %s", r.Method, statusCode, r.URL)
+		utils.LogInfof("%s [%d] %s", r.Method, statusCode, r.URL)
 	})
 }
 
@@ -202,7 +204,7 @@ func getTCPListener(host string, port int) (net.Listener, error) {
 
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, port))
 	if err != nil {
-		utils.LogInfo("Skipping port %d: %v", port, err)
+		utils.LogInfof("Skipping port %d: %v", port, err)
 		listener, err = net.Listen("tcp", host+":0")
 	}
 

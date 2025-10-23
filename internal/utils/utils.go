@@ -12,11 +12,11 @@ func Must[T any](v T, err error) T { //nolint:ireturn
 	return v
 }
 
-func LogInfo(format string, v ...any) {
+func LogInfof(format string, v ...any) {
 	log.Printf(format, v...)
 }
 
-func LogDebug(format string, v ...any) {
+func LogDebugf(format string, v ...any) {
 	if verbose {
 		log.Printf(format, v...)
 	}
