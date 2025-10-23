@@ -123,13 +123,16 @@ func mdResponse(w http.ResponseWriter, filename string, param *Param) string {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	var markdown string
+
 	var err error
+
 	if param.UseStdin && param.StdinContent != "" && filename == "" {
 		markdown = param.StdinContent
 	} else {
 		markdown, err = app.Slurp(filename)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+
 			return ""
 		}
 	}

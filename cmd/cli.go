@@ -45,6 +45,7 @@ func detectStdin(filename string) (bool, string) {
 		if err != nil {
 			log.Fatalf("Error reading stdin: %v", err)
 		}
+
 		return true, string(data)
 	case "":
 		if fi, _ := os.Stdin.Stat(); (fi.Mode() & os.ModeCharDevice) == 0 {
@@ -52,9 +53,11 @@ func detectStdin(filename string) (bool, string) {
 			if err != nil {
 				log.Fatalf("Error reading stdin: %v", err)
 			}
+
 			return true, string(data)
 		}
 	}
+
 	return false, ""
 }
 
