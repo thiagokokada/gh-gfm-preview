@@ -109,6 +109,14 @@ Or this command will detect README file in the directory automatically.
 gh gfm-preview
 ```
 
+You can also preview Markdown from stdin by piping or using `-`:
+
+```
+echo "# Hello" | gh gfm-preview
+cat README.md | gh gfm-preview
+gh gfm-preview - < README.md
+```
+
 Then access the local web server such as `http://localhost:3333` with Chrome,
 Firefox, or Safari.
 

@@ -29,7 +29,7 @@ var tmpl = template.Must(template.New("HTML Template").Parse(htmlTemplate))
 
 const defaultPort = 3333
 
-func (server *Server) Serve(param *Param) error {
+func (server *Server) Serve(param *Param) (err error) {
 	host := server.Host
 
 	port := defaultPort
@@ -37,9 +37,12 @@ func (server *Server) Serve(param *Param) error {
 		port = server.Port
 	}
 
-	filename, err := app.TargetFile(param.Filename)
-	if err != nil {
-		return fmt.Errorf("target file error: %w", err)
+	filename := ""
+	if !param.UseStdin {
+		filename, err = app.TargetFile(param.Filename)
+		if err != nil {
+			return fmt.Errorf("target file error: %w", err)
+		}
 	}
 
 	dir := filepath.Dir(filename)
@@ -119,7 +122,18 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 func mdResponse(w http.ResponseWriter, filename string, param *Param) string {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	markdown, err := app.Slurp(filename)
+	var markdown string
+	var err error
+	if param.UseStdin && param.StdinContent != "" && filename == "" {
+		markdown = param.StdinContent
+	} else {
+		markdown, err = app.Slurp(filename)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return ""
+		}
+	}
+
 	if err != nil {
 		if errors.Is(err, app.ErrFileNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)

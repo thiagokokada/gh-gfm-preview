@@ -17,6 +17,8 @@ type Param struct {
 	ForceLightMode bool
 	ForceDarkMode  bool
 	AutoOpen       bool
+	UseStdin       bool
+	StdinContent   string
 }
 
 type Server struct {
