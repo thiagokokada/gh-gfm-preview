@@ -1,14 +1,14 @@
 {
   lib,
-  buildGoModule,
+  buildGo124Module,
   version ? "unknown",
 }:
 
-buildGoModule {
+buildGo124Module {
   pname = "gh-gfm-preview";
   inherit version;
   src = lib.cleanSource ./.;
-  vendorHash = "sha256-VeOXRovbnzYBDrAKqKZhtKeAfcp4s5rn/KpubXtmiug=";
+  vendorHash = "sha256-FOzr/Dzso8q3ChG6ey4RDPfs75aB6T8Sw/MF12LxZIg=";
 
   env.CGO_ENABLED = "0";
 
