@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-// ParseExtensions parses a comma-separated string of file extensions
-// Special case: if "*" is found anywhere in the list, returns []string{"*"} to match all files
+// ParseExtensions parses a comma-separated string of file extensions.
+// Special case: if "*" is found anywhere in the list, returns []string{"*"} to match all files.
 func ParseExtensions(extensionsStr string) []string {
 	if extensionsStr == "" {
 		return []string{".md"}
@@ -27,12 +27,14 @@ func ParseExtensions(extensionsStr string) []string {
 		// Check for wildcard
 		if ext == "*" {
 			hasWildcard = true
+
 			continue
 		}
 		// Add leading dot if not present
 		if !strings.HasPrefix(ext, ".") {
 			ext = "." + ext
 		}
+
 		extensions = append(extensions, strings.ToLower(ext))
 	}
 
@@ -48,7 +50,7 @@ func ParseExtensions(extensionsStr string) []string {
 	return extensions
 }
 
-// ListMarkdownFiles recursively lists files with specified extensions in a directory
+// ListMarkdownFiles recursively lists files with specified extensions in a directory.
 func ListMarkdownFiles(dir string, extensions []string) ([]string, error) {
 	var files []string
 
@@ -68,9 +70,11 @@ func ListMarkdownFiles(dir string, extensions []string) ([]string, error) {
 		if allowAll {
 			relPath, err := filepath.Rel(dir, path)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get relative path: %w", err)
 			}
+
 			files = append(files, relPath)
+
 			return nil
 		}
 
@@ -81,16 +85,17 @@ func ListMarkdownFiles(dir string, extensions []string) ([]string, error) {
 				// Get relative path from dir
 				relPath, err := filepath.Rel(dir, path)
 				if err != nil {
-					return err
+					return fmt.Errorf("failed to get relative path: %w", err)
 				}
+
 				files = append(files, relPath)
+
 				break
 			}
 		}
 
 		return nil
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("error walking directory: %w", err)
 	}
@@ -101,12 +106,14 @@ func ListMarkdownFiles(dir string, extensions []string) ([]string, error) {
 	return files, nil
 }
 
-// ListDirectoryContents lists only the immediate contents (files and directories) of a directory
-func ListDirectoryContents(dir string, extensions []string) (files []string, dirs []string, err error) {
+// ListDirectoryContents lists only the immediate contents (files and directories) of a directory.
+func ListDirectoryContents(dir string, extensions []string) ([]string, []string, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error reading directory: %w", err)
 	}
+
+	var files, dirs []string
 
 	// Check if wildcard is enabled
 	allowAll := len(extensions) == 1 && extensions[0] == "*"
@@ -118,6 +125,7 @@ func ListDirectoryContents(dir string, extensions []string) (files []string, dir
 			// If wildcard, include all files
 			if allowAll {
 				files = append(files, entry.Name())
+
 				continue
 			}
 			// Check if file has one of the specified extensions (case-insensitive)
@@ -125,6 +133,7 @@ func ListDirectoryContents(dir string, extensions []string) (files []string, dir
 			for _, validExt := range extensions {
 				if ext == validExt {
 					files = append(files, entry.Name())
+
 					break
 				}
 			}
@@ -138,23 +147,25 @@ func ListDirectoryContents(dir string, extensions []string) (files []string, dir
 	return files, dirs, nil
 }
 
-// HasAllowedExtension checks if a file path has one of the allowed extensions
+// HasAllowedExtension checks if a file path has one of the allowed extensions.
 func HasAllowedExtension(filePath string, extensions []string) bool {
 	// Wildcard allows all files
 	if len(extensions) == 1 && extensions[0] == "*" {
 		return true
 	}
+
 	ext := strings.ToLower(filepath.Ext(filePath))
 	for _, validExt := range extensions {
 		if ext == validExt {
 			return true
 		}
 	}
+
 	return false
 }
 
 // IsTextFile checks if a file is a text file based on allowed extensions (whitelist)
-// Returns true if the file extension is in the allowed list
+// Returns true if the file extension is in the allowed list.
 func IsTextFile(filePath string, textExtensions []string) bool {
 	ext := strings.ToLower(filepath.Ext(filePath))
 	for _, textExt := range textExtensions {
@@ -162,5 +173,6 @@ func IsTextFile(filePath string, textExtensions []string) bool {
 			return true
 		}
 	}
+
 	return false
 }

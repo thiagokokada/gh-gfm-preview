@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"sync"
@@ -16,9 +17,11 @@ const (
 )
 
 var (
-	watcherMutex     sync.RWMutex
-	watchedDirs      = make(map[string]bool)
-	globalWatcher    *fsnotify.Watcher
+	watcherMutex  sync.RWMutex
+	watchedDirs   = make(map[string]bool)
+	globalWatcher *fsnotify.Watcher
+
+	ErrWatcherNotInitialized = errors.New("watcher not initialized")
 )
 
 func createWatcher(dir string) (*fsnotify.Watcher, error) {
@@ -39,7 +42,7 @@ func createWatcher(dir string) (*fsnotify.Watcher, error) {
 	return watcher, nil
 }
 
-// addDirToWatcher adds a directory to the watcher if not already watched
+// addDirToWatcher adds a directory to the watcher if not already watched.
 func addDirToWatcher(watcher *fsnotify.Watcher, dir string) error {
 	watcherMutex.Lock()
 	defer watcherMutex.Unlock()
@@ -50,7 +53,7 @@ func addDirToWatcher(watcher *fsnotify.Watcher, dir string) error {
 
 	err := watcher.Add(dir)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to add directory to watcher: %w", err)
 	}
 
 	watchedDirs[dir] = true
@@ -59,10 +62,10 @@ func addDirToWatcher(watcher *fsnotify.Watcher, dir string) error {
 	return nil
 }
 
-// AddDirectoryToWatch adds a directory to the global watcher
+// AddDirectoryToWatch adds a directory to the global watcher.
 func AddDirectoryToWatch(dir string) error {
 	if globalWatcher == nil {
-		return fmt.Errorf("watcher not initialized")
+		return ErrWatcherNotInitialized
 	}
 
 	return addDirToWatcher(globalWatcher, dir)

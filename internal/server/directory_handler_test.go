@@ -108,8 +108,10 @@ func TestGenerateFileTree(t *testing.T) {
 			got := generateFileTree(tt.files, tt.dirs, tt.currentPath)
 			if len(got) != len(tt.want) {
 				t.Errorf("generateFileTree() length = %v, want %v", len(got), len(tt.want))
+
 				return
 			}
+
 			for i := range got {
 				if got[i].Name != tt.want[i].Name || got[i].Path != tt.want[i].Path || got[i].IsDir != tt.want[i].IsDir {
 					t.Errorf("generateFileTree()[%d] = %+v, want %+v", i, got[i], tt.want[i])

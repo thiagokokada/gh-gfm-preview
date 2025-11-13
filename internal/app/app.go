@@ -112,7 +112,7 @@ func Slurp(fileName string) (string, error) {
 	return text, nil
 }
 
-// FindReadme finds a README file in the specified directory
+// FindReadme finds a README file in the specified directory.
 func FindReadme(dir string) (string, error) {
 	files, err := os.ReadDir(dir)
 	if err != nil {

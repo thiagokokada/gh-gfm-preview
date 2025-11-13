@@ -30,62 +30,75 @@ var tmpl = template.Must(template.New("HTML Template").Parse(htmlTemplate))
 
 const defaultPort = 3333
 
-func (server *Server) Serve(param *Param) error {
-	host := server.Host
-
-	port := defaultPort
+func (server *Server) resolvePort() int {
 	if server.Port > 0 {
-		port = server.Port
+		return server.Port
 	}
 
-	filename := ""
-	dir := ""
+	return defaultPort
+}
 
-	var err error
-	if !param.UseStdin {
-		// Check if filename is a directory
-		inputPath := param.Filename
-		if inputPath == "" {
-			inputPath = "."
-		}
+func resolveFileAndDir(param *Param) (string, string, error) {
+	if param.UseStdin {
+		return "", ".", nil
+	}
 
-		info, statErr := os.Stat(inputPath)
-		isDir := statErr == nil && info.IsDir()
+	return resolveFileMode(param)
+}
 
-		if isDir && param.DirectoryListing {
-			// Directory listing mode
+func resolveFileMode(param *Param) (string, string, error) {
+	inputPath := param.Filename
+	if inputPath == "" {
+		inputPath = "."
+	}
+
+	info, statErr := os.Stat(inputPath)
+	isDir := statErr == nil && info.IsDir()
+
+	if isDir && param.DirectoryListing {
+		return setupDirectoryMode(param, inputPath)
+	}
+
+	return setupFileMode(param, inputPath)
+}
+
+func setupDirectoryMode(param *Param, inputPath string) (string, string, error) {
+	param.IsDirectoryMode = true
+	param.DirectoryPath = inputPath
+
+	readme, readmeErr := app.FindReadme(inputPath)
+	if readmeErr == nil {
+		param.ReadmeFile = readme
+
+		return readme, inputPath, nil
+	}
+
+	return "", inputPath, nil
+}
+
+func setupFileMode(param *Param, inputPath string) (string, string, error) {
+	filename, err := app.TargetFile(param.Filename)
+	if err != nil {
+		if param.DirectoryListing && errors.Is(err, app.ErrFileNotFound) {
 			param.IsDirectoryMode = true
 			param.DirectoryPath = inputPath
-			dir = inputPath
 
-			// Try to find README
-			readme, readmeErr := app.FindReadme(inputPath)
-			if readmeErr == nil {
-				param.ReadmeFile = readme
-				filename = readme
-			} else {
-				// No README found, will show directory listing
-				filename = ""
-			}
-		} else {
-			// Regular file mode
-			filename, err = app.TargetFile(param.Filename)
-			if err != nil {
-				if param.DirectoryListing && errors.Is(err, app.ErrFileNotFound) {
-					// README not found but directory listing is enabled
-					param.IsDirectoryMode = true
-					param.DirectoryPath = inputPath
-					dir = inputPath
-					filename = ""
-				} else {
-					return fmt.Errorf("target file error: %w", err)
-				}
-			} else {
-				dir = filepath.Dir(filename)
-			}
+			return "", inputPath, nil
 		}
-	} else {
-		dir = "."
+
+		return "", "", fmt.Errorf("target file error: %w", err)
+	}
+
+	return filename, filepath.Dir(filename), nil
+}
+
+func (server *Server) Serve(param *Param) error {
+	host := server.Host
+	port := server.resolvePort()
+
+	filename, dir, err := resolveFileAndDir(param)
+	if err != nil {
+		return err
 	}
 
 	// Get the static subdirectory from embed.FS
@@ -147,6 +160,7 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 			// Original single-file mode
 			if !strings.HasSuffix(r.URL.Path, ".md") && r.URL.Path != "/" {
 				h.ServeHTTP(w, r)
+
 				return
 			}
 
@@ -161,8 +175,10 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 			err := tmpl.Execute(w, templateParam)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
+
 				return
 			}
+
 			return
 		}
 
@@ -214,6 +230,7 @@ func mdHandler(filename string, param *Param) http.Handler {
 		pathParam := r.URL.Query().Get("path")
 
 		var file string
+
 		if pathParam != "" {
 			// In directory mode, convert relative path to absolute path
 			if param.IsDirectoryMode {

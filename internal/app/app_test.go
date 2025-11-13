@@ -212,8 +212,10 @@ func TestParseExtensions(t *testing.T) {
 			got := ParseExtensions(tt.input)
 			if len(got) != len(tt.want) {
 				t.Errorf("ParseExtensions(%q) length = %v, want %v", tt.input, len(got), len(tt.want))
+
 				return
 			}
+
 			for i := range got {
 				if got[i] != tt.want[i] {
 					t.Errorf("ParseExtensions(%q)[%d] = %v, want %v", tt.input, i, got[i], tt.want[i])
