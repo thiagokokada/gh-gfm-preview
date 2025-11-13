@@ -1,0 +1,327 @@
+/* Directory browsing styles */
+.browse-button-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.btn-browse,
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #238636;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.btn-browse:hover,
+.btn-back:hover {
+  background: #2ea043;
+}
+
+.btn-browse svg,
+.btn-back svg {
+  fill: white;
+}
+
+/* Popover styles */
+.files-popover {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  width: 300px;
+  max-height: 500px;
+  background: white;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(140, 149, 159, 0.2);
+  z-index: 999;
+  overflow: hidden;
+}
+
+@media (prefers-color-scheme: dark) {
+  .files-popover {
+    background: #161b22;
+    border-color: #30363d;
+    box-shadow: 0 8px 24px rgba(1, 4, 9, 0.8);
+  }
+}
+
+.popover-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #d0d7de;
+}
+
+@media (prefers-color-scheme: dark) {
+  .popover-header {
+    border-bottom-color: #30363d;
+  }
+}
+
+.popover-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  line-height: 1;
+  color: #57606a;
+}
+
+@media (prefers-color-scheme: dark) {
+  .close-btn {
+    color: #8b949e;
+  }
+}
+
+.close-btn:hover {
+  color: #1f2328;
+}
+
+@media (prefers-color-scheme: dark) {
+  .close-btn:hover {
+    color: #c9d1d9;
+  }
+}
+
+.popover-body {
+  max-height: 440px;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.file-tree-popover .file-tree-item {
+  margin-bottom: 4px;
+}
+
+.file-tree-popover .file-tree-item a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  text-decoration: none;
+  color: inherit;
+  font-size: 14px;
+  transition: background 0.15s ease;
+}
+
+.file-tree-popover .file-tree-item a:hover {
+  background: #f6f8fa;
+}
+
+@media (prefers-color-scheme: dark) {
+  .file-tree-popover .file-tree-item a:hover {
+    background: #21262d;
+  }
+}
+
+.dir-icon {
+  fill: #54aeff;
+  flex-shrink: 0;
+}
+
+.file-icon-small {
+  fill: #57606a;
+  flex-shrink: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .file-icon-small {
+    fill: #8b949e;
+  }
+}
+
+/* Breadcrumb styles */
+.breadcrumb-container {
+  padding: 16px 20px;
+  border-bottom: 1px solid #d0d7de;
+  background: #f6f8fa;
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+}
+
+@media (prefers-color-scheme: dark) {
+  .breadcrumb-container {
+    background: #0d1117;
+    border-bottom-color: #30363d;
+  }
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.breadcrumb a {
+  color: #0969da;
+  text-decoration: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .breadcrumb a {
+    color: #58a6ff;
+  }
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb .separator {
+  color: #57606a;
+}
+
+@media (prefers-color-scheme: dark) {
+  .breadcrumb .separator {
+    color: #8b949e;
+  }
+}
+
+.breadcrumb .current {
+  font-weight: 600;
+}
+
+.directory-index {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.back-to-readme {
+  margin-bottom: 24px;
+}
+
+.directory-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #d0d7de;
+}
+
+@media (prefers-color-scheme: dark) {
+  .directory-title {
+    border-bottom-color: #30363d;
+  }
+}
+
+.folder-icon {
+  fill: #54aeff;
+}
+
+.file-tree {
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+@media (prefers-color-scheme: dark) {
+  .file-tree {
+    border-color: #30363d;
+  }
+}
+
+.file-item {
+  border-bottom: 1px solid #d0d7de;
+  padding: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .file-item {
+    border-bottom-color: #30363d;
+  }
+}
+
+.file-item:last-child {
+  border-bottom: none;
+}
+
+.file-item a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease;
+}
+
+.file-item:hover {
+  background-color: #f6f8fa;
+}
+
+@media (prefers-color-scheme: dark) {
+  .file-item:hover {
+    background-color: #161b22;
+  }
+}
+
+.file-item[data-depth="1"] a {
+  padding-left: 32px;
+}
+
+.file-item[data-depth="2"] a {
+  padding-left: 48px;
+}
+
+.file-item[data-depth="3"] a {
+  padding-left: 64px;
+}
+
+.file-icon {
+  flex-shrink: 0;
+  fill: #57606a;
+}
+
+@media (prefers-color-scheme: dark) {
+  .file-icon {
+    fill: #8b949e;
+  }
+}
+
+.file-name {
+  font-size: 14px;
+}
+
+@media (max-width: 767px) {
+  .directory-index {
+    padding: 10px;
+    margin: 20px auto;
+  }
+
+  .browse-button-container {
+    top: 10px;
+    right: 10px;
+  }
+
+  .btn-browse,
+  .btn-back {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
