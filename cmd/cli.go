@@ -29,14 +29,14 @@ func Execute() {
 
 func init() {
 	rootCmd.Flags().IntP("port", "p", 3333, "TCP port number of this server")
-	rootCmd.Flags().StringP("host", "", "localhost", "hostname this server will bind")
-	rootCmd.Flags().BoolP("disable-reload", "", false, "disable live reloading")
-	rootCmd.Flags().BoolP("markdown-mode", "", false, "force \"markdown\" mode (rather than default \"gfm\")")
-	rootCmd.Flags().BoolP("disable-auto-open", "", false, "disable auto opening your browser")
-	rootCmd.Flags().BoolP("verbose", "", false, "show verbose output")
-	rootCmd.Flags().BoolP("light-mode", "", false, "force light mode")
-	rootCmd.Flags().BoolP("dark-mode", "", false, "force dark mode")
-	rootCmd.Flags().BoolP("directory-listing", "", false, "enable directory browsing mode")
+	rootCmd.Flags().StringP("host", "H", "localhost", "hostname this server will bind")
+	rootCmd.Flags().BoolP("disable-reload", "R", false, "disable live reloading")
+	rootCmd.Flags().BoolP("markdown-mode", "m", false, "force \"markdown\" mode (rather than default \"gfm\")")
+	rootCmd.Flags().BoolP("disable-auto-open", "A", false, "disable auto opening your browser")
+	rootCmd.Flags().BoolP("verbose", "v", false, "show verbose output")
+	rootCmd.Flags().BoolP("light-mode", "l", false, "force light mode")
+	rootCmd.Flags().BoolP("dark-mode", "d", false, "force dark mode")
+	rootCmd.Flags().BoolP("directory-listing", "D", false, "enable directory browsing mode")
 	rootCmd.Flags().StringP("directory-listing-show-extensions", "", ".md,.txt", "file extensions to show in directory listing (comma-separated, use '*' for all files)")
 	rootCmd.Flags().StringP("directory-listing-text-extensions", "", ".md,.txt", "text file extensions for preview (comma-separated, others will be served as binary)")
 }
