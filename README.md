@@ -123,18 +123,19 @@ Firefox, or Safari.
 Available options:
 
 ```
-    --dark-mode                               force dark mode
-    --directory-listing                       enable directory browsing mode
-    --directory-listing-show-extensions       specify file extensions to show (default ".md,.txt")
-    --directory-listing-text-extensions       define which files should be previewed as text (default ".md,.txt")
-    --disable-auto-open                       disable auto opening your browser
-    --disable-reload                          disable live reloading
--h, --help                                    help for gh-gfm-preview
-    --host string                             hostname this server will bind (default "localhost")
-    --light-mode                              force light mode
-    --markdown-mode                           force "markdown" mode (rather than default "gfm")
--p, --port int                                TCP port number of this server (default 3333)
-    --verbose                                 show verbose output
+  -d, --dark-mode                                  force dark mode
+  -D, --directory-listing                          enable directory browsing mode
+      --directory-listing-show-extensions string   file extensions to show in directory listing (comma-separated, use '*' for all files) (default".md,.txt")
+      --directory-listing-text-extensions string   text file extensions for preview (comma-separated, others will be served as binary) (default ".md,.txt")
+  -A, --disable-auto-open                          disable auto opening your browser
+  -R, --disable-reload                             disable live reloading
+  -h, --help                                       help for gh-gfm-preview
+  -H, --host string                                hostname this server will bind (default "localhost")
+  -l, --light-mode                                 force light mode
+  -m, --markdown-mode                              force "markdown" mode (rather than default "gfm")
+  -p, --port int                                   TCP port number of this server (default 3333)
+  -v, --verbose                                    show verbose output
+      --version                                    version for gh-gfm-preview
 ```
 
 ### Directory Listing
@@ -144,6 +145,8 @@ Enable directory browsing mode to navigate and preview files:
 ```console
 # Enable with default settings
 gh gfm-preview --directory-listing
+# Or
+gh gfm-preview -D
 
 # Show all file types
 gh gfm-preview --directory-listing --directory-listing-show-extensions="*"
