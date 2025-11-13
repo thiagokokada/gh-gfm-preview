@@ -123,15 +123,35 @@ Firefox, or Safari.
 Available options:
 
 ```
-    --dark-mode           force dark mode
-    --disable-auto-open   disable auto opening your browser
-    --disable-reload      disable live reloading
--h, --help                help for gh-gfm-preview
-    --host string         hostname this server will bind (default "localhost")
-    --light-mode          force light mode
-    --markdown-mode       force "markdown" mode (rather than default "gfm")
--p, --port int            TCP port number of this server (default 3333)
-    --verbose             show verbose output
+    --dark-mode                               force dark mode
+    --directory-listing                       enable directory browsing mode
+    --directory-listing-show-extensions       specify file extensions to show (default ".md,.txt")
+    --directory-listing-text-extensions       define which files should be previewed as text (default ".md,.txt")
+    --disable-auto-open                       disable auto opening your browser
+    --disable-reload                          disable live reloading
+-h, --help                                    help for gh-gfm-preview
+    --host string                             hostname this server will bind (default "localhost")
+    --light-mode                              force light mode
+    --markdown-mode                           force "markdown" mode (rather than default "gfm")
+-p, --port int                                TCP port number of this server (default 3333)
+    --verbose                                 show verbose output
+```
+
+### Directory Listing
+
+Enable directory browsing mode to navigate and preview files:
+
+```console
+# Enable with default settings
+gh gfm-preview --directory-listing
+
+# Show all file types
+gh gfm-preview --directory-listing --directory-listing-show-extensions="*"
+
+# Custom file extensions
+gh gfm-preview --directory-listing \
+  --directory-listing-show-extensions=".md,.rst,.adoc" \
+  --directory-listing-text-extensions=".md,.txt,.rst"
 ```
 
 ## Other usages
