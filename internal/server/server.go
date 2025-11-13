@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -99,6 +100,41 @@ func (server *Server) Serve(param *Param) error {
 func handler(filename string, param *Param, h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !strings.HasSuffix(r.URL.Path, ".md") && r.URL.Path != "/" {
+			// Check if this is a directory request
+			dir := filepath.Dir(filename)
+			requestedPath := filepath.Join(dir, r.URL.Path)
+
+			// Try to get file info
+			info, err := os.Stat(requestedPath)
+			if err == nil && info.IsDir() {
+				// This is a directory - wrap the FileServer response with our template
+				// Create a custom response writer to capture the directory listing HTML
+				crw := &capturingResponseWriter{
+					ResponseWriter: w,
+					statusCode:     http.StatusOK,
+				}
+				h.ServeHTTP(crw, r)
+
+				// If we captured HTML content, wrap it in our template
+				if crw.statusCode == http.StatusOK && len(crw.body) > 0 {
+					templateParam := TemplateParam{
+						Title:  filepath.Base(requestedPath),
+						Body:   crw.ExtractDirectoryListingBody(),
+						Host:   r.Host,
+						Reload: param.Reload,
+						Mode:   param.getMode().String(),
+					}
+
+					err := tmpl.Execute(w, templateParam)
+					if err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+					}
+					return
+				}
+				return
+			}
+
+			// Not a directory or error - serve normally
 			h.ServeHTTP(w, r)
 
 			return
