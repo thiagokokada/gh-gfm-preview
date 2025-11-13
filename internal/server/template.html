@@ -109,17 +109,578 @@
         padding: 15px;
       }
     }
+
+    /* Directory browsing styles */
+    .browse-button-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+
+    .btn-browse,
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: #238636;
+      color: white;
+      border-radius: 6px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.2s ease;
+    }
+
+    .btn-browse:hover,
+    .btn-back:hover {
+      background: #2ea043;
+    }
+
+    .btn-browse svg,
+    .btn-back svg {
+      fill: white;
+    }
+
+    /* Popover styles */
+    .files-popover {
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      width: 300px;
+      max-height: 500px;
+      background: white;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      box-shadow: 0 8px 24px rgba(140, 149, 159, 0.2);
+      z-index: 999;
+      overflow: hidden;
+    }
+
+    {{ if eq .Mode "dark" }}
+    .files-popover {
+      background: #161b22;
+      border-color: #30363d;
+      box-shadow: 0 8px 24px rgba(1, 4, 9, 0.8);
+    }
+    {{ else if eq .Mode "auto" }}
+    @media (prefers-color-scheme: dark) {
+      .files-popover {
+        background: #161b22;
+        border-color: #30363d;
+        box-shadow: 0 8px 24px rgba(1, 4, 9, 0.8);
+      }
+    }
+    {{ end }}
+
+    .popover-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid #d0d7de;
+    }
+
+    {{ if eq .Mode "dark" }}
+    .popover-header {
+      border-bottom-color: #30363d;
+    }
+    {{ else if eq .Mode "auto" }}
+    @media (prefers-color-scheme: dark) {
+      .popover-header {
+        border-bottom-color: #30363d;
+      }
+    }
+    {{ end }}
+
+    .popover-header h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      line-height: 1;
+      color: #57606a;
+    }
+
+    {{ if eq .Mode "dark" }}
+    .close-btn {
+      color: #8b949e;
+    }
+    {{ else if eq .Mode "auto" }}
+    @media (prefers-color-scheme: dark) {
+      .close-btn {
+        color: #8b949e;
+      }
+    }
+    {{ end }}
+
+    .close-btn:hover {
+      color: #1f2328;
+    }
+
+    {{ if eq .Mode "dark" }}
+    .close-btn:hover {
+      color: #c9d1d9;
+    }
+    {{ else if eq .Mode "auto" }}
+    @media (prefers-color-scheme: dark) {
+      .close-btn:hover {
+        color: #c9d1d9;
+      }
+    }
+    {{ end }}
+
+    .popover-body {
+      max-height: 440px;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .file-tree-popover .file-tree-item {
+      margin-bottom: 4px;
+    }
+
+    .file-tree-popover .file-tree-item a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      text-decoration: none;
+      color: inherit;
+      font-size: 14px;
+      transition: background 0.15s ease;
+    }
+
+    .file-tree-popover .file-tree-item a:hover {
+      background: #f6f8fa;
+    }
+
+    {{ if eq .Mode "dark" }}
+    .file-tree-popover .file-tree-item a:hover {
+      background: #21262d;
+    }
+    {{ else if eq .Mode "auto" }}
+    @media (prefers-color-scheme: dark) {
+      .file-tree-popover .file-tree-item a:hover {
+        background: #21262d;
+      }
+    }
+    {{ end }}
+
+    .dir-icon {
+      fill: #54aeff;
+      flex-shrink: 0;
+    }
+
+    .file-icon-small {
+      fill: #57606a;
+      flex-shrink: 0;
+    }
+
+    {{ if eq .Mode "dark" }}
+    .file-icon-small {
+      fill: #8b949e;
+    }
+    {{ else if eq .Mode "auto" }}
+    @media (prefers-color-scheme: dark) {
+      .file-icon-small {
+        fill: #8b949e;
+      }
+    }
+    {{ end }}
+
+    /* Breadcrumb styles */
+    .breadcrumb-container {
+      padding: 16px 20px;
+      border-bottom: 1px solid #d0d7de;
+      background: #f6f8fa;
+    }
+
+    {{ if eq .Mode "dark" }}
+    .breadcrumb-container {
+      background: #0d1117;
+      border-bottom-color: #30363d;
+    }
+    {{ else if eq .Mode "auto" }}
+    @media (prefers-color-scheme: dark) {
+      .breadcrumb-container {
+        background: #0d1117;
+        border-bottom-color: #30363d;
+      }
+    }
+    {{ end }}
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+
+    .breadcrumb a {
+      color: #0969da;
+      text-decoration: none;
+    }
+
+    {{ if eq .Mode "dark" }}
+    .breadcrumb a {
+      color: #58a6ff;
+    }
+    {{ else if eq .Mode "auto" }}
+    @media (prefers-color-scheme: dark) {
+      .breadcrumb a {
+        color: #58a6ff;
+      }
+    }
+    {{ end }}
+
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    .breadcrumb .separator {
+      color: #57606a;
+    }
+
+    {{ if eq .Mode "dark" }}
+    .breadcrumb .separator {
+      color: #8b949e;
+    }
+    {{ else if eq .Mode "auto" }}
+    @media (prefers-color-scheme: dark) {
+      .breadcrumb .separator {
+        color: #8b949e;
+      }
+    }
+    {{ end }}
+
+    .breadcrumb .current {
+      font-weight: 600;
+    }
+
+    .directory-index {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    .back-to-readme {
+      margin-bottom: 24px;
+    }
+
+    .directory-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #d0d7de;
+    }
+
+    {{ if eq .Mode "dark" }}
+    .directory-title {
+      border-bottom-color: #30363d;
+    }
+    {{ else if eq .Mode "light" }}
+    .directory-title {
+      border-bottom-color: #d0d7de;
+    }
+    {{ else }}
+    @media (prefers-color-scheme: dark) {
+      .directory-title {
+        border-bottom-color: #30363d;
+      }
+    }
+    @media (prefers-color-scheme: light) {
+      .directory-title {
+        border-bottom-color: #d0d7de;
+      }
+    }
+    {{ end }}
+
+    .folder-icon {
+      fill: #54aeff;
+    }
+
+    .file-tree {
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    {{ if eq .Mode "dark" }}
+    .file-tree {
+      border-color: #30363d;
+    }
+    {{ else if eq .Mode "light" }}
+    .file-tree {
+      border-color: #d0d7de;
+    }
+    {{ else }}
+    @media (prefers-color-scheme: dark) {
+      .file-tree {
+        border-color: #30363d;
+      }
+    }
+    @media (prefers-color-scheme: light) {
+      .file-tree {
+        border-color: #d0d7de;
+      }
+    }
+    {{ end }}
+
+    .file-item {
+      border-bottom: 1px solid #d0d7de;
+      padding: 0;
+    }
+
+    {{ if eq .Mode "dark" }}
+    .file-item {
+      border-bottom-color: #30363d;
+    }
+    {{ else if eq .Mode "light" }}
+    .file-item {
+      border-bottom-color: #d0d7de;
+    }
+    {{ else }}
+    @media (prefers-color-scheme: dark) {
+      .file-item {
+        border-bottom-color: #30363d;
+      }
+    }
+    @media (prefers-color-scheme: light) {
+      .file-item {
+        border-bottom-color: #d0d7de;
+      }
+    }
+    {{ end }}
+
+    .file-item:last-child {
+      border-bottom: none;
+    }
+
+    .file-item a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.15s ease;
+    }
+
+    .file-item:hover {
+      background-color: #f6f8fa;
+    }
+
+    {{ if eq .Mode "dark" }}
+    .file-item:hover {
+      background-color: #161b22;
+    }
+    {{ else if eq .Mode "light" }}
+    .file-item:hover {
+      background-color: #f6f8fa;
+    }
+    {{ else }}
+    @media (prefers-color-scheme: dark) {
+      .file-item:hover {
+        background-color: #161b22;
+      }
+    }
+    @media (prefers-color-scheme: light) {
+      .file-item:hover {
+        background-color: #f6f8fa;
+      }
+    }
+    {{ end }}
+
+    .file-item[data-depth="1"] a {
+      padding-left: 32px;
+    }
+
+    .file-item[data-depth="2"] a {
+      padding-left: 48px;
+    }
+
+    .file-item[data-depth="3"] a {
+      padding-left: 64px;
+    }
+
+    .file-icon {
+      flex-shrink: 0;
+      fill: #57606a;
+    }
+
+    {{ if eq .Mode "dark" }}
+    .file-icon {
+      fill: #8b949e;
+    }
+    {{ else if eq .Mode "light" }}
+    .file-icon {
+      fill: #57606a;
+    }
+    {{ else }}
+    @media (prefers-color-scheme: dark) {
+      .file-icon {
+        fill: #8b949e;
+      }
+    }
+    @media (prefers-color-scheme: light) {
+      .file-icon {
+        fill: #57606a;
+      }
+    }
+    {{ end }}
+
+    .file-name {
+      font-size: 14px;
+    }
+
+    @media (max-width: 767px) {
+      .directory-index {
+        padding: 10px;
+        margin: 20px auto;
+      }
+
+      .browse-button-container {
+        top: 10px;
+        right: 10px;
+      }
+
+      .btn-browse,
+      .btn-back {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+    }
     </style>
   </head>
 
   <body>
+    {{if .ShowBrowseButton}}
+    <!-- Browse Files Button with Popover -->
+    <div class="browse-button-container">
+      <button id="browse-files-btn" class="btn-browse">
+        <svg class="file-icon" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true">
+          <path d="M1.75 1A1.75 1.75 0 0 0 0 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0 0 16 13.25v-8.5A1.75 1.75 0 0 0 14.25 3H7.5a.25.25 0 0 1-.2-.1l-.9-1.2C6.07 1.26 5.55 1 5 1H1.75Z"></path>
+        </svg>
+        Browse Files
+      </button>
+
+      <!-- Popover -->
+      <div id="files-popover" class="files-popover" style="display: none;">
+        <div class="popover-header">
+          <h3>Files</h3>
+          <button id="close-popover" class="close-btn">×</button>
+        </div>
+        <div class="popover-body">
+          {{if .FileTree}}
+          <div class="file-tree-popover">
+            {{range .FileTree}}
+            <div class="file-tree-item">
+              <a href="{{if .Path}}/{{.Path}}{{if .IsDir}}/{{end}}{{else}}/{{end}}">
+                {{if .IsDir}}
+                <svg class="dir-icon" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true">
+                  <path d="M1.75 1A1.75 1.75 0 0 0 0 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0 0 16 13.25v-8.5A1.75 1.75 0 0 0 14.25 3H7.5a.25.25 0 0 1-.2-.1l-.9-1.2C6.07 1.26 5.55 1 5 1H1.75Z"></path>
+                </svg>
+                {{else}}
+                <svg class="file-icon-small" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true">
+                  <path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path>
+                </svg>
+                {{end}}
+                <span>{{.Name}}</span>
+              </a>
+            </div>
+            {{end}}
+          </div>
+          {{end}}
+        </div>
+      </div>
+    </div>
+    {{end}}
+
+    <!-- Breadcrumb Navigation -->
+    {{if .BreadcrumbItems}}
+    <div class="breadcrumb-container">
+      <nav class="breadcrumb">
+        <a href="/">Home</a>
+        {{range .BreadcrumbItems}}
+        <span class="separator">›</span>
+        {{if .IsCurrent}}
+        <span class="current">{{.Name}}</span>
+        {{else}}
+        <a href="/{{.Path}}/">{{.Name}}</a>
+        {{end}}
+        {{end}}
+      </nav>
+    </div>
+    {{end}}
+
+    {{if .IsDirectoryIndex}}
+    <!-- Directory Index View -->
+    <div class="directory-index markdown-body">
+      {{if .HasReadme}}
+      <div class="back-to-readme">
+        <a href="/{{if .CurrentPath}}{{.CurrentPath}}/{{end}}" class="btn-back">
+          <svg viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true">
+            <path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path>
+          </svg>
+          Back to README
+        </a>
+      </div>
+      {{end}}
+
+      <h1 class="directory-title">
+        <svg class="folder-icon" viewBox="0 0 16 16" version="1.1" width="24" height="24" aria-hidden="true">
+          <path d="M1.75 1A1.75 1.75 0 0 0 0 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0 0 16 13.25v-8.5A1.75 1.75 0 0 0 14.25 3H7.5a.25.25 0 0 1-.2-.1l-.9-1.2C6.07 1.26 5.55 1 5 1H1.75Z"></path>
+        </svg>
+        {{if .DirectoryTitle}}{{.DirectoryTitle}}{{else}}Files{{end}}
+      </h1>
+
+      <div class="file-tree">
+        {{range .FileTree}}
+        <div class="file-item">
+          <a href="{{if .Path}}/{{.Path}}{{if .IsDir}}/{{end}}{{else}}/{{end}}">
+            {{if .IsDir}}
+            <svg class="dir-icon" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true">
+              <path d="M1.75 1A1.75 1.75 0 0 0 0 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0 0 16 13.25v-8.5A1.75 1.75 0 0 0 14.25 3H7.5a.25.25 0 0 1-.2-.1l-.9-1.2C6.07 1.26 5.55 1 5 1H1.75Z"></path>
+            </svg>
+            {{else}}
+            <svg class="file-icon" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true">
+              <path d="M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z"></path>
+            </svg>
+            {{end}}
+            <span class="file-name">{{.Name}}</span>
+          </a>
+        </div>
+        {{end}}
+      </div>
+    </div>
+    {{else}}
     <article id="markdown-body" class="markdown-body">{{ .Body }}</article>
+    {{end}}
 
     <script type="text/javascript">
       Param = {
         host: "{{ .Host }}", // type: string
         mode: "{{ .Mode }}", // type: string
         reload: {{ .Reload }}, // type: bool
+        isDirectoryIndex: {{ .IsDirectoryIndex }}, // type: bool
       };
 
       MathJax = {
@@ -134,6 +695,37 @@
           ],
         },
       };
+
+      // Popover functionality
+      document.addEventListener('DOMContentLoaded', function() {
+        const browseBtn = document.getElementById('browse-files-btn');
+        const popover = document.getElementById('files-popover');
+        const closeBtn = document.getElementById('close-popover');
+
+        if (browseBtn && popover) {
+          browseBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isVisible = popover.style.display !== 'none';
+            popover.style.display = isVisible ? 'none' : 'block';
+          });
+
+          if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+              popover.style.display = 'none';
+            });
+          }
+
+          // Close popover when clicking outside
+          document.addEventListener('click', function(e) {
+            if (popover.style.display !== 'none' &&
+                !popover.contains(e.target) &&
+                e.target !== browseBtn &&
+                !browseBtn.contains(e.target)) {
+              popover.style.display = 'none';
+            }
+          });
+        }
+      });
     </script>
     <script type="text/javascript" src="/static/tex-mml-chtml.min.js"></script>
     <script type="text/javascript" src="/static/mermaid.min.js"></script>

@@ -114,7 +114,10 @@
   }
 
   (async function () {
-    await loadMarkdown();
+    // Only load markdown initially if not in directory index mode
+    if (!window.Param.isDirectoryIndex) {
+      await loadMarkdown();
+    }
 
     if (window.Param.reload) {
       const conn = new WebSocket(`ws://${window.Param.host}/ws`);
@@ -124,7 +127,13 @@
       conn.onmessage = (e) => {
         if (e.data === "reload") {
           console.log("Reload page!");
-          loadMarkdown();
+          // For directory index view, do a full page reload
+          // For markdown view, reload just the markdown content
+          if (window.Param.isDirectoryIndex) {
+            window.location.reload();
+          } else {
+            loadMarkdown();
+          }
         }
       };
     }

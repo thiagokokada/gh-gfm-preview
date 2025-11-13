@@ -1,13 +1,14 @@
 package server
 
 import (
-	"cmp"
 	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"net"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -38,20 +39,64 @@ func (server *Server) Serve(param *Param) error {
 	}
 
 	filename := ""
+	dir := ""
 
 	var err error
 	if !param.UseStdin {
-		filename, err = app.TargetFile(param.Filename)
-		if err != nil {
-			return fmt.Errorf("target file error: %w", err)
+		// Check if filename is a directory
+		inputPath := param.Filename
+		if inputPath == "" {
+			inputPath = "."
 		}
+
+		info, statErr := os.Stat(inputPath)
+		isDir := statErr == nil && info.IsDir()
+
+		if isDir && param.DirectoryListing {
+			// Directory listing mode
+			param.IsDirectoryMode = true
+			param.DirectoryPath = inputPath
+			dir = inputPath
+
+			// Try to find README
+			readme, readmeErr := app.FindReadme(inputPath)
+			if readmeErr == nil {
+				param.ReadmeFile = readme
+				filename = readme
+			} else {
+				// No README found, will show directory listing
+				filename = ""
+			}
+		} else {
+			// Regular file mode
+			filename, err = app.TargetFile(param.Filename)
+			if err != nil {
+				if param.DirectoryListing && errors.Is(err, app.ErrFileNotFound) {
+					// README not found but directory listing is enabled
+					param.IsDirectoryMode = true
+					param.DirectoryPath = inputPath
+					dir = inputPath
+					filename = ""
+				} else {
+					return fmt.Errorf("target file error: %w", err)
+				}
+			} else {
+				dir = filepath.Dir(filename)
+			}
+		}
+	} else {
+		dir = "."
 	}
 
-	dir := filepath.Dir(filename)
+	// Get the static subdirectory from embed.FS
+	staticFS, err := fs.Sub(staticDir, "static")
+	if err != nil {
+		return fmt.Errorf("failed to get static subdirectory: %w", err)
+	}
 
 	serveMux := http.NewServeMux()
 	serveMux.Handle("/", wrapHandler(handler(filename, param, http.FileServer(http.Dir(dir)))))
-	serveMux.Handle("/static/", wrapHandler(handler(filename, param, http.FileServer(http.FS(staticDir)))))
+	serveMux.Handle("/static/", wrapHandler(http.StripPrefix("/static/", http.FileServer(http.FS(staticFS)))))
 	serveMux.Handle("/__/md", wrapHandler(mdHandler(filename, param)))
 
 	watcher, err := createWatcher(dir)
@@ -98,26 +143,31 @@ func (server *Server) Serve(param *Param) error {
 
 func handler(filename string, param *Param, h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !strings.HasSuffix(r.URL.Path, ".md") && r.URL.Path != "/" {
-			h.ServeHTTP(w, r)
+		if !param.IsDirectoryMode {
+			// Original single-file mode
+			if !strings.HasSuffix(r.URL.Path, ".md") && r.URL.Path != "/" {
+				h.ServeHTTP(w, r)
+				return
+			}
 
+			templateParam := TemplateParam{
+				Title:  getTitle(filename),
+				Body:   mdResponse(w, filename, param),
+				Host:   r.Host,
+				Reload: param.Reload,
+				Mode:   param.getMode().String(),
+			}
+
+			err := tmpl.Execute(w, templateParam)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 			return
 		}
 
-		param := TemplateParam{
-			Title:  getTitle(filename),
-			Body:   mdResponse(w, filename, param),
-			Host:   r.Host,
-			Reload: param.Reload,
-			Mode:   param.getMode().String(),
-		}
-
-		err := tmpl.Execute(w, param)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-
-			return
-		}
+		// Directory browsing mode
+		handleDirectoryMode(w, r, param)
 	})
 }
 
@@ -163,7 +213,18 @@ func mdHandler(filename string, param *Param) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		pathParam := r.URL.Query().Get("path")
 
-		file := cmp.Or(pathParam, filename)
+		var file string
+		if pathParam != "" {
+			// In directory mode, convert relative path to absolute path
+			if param.IsDirectoryMode {
+				file = filepath.Join(param.DirectoryPath, pathParam)
+			} else {
+				file = pathParam
+			}
+		} else {
+			file = filename
+		}
+
 		html := mdResponse(w, file, param)
 		title := getTitle(file)
 
