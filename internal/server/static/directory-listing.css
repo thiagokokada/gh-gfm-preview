@@ -1,3 +1,10 @@
+:root {
+  --background-dark: #0d1117;
+  --background-light: #ffffff;
+  --color-dark: #c9d1d9;
+  --color-light: #1f2328;
+}
+
 /* Directory browsing styles */
 .browse-button-container {
   position: relative;
@@ -94,12 +101,12 @@
 }
 
 .close-btn:hover {
-  color: #1f2328;
+  color: var(--background-light);
 }
 
 @media (prefers-color-scheme: dark) {
   .close-btn:hover {
-    color: #c9d1d9;
+    color: var(--background-dark);
   }
 }
 
@@ -158,13 +165,13 @@
   justify-content: space-between;
   padding: 16px 20px;
   border-bottom: 1px solid #d0d7de;
-  background: #f6f8fa;
+  background: var(--background-light);
   font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
 }
 
 @media (prefers-color-scheme: dark) {
   .breadcrumb-container {
-    background: #0d1117;
+    background: var(--background-dark);
     border-bottom-color: #30363d;
   }
 }
