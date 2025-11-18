@@ -3,6 +3,7 @@ package server
 import (
 	"errors"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -11,16 +12,17 @@ import (
 )
 
 const (
-	pongWait   = 60 * time.Second
-	pingPeriod = (pongWait * 9) / 10
+	defaultPongWait   = 60 * time.Second
+	defaultPingPeriod = (defaultPongWait * 9) / 10
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-}
-
-var socket *websocket.Conn
+var (
+	upgrader   = websocket.Upgrader{ReadBufferSize: 1024, WriteBufferSize: 1024}
+	pongWait   = defaultPongWait
+	pingPeriod = defaultPingPeriod
+	socket     *websocket.Conn
+	mu         sync.Mutex
+)
 
 func wsHandler(watcher *fsnotify.Watcher) http.Handler {
 	reload := make(chan bool, 1)
@@ -82,9 +84,14 @@ func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
 	defer ticker.Stop()
 
 	for {
+		var err error
+
 		select {
 		case <-reload:
-			err := socket.WriteMessage(websocket.TextMessage, []byte("reload"))
+			withLock(func() {
+				err = socket.WriteMessage(websocket.TextMessage, []byte("reload"))
+			})
+
 			if err != nil {
 				utils.LogDebugf("Debug [reload error]: %v", err)
 
@@ -92,8 +99,10 @@ func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
 			}
 		case <-ticker.C:
 			utils.LogDebugf("Debug [ping send]: ping to client")
+			withLock(func() {
+				err = socket.WriteMessage(websocket.PingMessage, []byte{})
+			})
 
-			err := socket.WriteMessage(websocket.PingMessage, []byte{})
 			if err != nil {
 				// Do nothing
 				utils.LogDebugf("Debug [ping error]: %v", err)
@@ -102,4 +111,11 @@ func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
 			return
 		}
 	}
+}
+
+func withLock(fn func()) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	fn()
 }
