@@ -27,8 +27,8 @@ var upgrader = websocket.Upgrader{
 }
 
 var (
-	socket     *websocket.Conn
-	writeMutex sync.Mutex
+	socket *websocket.Conn
+	mu     sync.Mutex
 )
 
 func getPongWait() time.Duration {
@@ -109,11 +109,11 @@ func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
 	for {
 		select {
 		case <-reload:
-			writeMutex.Lock()
+			mu.Lock()
 
 			err := socket.WriteMessage(websocket.TextMessage, []byte("reload"))
 
-			writeMutex.Unlock()
+			mu.Unlock()
 
 			if err != nil {
 				utils.LogDebugf("Debug [reload error]: %v", err)
@@ -123,11 +123,11 @@ func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
 		case <-ticker.C:
 			utils.LogDebugf("Debug [ping send]: ping to client")
 
-			writeMutex.Lock()
+			mu.Lock()
 
 			err := socket.WriteMessage(websocket.PingMessage, []byte{})
 
-			writeMutex.Unlock()
+			mu.Unlock()
 
 			if err != nil {
 				// Do nothing
