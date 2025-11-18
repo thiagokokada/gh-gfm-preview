@@ -1,9 +1,7 @@
 package server
 
 import (
-	"errors"
 	"fmt"
-	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
@@ -13,117 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/websocket"
-	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 )
-
-// Unsafe implementation for testing - demonstrates the bug without mutex protection.
-var socketUnsafe *websocket.Conn
-
-func wsHandlerUnsafe(watcher *fsnotify.Watcher, pingPeriodOverride time.Duration) http.Handler {
-	reload := make(chan bool, 1)
-	errorChan := make(chan error)
-	done := make(chan any)
-
-	go watch(done, errorChan, reload, watcher)
-
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var err error
-
-		socketUnsafe, err = upgrader.Upgrade(w, r, nil)
-		if err != nil {
-			if errors.Is(err, websocket.HandshakeError{}) {
-				utils.LogDebugf("Debug [handshake error]: %v", err)
-			}
-
-			return
-		}
-
-		err = socketUnsafe.SetReadDeadline(time.Now().Add(60 * time.Second))
-		if err != nil {
-			utils.LogDebugf("Debug [set read deadline error]: %v", err)
-		}
-
-		socketUnsafe.SetPongHandler(func(string) error {
-			err := socketUnsafe.SetReadDeadline(time.Now().Add(60 * time.Second))
-			if err != nil {
-				utils.LogDebugf("Debug [set read deadline error in pong handler]: %v", err)
-			}
-
-			return nil
-		})
-
-		go wsReaderUnsafe(done, errorChan)
-		go wsWriterUnsafe(done, errorChan, reload, pingPeriodOverride)
-
-		err = <-errorChan
-
-		close(done)
-		utils.LogInfof("Close WebSocket: %v\n", err)
-		socketUnsafe.Close()
-	})
-}
-
-func wsReaderUnsafe(done <-chan any, errorChan chan<- error) {
-	for range done {
-		_, _, err := socketUnsafe.ReadMessage()
-		if err != nil {
-			utils.LogDebugf("Debug [read message]: %v", err)
-
-			errorChan <- err
-		}
-	}
-}
-
-// wsWriterUnsafe demonstrates the bug: WriteMessage calls are NOT protected by mutex.
-func wsWriterUnsafe(done <-chan any, errChan chan<- error, reload <-chan bool, pingPeriodOverride time.Duration) {
-	ticker := time.NewTicker(pingPeriodOverride)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-reload:
-			// UNSAFE: NO MUTEX PROTECTION - concurrent writes can occur!
-			err := socketUnsafe.WriteMessage(websocket.TextMessage, []byte("reload"))
-			if err != nil {
-				utils.LogDebugf("Debug [reload error]: %v", err)
-
-				errChan <- err
-			}
-		case <-ticker.C:
-			utils.LogDebugf("Debug [ping send]: ping to client")
-			// UNSAFE: NO MUTEX PROTECTION - concurrent writes can occur!
-			err := socketUnsafe.WriteMessage(websocket.PingMessage, []byte{})
-			if err != nil {
-				utils.LogDebugf("Debug [ping error]: %v", err)
-			}
-		case <-done:
-			return
-		}
-	}
-}
-
-// TestConcurrentWritePanicReproduction demonstrates the concurrent write bug
-// Uses the unsafe implementation above (without mutex) to reliably trigger the panic.
-func TestConcurrentWritePanicReproduction(t *testing.T) {
-	shortPingPeriod := 10 * time.Millisecond
-
-	ws, testFile, cleanup := setupConcurrencyTest(t, shortPingPeriod, true)
-	defer cleanup()
-
-	panicCount := runConcurrentWriteTest(t, ws, testFile)
-
-	if panicCount > 0 {
-		t.Logf("✓✓✓ SUCCESS: BUG REPRODUCED! ✓✓✓")
-		t.Logf("Panic count: %d", panicCount)
-		t.Logf("This demonstrates the 'concurrent write to websocket connection' bug")
-		t.Logf("The fix (using sync.Mutex) prevents this panic")
-	} else {
-		t.Logf("No panic detected (test conditions may not have triggered the race)")
-		t.Logf("Note: Race conditions are timing-dependent and may not always trigger")
-	}
-}
 
 // TestConcurrentWriteWithMutex verifies that the mutex fix prevents panics.
 func TestConcurrentWriteWithMutex(t *testing.T) {
@@ -135,7 +24,7 @@ func TestConcurrentWriteWithMutex(t *testing.T) {
 		testPongWait = 0
 	}()
 
-	ws, testFile, cleanup := setupConcurrencyTest(t, 0, false)
+	ws, testFile, cleanup := setupConcurrencyTest(t)
 	defer cleanup()
 
 	panicCount := runConcurrentWriteTest(t, ws, testFile)
@@ -148,7 +37,7 @@ func TestConcurrentWriteWithMutex(t *testing.T) {
 	t.Logf("No 'concurrent write' panics detected with mutex protection")
 }
 
-func setupConcurrencyTest(t *testing.T, pingPeriod time.Duration, useUnsafe bool) (*websocket.Conn, *os.File, func()) {
+func setupConcurrencyTest(t *testing.T) (*websocket.Conn, *os.File, func()) {
 	t.Helper()
 
 	testFile, err := os.CreateTemp(t.TempDir(), "markdown-preview-test")
@@ -164,12 +53,7 @@ func setupConcurrencyTest(t *testing.T, pingPeriod time.Duration, useUnsafe bool
 		t.Fatalf("%v", err)
 	}
 
-	var s *httptest.Server
-	if useUnsafe {
-		s = httptest.NewServer(wsHandlerUnsafe(watcher, pingPeriod))
-	} else {
-		s = httptest.NewServer(wsHandler(watcher))
-	}
+	s := httptest.NewServer(wsHandler(watcher))
 
 	u := "ws" + strings.TrimPrefix(s.URL, "http")
 
