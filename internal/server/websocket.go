@@ -12,40 +12,17 @@ import (
 )
 
 const (
-	pongWait   = 60 * time.Second
-	pingPeriod = (pongWait * 9) / 10
+	defaultPongWait   = 60 * time.Second
+	defaultPingPeriod = (defaultPongWait * 9) / 10
 )
 
 var (
-	testPongWait   time.Duration
-	testPingPeriod time.Duration
+	upgrader   = websocket.Upgrader{ReadBufferSize: 1024, WriteBufferSize: 1024}
+	pongWait   = defaultPongWait
+	pingPeriod = defaultPingPeriod
+	socket     *websocket.Conn
+	mu         sync.Mutex
 )
-
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-}
-
-var (
-	socket *websocket.Conn
-	mu     sync.Mutex
-)
-
-func getPongWait() time.Duration {
-	if testPongWait > 0 {
-		return testPongWait
-	}
-
-	return pongWait
-}
-
-func getPingPeriod() time.Duration {
-	if testPingPeriod > 0 {
-		return testPingPeriod
-	}
-
-	return pingPeriod
-}
 
 func wsHandler(watcher *fsnotify.Watcher) http.Handler {
 	reload := make(chan bool, 1)
@@ -66,13 +43,13 @@ func wsHandler(watcher *fsnotify.Watcher) http.Handler {
 			return
 		}
 
-		err = socket.SetReadDeadline(time.Now().Add(getPongWait()))
+		err = socket.SetReadDeadline(time.Now().Add(pongWait))
 		if err != nil {
 			utils.LogDebugf("Debug [set read deadline error]: %v", err)
 		}
 
 		socket.SetPongHandler(func(string) error {
-			err := socket.SetReadDeadline(time.Now().Add(getPongWait()))
+			err := socket.SetReadDeadline(time.Now().Add(pongWait))
 			if err != nil {
 				utils.LogDebugf("Debug [set read deadline error in pong handler]: %v", err)
 			}
@@ -103,7 +80,7 @@ func wsReader(done <-chan any, errorChan chan<- error) {
 }
 
 func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
-	ticker := time.NewTicker(getPingPeriod())
+	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
 
 	for {
@@ -111,12 +88,9 @@ func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
 
 		select {
 		case <-reload:
-			func() {
-				mu.Lock()
-				defer mu.Unlock()
-
+			withLock(func() {
 				err = socket.WriteMessage(websocket.TextMessage, []byte("reload"))
-			}()
+			})
 
 			if err != nil {
 				utils.LogDebugf("Debug [reload error]: %v", err)
@@ -125,12 +99,9 @@ func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
 			}
 		case <-ticker.C:
 			utils.LogDebugf("Debug [ping send]: ping to client")
-			func() {
-				mu.Lock()
-				defer mu.Unlock()
-
+			withLock(func() {
 				err = socket.WriteMessage(websocket.PingMessage, []byte{})
-			}()
+			})
 
 			if err != nil {
 				// Do nothing
@@ -140,4 +111,11 @@ func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
 			return
 		}
 	}
+}
+
+func withLock(fn func()) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	fn()
 }

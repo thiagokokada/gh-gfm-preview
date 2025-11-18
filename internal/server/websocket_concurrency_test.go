@@ -16,12 +16,12 @@ import (
 
 // TestConcurrentWriteWithMutex verifies that the mutex fix prevents panics.
 func TestConcurrentWriteWithMutex(t *testing.T) {
-	testPingPeriod = 10 * time.Millisecond
-	testPongWait = 60 * time.Second
+	pingPeriod = 10 * time.Millisecond
+	pongWait = 60 * time.Second
 
 	defer func() {
-		testPingPeriod = 0
-		testPongWait = 0
+		pingPeriod = defaultPingPeriod
+		pongWait = defaultPongWait
 	}()
 
 	ws, testFile, cleanup := setupConcurrencyTest(t)
@@ -30,11 +30,8 @@ func TestConcurrentWriteWithMutex(t *testing.T) {
 	panicCount := runConcurrentWriteTest(t, ws, testFile)
 
 	if panicCount > 0 {
-		t.Logf("Warning: Some panics occurred (likely from connection close): %d", panicCount)
+		t.Logf("warning: panics occurred (likely from connection close): %d", panicCount)
 	}
-
-	t.Logf("✓ Mutex fix works correctly")
-	t.Logf("No 'concurrent write' panics detected with mutex protection")
 }
 
 func setupConcurrencyTest(t *testing.T) (*websocket.Conn, *os.File, func()) {
@@ -94,10 +91,7 @@ func runConcurrentWriteTest(t *testing.T, ws *websocket.Conn, testFile *os.File)
 				if r := recover(); r != nil {
 					atomic.AddInt32(&panicCount, 1)
 
-					errStr := fmt.Sprintf("%v", r)
-					if strings.Contains(errStr, "concurrent write to websocket connection") {
-						t.Logf("✓ BUG REPRODUCED! Writer %d caught panic: %v", id, r)
-					}
+					t.Logf("writer %d caught panic: %v", id, r)
 				}
 			}()
 
@@ -164,10 +158,8 @@ func handleReaderPanic(t *testing.T, panicCount *int32) {
 		atomic.AddInt32(panicCount, 1)
 
 		errStr := fmt.Sprintf("%v", r)
-		if strings.Contains(errStr, "concurrent write to websocket connection") {
-			t.Logf("✓ BUG REPRODUCED! Reader caught panic: %v", r)
-		} else if !strings.Contains(errStr, "repeated read") {
-			t.Errorf("UNEXPECTED PANIC in reader: %v", r)
+		if !strings.Contains(errStr, "repeated read") {
+			t.Errorf("unexpected panic in reader: %v", r)
 		}
 	}
 }
