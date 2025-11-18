@@ -76,7 +76,7 @@ gh extension install thiagokokada/gh-gfm-preview
 Upgrade:
 
 ```console
-gh extension upgrade markdown-preview
+gh extension upgrade gfm-preview
 ```
 
 ### Standalone
