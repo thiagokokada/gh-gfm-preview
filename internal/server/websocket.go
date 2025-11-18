@@ -107,13 +107,16 @@ func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
 	defer ticker.Stop()
 
 	for {
+		var err error
+
 		select {
 		case <-reload:
-			mu.Lock()
+			func() {
+				mu.Lock()
+				defer mu.Unlock()
 
-			err := socket.WriteMessage(websocket.TextMessage, []byte("reload"))
-
-			mu.Unlock()
+				err = socket.WriteMessage(websocket.TextMessage, []byte("reload"))
+			}()
 
 			if err != nil {
 				utils.LogDebugf("Debug [reload error]: %v", err)
@@ -122,12 +125,12 @@ func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
 			}
 		case <-ticker.C:
 			utils.LogDebugf("Debug [ping send]: ping to client")
+			func() {
+				mu.Lock()
+				defer mu.Unlock()
 
-			mu.Lock()
-
-			err := socket.WriteMessage(websocket.PingMessage, []byte{})
-
-			mu.Unlock()
+				err = socket.WriteMessage(websocket.PingMessage, []byte{})
+			}()
 
 			if err != nil {
 				// Do nothing
