@@ -37,7 +37,7 @@ func handleDirectoryMode(w http.ResponseWriter, r *http.Request, param *Param) {
 	}
 
 	if err != nil {
-		http.Error(w, "Not Found", http.StatusNotFound)
+		render404Error(w, r, param, currentURLPath)
 
 		return
 	}
@@ -328,4 +328,34 @@ func appendCurrentItem(items []BreadcrumbItem, currentPath, currentName string) 
 		Path:      path,
 		IsCurrent: true,
 	})
+}
+
+func render404Error(w http.ResponseWriter, r *http.Request, param *Param, currentURLPath string) {
+	w.WriteHeader(http.StatusNotFound)
+
+	errorMessage := "<h1>404 - Not Found</h1><p>The requested path does not exist.</p>"
+
+	extensions := app.ParseExtensions(param.DirectoryListingShowExtensions)
+	parentPath := getParentPath(currentURLPath)
+	parentDir := filepath.Join(param.DirectoryPath, parentPath)
+
+	templateParam := TemplateParam{
+		Title:            "404 - Not Found",
+		Body:             errorMessage,
+		Host:             r.Host,
+		Reload:           param.Reload,
+		Mode:             param.getMode().String(),
+		ShowBrowseButton: true,
+		BreadcrumbItems:  generateBreadcrumbItems(parentPath, filepath.Base(currentURLPath), false),
+	}
+
+	files, dirs, err := app.ListDirectoryContents(parentDir, extensions)
+	if err == nil {
+		templateParam.FileTree = generateFileTree(files, dirs, parentPath)
+	}
+
+	err = tmpl.Execute(w, templateParam)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
