@@ -1,9 +1,11 @@
 package server
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -32,6 +34,8 @@ func TestDirectoryBrowsingMode(t *testing.T) {
 		{"Non-existent file", "/does-not-exist.md", http.StatusNotFound},
 		{"Directory listing", "/?view=index", http.StatusOK},
 		{"Subdirectory access", "/images/", http.StatusOK},
+		{"Subdirectory README with trailing slash", "/subdir/", http.StatusOK},
+		{"Subdirectory README.md explicit", "/subdir/README.md", http.StatusOK},
 	}
 
 	for _, tt := range tests {
@@ -44,6 +48,91 @@ func TestDirectoryBrowsingMode(t *testing.T) {
 
 			if res.StatusCode != tt.wantStatus {
 				t.Errorf("status code error for %s: got %v, want %v", tt.path, res.StatusCode, tt.wantStatus)
+			}
+		})
+	}
+}
+
+func TestSubdirectoryReadmeAccess(t *testing.T) {
+	testDir := "../../testdata"
+	param := &Param{
+		DirectoryListing:               true,
+		DirectoryListingShowExtensions: ".md",
+		DirectoryListingTextExtensions: ".md,.txt",
+		IsDirectoryMode:                true,
+		DirectoryPath:                  testDir,
+		ReadmeFile:                     filepath.Join(testDir, "README"),
+		Reload:                         false,
+	}
+
+	ts := httptest.NewServer(handler("", param, http.FileServer(http.Dir(testDir))))
+	defer ts.Close()
+
+	tests := []struct {
+		name          string
+		path          string
+		wantStatus    int
+		wantInBody    string
+		wantNotInBody string
+	}{
+		{
+			name:          "Subdirectory with trailing slash should show README",
+			path:          "/subdir/",
+			wantStatus:    http.StatusOK,
+			wantInBody:    "Subdirectory README",
+			wantNotInBody: "directory-index markdown-body",
+		},
+		{
+			name:          "Subdirectory README.md explicit",
+			path:          "/subdir/README.md",
+			wantStatus:    http.StatusOK,
+			wantInBody:    "Subdirectory README",
+			wantNotInBody: "directory-index markdown-body",
+		},
+		{
+			name:          "Subdirectory without trailing slash should show README",
+			path:          "/subdir",
+			wantStatus:    http.StatusOK,
+			wantInBody:    "Subdirectory README",
+			wantNotInBody: "directory-index markdown-body",
+		},
+		{
+			name:       "Subdirectory with view=index should show directory listing",
+			path:       "/subdir/?view=index",
+			wantStatus: http.StatusOK,
+			wantInBody: "directory-index markdown-body",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			res, err := http.Get(ts.URL + tt.path)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			defer res.Body.Close()
+
+			if res.StatusCode != tt.wantStatus {
+				t.Errorf("status code error for %s: got %v, want %v", tt.path, res.StatusCode, tt.wantStatus)
+			}
+
+			body, err := io.ReadAll(res.Body)
+			if err != nil {
+				t.Fatalf("failed to read response body: %v", err)
+			}
+
+			bodyStr := string(body)
+
+			if tt.wantInBody != "" && !strings.Contains(bodyStr, tt.wantInBody) {
+				t.Errorf("response body should contain %q for %s", tt.wantInBody, tt.path)
+				t.Logf("Body length: %d", len(bodyStr))
+				t.Logf("Body preview (first 2000 chars): %s", bodyStr[:min(2000, len(bodyStr))])
+			}
+
+			if tt.wantNotInBody != "" && strings.Contains(bodyStr, tt.wantNotInBody) {
+				t.Errorf("response body should not contain %q for %s", tt.wantNotInBody, tt.path)
+				t.Logf("Body length: %d", len(bodyStr))
+				t.Logf("Body preview (first 2000 chars): %s", bodyStr[:min(2000, len(bodyStr))])
 			}
 		})
 	}

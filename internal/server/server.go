@@ -242,6 +242,14 @@ func mdHandler(filename string, param *Param) http.Handler {
 			file = filename
 		}
 
+		// If the file is a directory, try to find a README file
+		if info, err := os.Stat(file); err == nil && info.IsDir() {
+			readme, err := app.FindReadme(file)
+			if err == nil {
+				file = readme
+			}
+		}
+
 		html := mdResponse(w, file, param)
 		title := getTitle(file)
 
