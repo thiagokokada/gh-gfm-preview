@@ -18,7 +18,8 @@ const (
 )
 
 var (
-	watcherMu     sync.RWMutex
+	watchedDirs   = make(map[string]bool)
+	watcherMu     sync.Mutex
 	globalWatcher atomic.Pointer[fsnotify.Watcher]
 
 	ErrWatcherNotInitialized = errors.New("watcher not initialized")
@@ -49,6 +50,10 @@ func addDirectoryToWatcher(dir string) error {
 		return ErrWatcherNotInitialized
 	}
 
+	if watchedDirs[dir] {
+		return nil // Already watching this directory
+	}
+
 	watcherMu.Lock()
 	defer watcherMu.Unlock()
 
@@ -57,7 +62,9 @@ func addDirectoryToWatcher(dir string) error {
 		return fmt.Errorf("failed to add dir %s to watcher: %w", dir, err)
 	}
 
-	utils.LogInfof("Watching %s/ for changes", dir)
+	watchedDirs[dir] = true
+
+	utils.LogInfof("Watching %s for changes", dir)
 
 	return nil
 }
