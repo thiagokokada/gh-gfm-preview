@@ -73,7 +73,7 @@ func addDirectoryToWatcher(watcher *fsnotify.Watcher, dir string) error {
 	return nil
 }
 
-func Watch(done <-chan any, errorChan chan<- error, reload chan<- bool) {
+func Watch(doneCh <-chan any, errorCh chan<- error, reloadCh chan<- bool) {
 	re := regexp.MustCompile(ignorePattern)
 	mu := sync.Mutex{}
 	watcher := globalWatcher.Load()
@@ -105,14 +105,14 @@ func Watch(done <-chan any, errorChan chan<- error, reload chan<- bool) {
 
 					utils.LogInfof("Change detected in %s, refreshing", event.Name)
 
-					reload <- true
+					reloadCh <- true
 
 					time.Sleep(lockTime)
 				}()
 			}
 		case err := <-watcher.Errors:
-			errorChan <- err
-		case <-done:
+			errorCh <- err
+		case <-doneCh:
 			return
 		}
 	}

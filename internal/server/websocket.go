@@ -25,11 +25,11 @@ var (
 )
 
 func wsHandler() http.Handler {
-	reload := make(chan bool, 1)
-	errorChan := make(chan error)
-	done := make(chan any)
+	reloadCh := make(chan bool, 1)
+	errorCh := make(chan error)
+	doneCh := make(chan any)
 
-	go watcher.Watch(done, errorChan, reload)
+	go watcher.Watch(doneCh, errorCh, reloadCh)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
@@ -57,29 +57,29 @@ func wsHandler() http.Handler {
 			return nil
 		})
 
-		go wsReader(done, errorChan)
-		go wsWriter(done, errorChan, reload)
+		go wsReader(doneCh, errorCh)
+		go wsWriter(doneCh, errorCh, reloadCh)
 
-		err = <-errorChan
+		err = <-errorCh
 
-		close(done)
+		close(doneCh)
 		utils.LogInfof("Close WebSocket: %v\n", err)
 		socket.Close()
 	})
 }
 
-func wsReader(done <-chan any, errorChan chan<- error) {
-	for range done {
+func wsReader(doneCh <-chan any, errorCh chan<- error) {
+	for range doneCh {
 		_, _, err := socket.ReadMessage()
 		if err != nil {
 			utils.LogDebugf("Debug [read message]: %v", err)
 
-			errorChan <- err
+			errorCh <- err
 		}
 	}
 }
 
-func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
+func wsWriter(doneCh <-chan any, errorCh chan<- error, reloadCh <-chan bool) {
 	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
 
@@ -87,7 +87,7 @@ func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
 		var err error
 
 		select {
-		case <-reload:
+		case <-reloadCh:
 			withSocketLock(func() {
 				err = socket.WriteMessage(websocket.TextMessage, []byte("reload"))
 			})
@@ -95,7 +95,7 @@ func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
 			if err != nil {
 				utils.LogDebugf("Debug [reload error]: %v", err)
 
-				errChan <- err
+				errorCh <- err
 			}
 		case <-ticker.C:
 			utils.LogDebugf("Debug [ping send]: ping to client")
@@ -107,7 +107,7 @@ func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
 				// Do nothing
 				utils.LogDebugf("Debug [ping error]: %v", err)
 			}
-		case <-done:
+		case <-doneCh:
 			return
 		}
 	}
