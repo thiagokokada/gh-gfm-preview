@@ -17,6 +17,7 @@ import (
 	"github.com/thiagokokada/gh-gfm-preview/internal/app"
 	"github.com/thiagokokada/gh-gfm-preview/internal/browser"
 	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
+	"github.com/thiagokokada/gh-gfm-preview/internal/watcher"
 )
 
 //go:generate go run _tools/generate-assets.go
@@ -112,9 +113,9 @@ func (server *Server) Serve(param *Param) error {
 	serveMux.Handle("/static/", wrapHandler(http.StripPrefix("/static/", http.FileServer(http.FS(staticFS)))))
 	serveMux.Handle("/__/md", wrapHandler(mdHandler(filename, param)))
 
-	err = initWatcher(dir)
+	err = watcher.Init(dir)
 	if err != nil {
-		return err
+		return fmt.Errorf("error while file watcher init: %w", err)
 	}
 
 	serveMux.Handle("/ws", wsHandler())

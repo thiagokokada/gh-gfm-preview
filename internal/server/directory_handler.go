@@ -9,6 +9,7 @@ import (
 
 	"github.com/thiagokokada/gh-gfm-preview/internal/app"
 	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
+	"github.com/thiagokokada/gh-gfm-preview/internal/watcher"
 )
 
 // handleDirectoryMode handles HTTP requests in directory browsing mode.
@@ -21,7 +22,7 @@ func handleDirectoryMode(w http.ResponseWriter, r *http.Request, param *Param) {
 
 	currentDir, currentURLPath := resolveDirectoryPath(param.DirectoryPath, urlPath)
 
-	err := addDirectoryToWatcher(currentDir)
+	err := watcher.AddDirectory(currentDir)
 	if err != nil {
 		utils.LogDebugf("Debug [add directory to watcher error]: %v", err)
 	}
@@ -89,7 +90,7 @@ func validateDirectoryAccess(w http.ResponseWriter, basePath, currentPath string
 func handleFileRequest(w http.ResponseWriter, r *http.Request, param *Param, currentDir, currentURLPath string, extensions, textExtensions []string) {
 	fileDir := filepath.Dir(currentDir)
 
-	err := addDirectoryToWatcher(fileDir)
+	err := watcher.AddDirectory(fileDir)
 	if err != nil {
 		utils.LogDebugf("Debug [add directory to watcher error]: %v", err)
 	}
