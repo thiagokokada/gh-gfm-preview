@@ -115,7 +115,7 @@ func (server *Server) Serve(param *Param) error {
 
 	err = watcher.Init(dir)
 	if err != nil {
-		return err
+		return fmt.Errorf("error while file watcher init: %w", err)
 	}
 
 	serveMux.Handle("/ws", wsHandler())

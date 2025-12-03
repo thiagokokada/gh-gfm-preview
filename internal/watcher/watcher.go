@@ -38,7 +38,7 @@ func Init(dir string) error {
 
 	err = AddDirectory(dir)
 	if err != nil {
-		return fmt.Errorf("failed to add directory watcher during init: %w", err)
+		return err
 	}
 
 	return nil
