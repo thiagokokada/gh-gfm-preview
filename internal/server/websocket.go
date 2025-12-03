@@ -21,7 +21,7 @@ var (
 	pongWait   = defaultPongWait
 	pingPeriod = defaultPingPeriod
 	socket     *websocket.Conn
-	mu         sync.Mutex
+	socketMu   sync.Mutex
 )
 
 func wsHandler(watcher *fsnotify.Watcher) http.Handler {
@@ -88,7 +88,7 @@ func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
 
 		select {
 		case <-reload:
-			withLock(func() {
+			withSocketLock(func() {
 				err = socket.WriteMessage(websocket.TextMessage, []byte("reload"))
 			})
 
@@ -99,7 +99,7 @@ func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
 			}
 		case <-ticker.C:
 			utils.LogDebugf("Debug [ping send]: ping to client")
-			withLock(func() {
+			withSocketLock(func() {
 				err = socket.WriteMessage(websocket.PingMessage, []byte{})
 			})
 
@@ -113,9 +113,9 @@ func wsWriter(done <-chan any, errChan chan<- error, reload <-chan bool) {
 	}
 }
 
-func withLock(fn func()) {
-	mu.Lock()
-	defer mu.Unlock()
+func withSocketLock(fn func()) {
+	socketMu.Lock()
+	defer socketMu.Unlock()
 
 	fn()
 }
