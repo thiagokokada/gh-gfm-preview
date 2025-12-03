@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -18,7 +19,7 @@ const (
 
 var (
 	watcherMu     sync.RWMutex
-	globalWatcher *fsnotify.Watcher
+	globalWatcher atomic.Pointer[fsnotify.Watcher]
 
 	ErrWatcherNotInitialized = errors.New("watcher not initialized")
 )
@@ -26,32 +27,36 @@ var (
 func createWatcher(dir string) (*fsnotify.Watcher, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		return watcher, fmt.Errorf("failed to create watcher: %w", err)
+		return nil, fmt.Errorf("failed to create watcher: %w", err)
 	}
 
-	globalWatcher = watcher
+	swapped := globalWatcher.CompareAndSwap(nil, watcher)
+	if swapped {
+		utils.LogDebugf("Debug [watcher created]")
+	}
 
 	utils.LogInfof("Watching %s/ for changes", dir)
 
 	err = addDirectoryToWatcher(dir)
 	if err != nil {
-		return watcher, fmt.Errorf("failed to add dir %s to watcher: %w", dir, err)
+		return watcher, fmt.Errorf("failed to add directory to watcher: %w", err)
 	}
 
 	return watcher, nil
 }
 
 func addDirectoryToWatcher(dir string) error {
-	if globalWatcher == nil {
+	watcher := globalWatcher.Load()
+	if watcher == nil {
 		return ErrWatcherNotInitialized
 	}
 
 	watcherMu.Lock()
 	defer watcherMu.Unlock()
 
-	err := globalWatcher.Add(dir)
+	err := watcher.Add(dir)
 	if err != nil {
-		return fmt.Errorf("failed to add directory to watcher: %w", err)
+		return fmt.Errorf("failed to add dir %s to watcher: %w", dir, err)
 	}
 
 	utils.LogDebugf("Debug [watching directory]: %s", dir)
