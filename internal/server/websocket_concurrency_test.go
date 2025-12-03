@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/thiagokokada/gh-gfm-preview/internal/watcher"
 )
 
 // TestConcurrentWriteWithMutex verifies that the mutex fix prevents panics.
@@ -45,7 +46,7 @@ func setupConcurrencyTest(t *testing.T) (*websocket.Conn, *os.File, func()) {
 	_, _ = testFile.WriteString("INITIAL.\n")
 	dir := filepath.Dir(testFile.Name())
 
-	err = initWatcher(dir)
+	err = watcher.Init(dir)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}

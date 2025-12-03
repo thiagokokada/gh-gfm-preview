@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
+	"github.com/thiagokokada/gh-gfm-preview/internal/watcher"
 )
 
 const (
@@ -28,7 +29,7 @@ func wsHandler() http.Handler {
 	errorChan := make(chan error)
 	done := make(chan any)
 
-	go watch(done, errorChan, reload)
+	go watcher.Watch(done, errorChan, reload)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error

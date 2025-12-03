@@ -1,4 +1,4 @@
-package server
+package watcher
 
 import (
 	"errors"
@@ -25,7 +25,7 @@ var (
 	ErrWatcherNotInitialized = errors.New("watcher not initialized")
 )
 
-func initWatcher(dir string) error {
+func Init(dir string) error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return fmt.Errorf("failed to create watcher: %w", err)
@@ -36,7 +36,7 @@ func initWatcher(dir string) error {
 		utils.LogDebugf("Debug [watcher created]")
 	}
 
-	err = addDirectoryToWatcher(dir)
+	err = AddDirectory(dir)
 	if err != nil {
 		return fmt.Errorf("failed to add directory watcher during init: %w", err)
 	}
@@ -44,7 +44,7 @@ func initWatcher(dir string) error {
 	return nil
 }
 
-func addDirectoryToWatcher(dir string) error {
+func AddDirectory(dir string) error {
 	watcher := globalWatcher.Load()
 	if watcher == nil {
 		return ErrWatcherNotInitialized
@@ -54,6 +54,10 @@ func addDirectoryToWatcher(dir string) error {
 		return nil // Already watching this directory
 	}
 
+	return addDirectoryToWatcher(watcher, dir)
+}
+
+func addDirectoryToWatcher(watcher *fsnotify.Watcher, dir string) error {
 	watcherMu.Lock()
 	defer watcherMu.Unlock()
 
@@ -69,7 +73,7 @@ func addDirectoryToWatcher(dir string) error {
 	return nil
 }
 
-func watch(done <-chan any, errorChan chan<- error, reload chan<- bool) {
+func Watch(done <-chan any, errorChan chan<- error, reload chan<- bool) {
 	re := regexp.MustCompile(ignorePattern)
 	mu := sync.Mutex{}
 	watcher := globalWatcher.Load()

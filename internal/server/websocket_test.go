@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/thiagokokada/gh-gfm-preview/internal/watcher"
 )
 
 const expectedReloadMsg = "reload"
@@ -24,7 +25,7 @@ func TestWriter(t *testing.T) {
 	_, _ = testFile.WriteString("BEFORE.\n")
 	dir := filepath.Dir(testFile.Name())
 
-	err = initWatcher(dir)
+	err = watcher.Init(dir)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -71,7 +72,7 @@ func TestConcurrentWrites(t *testing.T) {
 	_, _ = testFile.WriteString("INITIAL.\n")
 	dir := filepath.Dir(testFile.Name())
 
-	err = initWatcher(dir)
+	err = watcher.Init(dir)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -189,7 +190,7 @@ func TestConcurrentWritesStress(t *testing.T) {
 	_, _ = testFile.WriteString("INITIAL.\n")
 	dir := filepath.Dir(testFile.Name())
 
-	err = initWatcher(dir)
+	err = watcher.Init(dir)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
