@@ -21,7 +21,10 @@ func handleDirectoryMode(w http.ResponseWriter, r *http.Request, param *Param) {
 
 	currentDir, currentURLPath := resolveDirectoryPath(param.DirectoryPath, urlPath)
 
-	_ = AddDirectoryToWatch(currentDir)
+	err := addDirectoryToWatcher(currentDir)
+	if err != nil {
+		utils.LogDebugf("Debug [add directory to watcher error]: %v", err)
+	}
 
 	if !validateDirectoryAccess(w, param.DirectoryPath, currentDir) {
 		return
@@ -56,14 +59,14 @@ func resolveDirectoryPath(basePath, urlPath string) (string, string) {
 func validateDirectoryAccess(w http.ResponseWriter, basePath, currentPath string) bool {
 	absBase, err := filepath.Abs(basePath)
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return false
 	}
 
 	absCurrent, err := filepath.Abs(currentPath)
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return false
 	}
@@ -85,7 +88,11 @@ func validateDirectoryAccess(w http.ResponseWriter, basePath, currentPath string
 
 func handleFileRequest(w http.ResponseWriter, r *http.Request, param *Param, currentDir, currentURLPath string, extensions, textExtensions []string) {
 	fileDir := filepath.Dir(currentDir)
-	_ = AddDirectoryToWatch(fileDir)
+
+	err := addDirectoryToWatcher(fileDir)
+	if err != nil {
+		utils.LogDebugf("Debug [add directory to watcher error]: %v", err)
+	}
 
 	if !app.HasAllowedExtension(currentDir, extensions) {
 		http.Error(w, "Forbidden: File type not allowed", http.StatusForbidden)

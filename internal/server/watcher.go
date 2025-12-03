@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -17,9 +18,8 @@ const (
 )
 
 var (
-	watcherMutex  sync.RWMutex
-	watchedDirs   = make(map[string]bool)
-	globalWatcher *fsnotify.Watcher
+	watcherMu     sync.RWMutex
+	globalWatcher atomic.Pointer[fsnotify.Watcher]
 
 	ErrWatcherNotInitialized = errors.New("watcher not initialized")
 )
@@ -27,48 +27,41 @@ var (
 func createWatcher(dir string) (*fsnotify.Watcher, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		return watcher, fmt.Errorf("failed to create watcher: %w", err)
+		return nil, fmt.Errorf("failed to create watcher: %w", err)
 	}
 
-	globalWatcher = watcher
+	swapped := globalWatcher.CompareAndSwap(nil, watcher)
+	if swapped {
+		utils.LogDebugf("Debug [watcher created]")
+	}
 
 	utils.LogInfof("Watching %s/ for changes", dir)
 
-	err = addDirToWatcher(watcher, dir)
+	err = addDirectoryToWatcher(dir)
 	if err != nil {
-		return watcher, fmt.Errorf("failed to add dir %s to watcher: %w", dir, err)
+		return watcher, fmt.Errorf("failed to add directory to watcher: %w", err)
 	}
 
 	return watcher, nil
 }
 
-// addDirToWatcher adds a directory to the watcher if not already watched.
-func addDirToWatcher(watcher *fsnotify.Watcher, dir string) error {
-	watcherMutex.Lock()
-	defer watcherMutex.Unlock()
-
-	if watchedDirs[dir] {
-		return nil // Already watching this directory
-	}
-
-	err := watcher.Add(dir)
-	if err != nil {
-		return fmt.Errorf("failed to add directory to watcher: %w", err)
-	}
-
-	watchedDirs[dir] = true
-	utils.LogDebugf("Debug [watching directory]: %s", dir)
-
-	return nil
-}
-
-// AddDirectoryToWatch adds a directory to the global watcher.
-func AddDirectoryToWatch(dir string) error {
-	if globalWatcher == nil {
+func addDirectoryToWatcher(dir string) error {
+	watcher := globalWatcher.Load()
+	if watcher == nil {
 		return ErrWatcherNotInitialized
 	}
 
-	return addDirToWatcher(globalWatcher, dir)
+	watcherMu.Lock()
+	defer watcherMu.Unlock()
+
+	err := watcher.Add(dir)
+	if err != nil {
+		return fmt.Errorf("failed to add dir %s to watcher: %w", dir, err)
+	}
+
+	utils.LogDebugf("Debug [watching directory]: %s", dir)
+
+	return nil
 }
 
 func watch(
