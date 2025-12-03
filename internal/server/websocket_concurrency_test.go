@@ -45,12 +45,12 @@ func setupConcurrencyTest(t *testing.T) (*websocket.Conn, *os.File, func()) {
 	_, _ = testFile.WriteString("INITIAL.\n")
 	dir := filepath.Dir(testFile.Name())
 
-	watcher, err := createWatcher(dir)
+	err = initWatcher(dir)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
 
-	s := httptest.NewServer(wsHandler(watcher))
+	s := httptest.NewServer(wsHandler())
 
 	u := "ws" + strings.TrimPrefix(s.URL, "http")
 

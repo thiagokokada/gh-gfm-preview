@@ -18,16 +18,17 @@ const (
 )
 
 var (
-	watcherMu     sync.RWMutex
+	watchedDirs   = make(map[string]bool)
+	watcherMu     sync.Mutex
 	globalWatcher atomic.Pointer[fsnotify.Watcher]
 
 	ErrWatcherNotInitialized = errors.New("watcher not initialized")
 )
 
-func createWatcher(dir string) (*fsnotify.Watcher, error) {
+func initWatcher(dir string) error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create watcher: %w", err)
+		return fmt.Errorf("failed to create watcher: %w", err)
 	}
 
 	swapped := globalWatcher.CompareAndSwap(nil, watcher)
@@ -35,20 +36,22 @@ func createWatcher(dir string) (*fsnotify.Watcher, error) {
 		utils.LogDebugf("Debug [watcher created]")
 	}
 
-	utils.LogInfof("Watching %s/ for changes", dir)
-
 	err = addDirectoryToWatcher(dir)
 	if err != nil {
-		return watcher, fmt.Errorf("failed to add directory to watcher: %w", err)
+		return fmt.Errorf("failed to add directory watcher during init: %w", err)
 	}
 
-	return watcher, nil
+	return nil
 }
 
 func addDirectoryToWatcher(dir string) error {
 	watcher := globalWatcher.Load()
 	if watcher == nil {
 		return ErrWatcherNotInitialized
+	}
+
+	if watchedDirs[dir] {
+		return nil // Already watching this directory
 	}
 
 	watcherMu.Lock()
@@ -59,19 +62,17 @@ func addDirectoryToWatcher(dir string) error {
 		return fmt.Errorf("failed to add dir %s to watcher: %w", dir, err)
 	}
 
-	utils.LogDebugf("Debug [watching directory]: %s", dir)
+	watchedDirs[dir] = true
+
+	utils.LogInfof("Watching %s for changes", dir)
 
 	return nil
 }
 
-func watch(
-	done <-chan any,
-	errorChan chan<- error,
-	reload chan<- bool,
-	watcher *fsnotify.Watcher,
-) {
-	r := regexp.MustCompile(ignorePattern)
-	m := sync.Mutex{}
+func watch(done <-chan any, errorChan chan<- error, reload chan<- bool) {
+	re := regexp.MustCompile(ignorePattern)
+	mu := sync.Mutex{}
+	watcher := globalWatcher.Load()
 
 	for {
 		select {
@@ -83,20 +84,20 @@ func watch(
 			utils.LogDebugf("Debug [event]: op=%s name=%s", event.Op, event.Name)
 
 			if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
-				if r.MatchString(event.Name) {
+				if re.MatchString(event.Name) {
 					utils.LogDebugf("Debug [ignore]: %s", event.Name)
 
 					continue
 				}
 
-				if !m.TryLock() {
+				if !mu.TryLock() {
 					utils.LogDebugf("Debug [event ignored]: op=%s name=%s", event.Op, event.Name)
 
 					continue
 				}
 
 				go func() {
-					defer m.Unlock()
+					defer mu.Unlock()
 
 					utils.LogInfof("Change detected in %s, refreshing", event.Name)
 

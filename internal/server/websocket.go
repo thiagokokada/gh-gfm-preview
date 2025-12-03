@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/websocket"
 	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 )
@@ -24,12 +23,12 @@ var (
 	socketMu   sync.Mutex
 )
 
-func wsHandler(watcher *fsnotify.Watcher) http.Handler {
+func wsHandler() http.Handler {
 	reload := make(chan bool, 1)
 	errorChan := make(chan error)
 	done := make(chan any)
 
-	go watch(done, errorChan, reload, watcher)
+	go watch(done, errorChan, reload)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error

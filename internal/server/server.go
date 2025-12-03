@@ -112,13 +112,12 @@ func (server *Server) Serve(param *Param) error {
 	serveMux.Handle("/static/", wrapHandler(http.StripPrefix("/static/", http.FileServer(http.FS(staticFS)))))
 	serveMux.Handle("/__/md", wrapHandler(mdHandler(filename, param)))
 
-	watcher, err := createWatcher(dir)
+	err = initWatcher(dir)
 	if err != nil {
 		return err
 	}
-	defer watcher.Close()
 
-	serveMux.Handle("/ws", wsHandler(watcher))
+	serveMux.Handle("/ws", wsHandler())
 
 	listener, err := getTCPListener(host, port)
 	if err != nil {
