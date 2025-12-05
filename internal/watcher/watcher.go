@@ -19,11 +19,11 @@ const (
 var ErrWatcherNotInitialized = errors.New("watcher not initialized")
 
 type Watcher struct {
-	*fsnotify.Watcher
 	DoneCh   chan any
 	ErrorCh  chan error
 	ReloadCh chan bool
 
+	w           *fsnotify.Watcher
 	mu          sync.Mutex
 	watchedDirs map[string]bool
 }
@@ -40,7 +40,7 @@ func Init(dir string) (*Watcher, error) {
 		DoneCh:   make(chan any),
 		ErrorCh:  make(chan error),
 		ReloadCh: make(chan bool, 1),
-		Watcher:  fsWatcher,
+		w:        fsWatcher,
 
 		watchedDirs: make(map[string]bool),
 	}
@@ -54,7 +54,7 @@ func Init(dir string) (*Watcher, error) {
 }
 
 func (watcher *Watcher) Close() error {
-	err := watcher.Watcher.Close()
+	err := watcher.w.Close()
 	if err != nil {
 		return fmt.Errorf("error during watcher close call: %w", err)
 	}
@@ -78,7 +78,7 @@ func (watcher *Watcher) addDirectoryToWatcher(dir string) error {
 	watcher.mu.Lock()
 	defer watcher.mu.Unlock()
 
-	err := watcher.Add(dir)
+	err := watcher.w.Add(dir)
 	if err != nil {
 		return fmt.Errorf("failed to add dir %s to watcher: %w", dir, err)
 	}
@@ -96,7 +96,7 @@ func (watcher *Watcher) Watch() {
 
 	for {
 		select {
-		case event, ok := <-watcher.Events:
+		case event, ok := <-watcher.w.Events:
 			if !ok {
 				continue
 			}
@@ -126,7 +126,7 @@ func (watcher *Watcher) Watch() {
 					time.Sleep(lockTime)
 				}()
 			}
-		case err := <-watcher.Errors:
+		case err := <-watcher.w.Errors:
 			watcher.ErrorCh <- err
 		case <-watcher.DoneCh:
 			return
