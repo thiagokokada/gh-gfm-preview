@@ -11,11 +11,8 @@ import (
 // and a cleanup function.
 func setupTestDir(t *testing.T) (string, func()) {
 	t.Helper()
-	dir, err := os.MkdirTemp("", "watcher_test")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
 
+	dir := t.TempDir()
 	cleanup := func() {
 		os.RemoveAll(dir)
 	}
@@ -41,10 +38,12 @@ func TestWatch_DetectsFileCreation(t *testing.T) {
 
 	// Create a file
 	filePath := filepath.Join(dir, "test.txt")
+
 	f, err := os.Create(filePath)
 	if err != nil {
 		t.Fatalf("Failed to create file: %v", err)
 	}
+
 	f.Close()
 
 	// Wait for the reload signal
@@ -64,7 +63,7 @@ func TestWatch_DetectsFileWrite(t *testing.T) {
 
 	// Pre-create the file before initializing watcher
 	filePath := filepath.Join(dir, "test.md")
-	if err := os.WriteFile(filePath, []byte("initial"), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte("initial"), 0o600); err != nil {
 		t.Fatalf("Failed to create initial file: %v", err)
 	}
 
@@ -75,10 +74,11 @@ func TestWatch_DetectsFileWrite(t *testing.T) {
 	defer w.Close()
 
 	go w.Watch()
+
 	time.Sleep(50 * time.Millisecond)
 
 	// Modify the file
-	if err := os.WriteFile(filePath, []byte("updated"), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte("updated"), 0o600); err != nil {
 		t.Fatalf("Failed to write to file: %v", err)
 	}
 
@@ -101,6 +101,7 @@ func TestWatch_DebounceLogic(t *testing.T) {
 	defer w.Close()
 
 	go w.Watch()
+
 	time.Sleep(50 * time.Millisecond)
 
 	filePath := filepath.Join(dir, "rapid.txt")
@@ -126,7 +127,10 @@ func TestWatch_DebounceLogic(t *testing.T) {
 
 	// Fire rapid events
 	for range 5 {
-		os.WriteFile(filePath, []byte(time.Now().String()), 0644)
+		if err := os.WriteFile(filePath, []byte(time.Now().String()), 0o600); err != nil {
+			t.Fatalf("Failed to write to file: %v", err)
+		}
+
 		time.Sleep(10 * time.Millisecond) // Fast, but distinct enough for fsnotify
 	}
 
@@ -138,6 +142,7 @@ func TestWatch_DebounceLogic(t *testing.T) {
 	if counter == 0 {
 		t.Error("Expected at least one event, got 0")
 	}
+
 	if counter == 5 {
 		t.Log("Warning: Debounce might not be catching all rapid events, got 5 events for 5 writes")
 	}
