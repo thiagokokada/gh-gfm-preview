@@ -33,7 +33,7 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 		socket, err = upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			if errors.Is(err, websocket.HandshakeError{}) {
-				utils.LogDebugf("Debug [handshake error]: %v", err)
+				utils.LogDebugf("[handshake error]: %v", err)
 			}
 
 			return
@@ -41,13 +41,13 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 
 		err = socket.SetReadDeadline(time.Now().Add(pongWait))
 		if err != nil {
-			utils.LogDebugf("Debug [set read deadline error]: %v", err)
+			utils.LogDebugf("[set read deadline error]: %v", err)
 		}
 
 		socket.SetPongHandler(func(string) error {
 			err := socket.SetReadDeadline(time.Now().Add(pongWait))
 			if err != nil {
-				utils.LogDebugf("Debug [set read deadline error in pong handler]: %v", err)
+				utils.LogDebugf("[set read deadline error in pong handler]: %v", err)
 			}
 
 			return nil
@@ -68,7 +68,7 @@ func wsReader(doneCh <-chan any, errorCh chan<- error) {
 	for range doneCh {
 		_, _, err := socket.ReadMessage()
 		if err != nil {
-			utils.LogDebugf("Debug [read message]: %v", err)
+			utils.LogDebugf("[read message]: %v", err)
 
 			errorCh <- err
 		}
@@ -89,19 +89,19 @@ func wsWriter(doneCh <-chan any, errorCh chan<- error, reloadCh <-chan bool) {
 			})
 
 			if err != nil {
-				utils.LogDebugf("Debug [reload error]: %v", err)
+				utils.LogDebugf("[reload error]: %v", err)
 
 				errorCh <- err
 			}
 		case <-ticker.C:
-			utils.LogDebugf("Debug [ping send]: ping to client")
+			utils.LogDebugf("[ping send]: ping to client")
 			withSocketLock(func() {
 				err = socket.WriteMessage(websocket.PingMessage, []byte{})
 			})
 
 			if err != nil {
 				// Do nothing
-				utils.LogDebugf("Debug [ping error]: %v", err)
+				utils.LogDebugf("[ping error]: %v", err)
 			}
 		case <-doneCh:
 			return

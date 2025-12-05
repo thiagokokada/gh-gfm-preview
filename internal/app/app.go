@@ -118,7 +118,7 @@ func FindReadme(dir string) (string, error) {
 	if err != nil {
 		// Not returning since read dir will return the files
 		// that it read until the error
-		utils.LogDebugf("Debug [read dir error]: %v", err)
+		utils.LogDebugf("[read dir error]: %v", err)
 	}
 
 	for _, f := range files {
