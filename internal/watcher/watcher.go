@@ -54,7 +54,12 @@ func Init(dir string) (*Watcher, error) {
 }
 
 func (watcher *Watcher) Close() error {
-	return watcher.Watcher.Close()
+	err := watcher.Watcher.Close()
+	if err != nil {
+		return fmt.Errorf("error during watcher close call: %w", err)
+	}
+
+	return nil
 }
 
 func (watcher *Watcher) AddDirectory(dir string) error {

@@ -27,6 +27,7 @@ func TestDirectoryBrowsingMode(t *testing.T) {
 
 	watcher, _ := watcher.Init(testDir)
 	defer watcher.Close()
+
 	ts := httptest.NewServer(handler("", param, http.FileServer(http.Dir(testDir)), watcher))
 	defer ts.Close()
 
@@ -73,6 +74,7 @@ func TestSubdirectoryReadmeAccess(t *testing.T) {
 
 	watcher, _ := watcher.Init(testDir)
 	defer watcher.Close()
+
 	ts := httptest.NewServer(handler("", param, http.FileServer(http.Dir(testDir)), watcher))
 	defer ts.Close()
 
@@ -160,6 +162,7 @@ func Test404ErrorRendering(t *testing.T) {
 
 	watcher, _ := watcher.Init(testDir)
 	defer watcher.Close()
+
 	ts := httptest.NewServer(handler("", param, http.FileServer(http.Dir(testDir)), watcher))
 	defer ts.Close()
 

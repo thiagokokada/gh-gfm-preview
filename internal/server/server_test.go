@@ -19,6 +19,7 @@ func TestHandler(t *testing.T) {
 
 	watcher, _ := watcher.Init(dir)
 	defer watcher.Close()
+
 	ts := httptest.NewServer(handler(filename, param, http.FileServer(http.Dir(dir)), watcher))
 	defer ts.Close()
 
