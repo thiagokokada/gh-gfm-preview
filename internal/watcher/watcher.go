@@ -72,12 +72,13 @@ func (w *Watcher) AddDirectory(dir string) error {
 	if err != nil {
 		// Roll back the map if Add failed
 		w.watchedDirs.Delete(dir)
+
 		return fmt.Errorf("failed to add dir %s to watcher: %w", dir, err)
 	}
 
 	utils.LogInfof("Watching %s for changes", dir)
 
-	return err
+	return nil
 }
 
 func (w *Watcher) Watch() {
