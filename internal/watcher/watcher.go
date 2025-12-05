@@ -71,10 +71,14 @@ func (watcher *Watcher) AddDirectory(dir string) error {
 		return nil // Already watching this directory
 	}
 
-	return watcher.addDirectoryToWatcher(dir)
+	err := watcher.addDirectory(dir)
+
+	utils.LogInfof("Watching %s for changes", dir)
+
+	return err
 }
 
-func (watcher *Watcher) addDirectoryToWatcher(dir string) error {
+func (watcher *Watcher) addDirectory(dir string) error {
 	watcher.mu.Lock()
 	defer watcher.mu.Unlock()
 
@@ -84,8 +88,6 @@ func (watcher *Watcher) addDirectoryToWatcher(dir string) error {
 	}
 
 	watcher.watchedDirs[dir] = true
-
-	utils.LogInfof("Watching %s for changes", dir)
 
 	return nil
 }
