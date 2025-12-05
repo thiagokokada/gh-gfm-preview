@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"testing"
+
+	"github.com/thiagokokada/gh-gfm-preview/internal/watcher"
 )
 
 func TestHandler(t *testing.T) {
@@ -15,7 +17,10 @@ func TestHandler(t *testing.T) {
 		Reload: false,
 	}
 
-	ts := httptest.NewServer(handler(filename, param, http.FileServer(http.Dir(dir))))
+	watcher, _ := watcher.Init(dir)
+	defer watcher.Close()
+
+	ts := httptest.NewServer(handler(filename, param, http.FileServer(http.Dir(dir)), watcher))
 	defer ts.Close()
 
 	r1, err := http.Get(ts.URL)

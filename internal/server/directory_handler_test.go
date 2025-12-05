@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/thiagokokada/gh-gfm-preview/internal/watcher"
 )
 
 const testDataDir = "../../testdata"
@@ -23,7 +25,10 @@ func TestDirectoryBrowsingMode(t *testing.T) {
 		Reload:                         false,
 	}
 
-	ts := httptest.NewServer(handler("", param, http.FileServer(http.Dir(testDir))))
+	watcher, _ := watcher.Init(testDir)
+	defer watcher.Close()
+
+	ts := httptest.NewServer(handler("", param, http.FileServer(http.Dir(testDir)), watcher))
 	defer ts.Close()
 
 	tests := []struct {
@@ -67,7 +72,10 @@ func TestSubdirectoryReadmeAccess(t *testing.T) {
 		Reload:                         false,
 	}
 
-	ts := httptest.NewServer(handler("", param, http.FileServer(http.Dir(testDir))))
+	watcher, _ := watcher.Init(testDir)
+	defer watcher.Close()
+
+	ts := httptest.NewServer(handler("", param, http.FileServer(http.Dir(testDir)), watcher))
 	defer ts.Close()
 
 	tests := []struct {
@@ -152,7 +160,10 @@ func Test404ErrorRendering(t *testing.T) {
 		Reload:                         false,
 	}
 
-	ts := httptest.NewServer(handler("", param, http.FileServer(http.Dir(testDir))))
+	watcher, _ := watcher.Init(testDir)
+	defer watcher.Close()
+
+	ts := httptest.NewServer(handler("", param, http.FileServer(http.Dir(testDir)), watcher))
 	defer ts.Close()
 
 	tests := []struct {
