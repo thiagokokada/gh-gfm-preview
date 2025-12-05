@@ -24,12 +24,8 @@ var (
 	socketMu   sync.Mutex
 )
 
-func wsHandler() http.Handler {
-	reloadCh := make(chan bool, 1)
-	errorCh := make(chan error)
-	doneCh := make(chan any)
-
-	go watcher.Watch(doneCh, errorCh, reloadCh)
+func wsHandler(watcher *watcher.Watcher) http.Handler {
+	go watcher.Watch()
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var err error
@@ -57,12 +53,12 @@ func wsHandler() http.Handler {
 			return nil
 		})
 
-		go wsReader(doneCh, errorCh)
-		go wsWriter(doneCh, errorCh, reloadCh)
+		go wsReader(watcher.DoneCh, watcher.ErrorCh)
+		go wsWriter(watcher.DoneCh, watcher.ErrorCh, watcher.ReloadCh)
 
-		err = <-errorCh
+		err = <-watcher.ErrorCh
 
-		close(doneCh)
+		close(watcher.DoneCh)
 		utils.LogInfof("Close WebSocket: %v\n", err)
 		socket.Close()
 	})

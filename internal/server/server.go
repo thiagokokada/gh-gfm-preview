@@ -108,17 +108,18 @@ func (server *Server) Serve(param *Param) error {
 		return fmt.Errorf("failed to get static subdirectory: %w", err)
 	}
 
-	serveMux := http.NewServeMux()
-	serveMux.Handle("/", wrapHandler(handler(filename, param, http.FileServer(http.Dir(dir)))))
-	serveMux.Handle("/static/", wrapHandler(http.StripPrefix("/static/", http.FileServer(http.FS(staticFS)))))
-	serveMux.Handle("/__/md", wrapHandler(mdHandler(filename, param)))
-
-	err = watcher.Init(dir)
+	watcher, err := watcher.Init(dir)
 	if err != nil {
 		return fmt.Errorf("error while file watcher init: %w", err)
 	}
+	defer watcher.Close()
 
-	serveMux.Handle("/ws", wsHandler())
+	serveMux := http.NewServeMux()
+	serveMux.Handle("/", wrapHandler(handler(filename, param, http.FileServer(http.Dir(dir)), watcher)))
+	serveMux.Handle("/static/", wrapHandler(http.StripPrefix("/static/", http.FileServer(http.FS(staticFS)))))
+	serveMux.Handle("/__/md", wrapHandler(mdHandler(filename, param)))
+
+	serveMux.Handle("/ws", wsHandler(watcher))
 
 	listener, err := getTCPListener(host, port)
 	if err != nil {
@@ -154,12 +155,12 @@ func (server *Server) Serve(param *Param) error {
 	return nil
 }
 
-func handler(filename string, param *Param, h http.Handler) http.Handler {
+func handler(filename string, param *Param, handler http.Handler, watcher *watcher.Watcher) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !param.IsDirectoryMode {
 			// Original single-file mode
 			if !strings.HasSuffix(r.URL.Path, ".md") && r.URL.Path != "/" {
-				h.ServeHTTP(w, r)
+				handler.ServeHTTP(w, r)
 
 				return
 			}
@@ -183,7 +184,7 @@ func handler(filename string, param *Param, h http.Handler) http.Handler {
 		}
 
 		// Directory browsing mode
-		handleDirectoryMode(w, r, param)
+		handleDirectoryMode(w, r, param, watcher)
 	})
 }
 

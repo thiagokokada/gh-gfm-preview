@@ -13,7 +13,7 @@ import (
 )
 
 // handleDirectoryMode handles HTTP requests in directory browsing mode.
-func handleDirectoryMode(w http.ResponseWriter, r *http.Request, param *Param) {
+func handleDirectoryMode(w http.ResponseWriter, r *http.Request, param *Param, watcher *watcher.Watcher) {
 	urlPath := strings.TrimPrefix(r.URL.Path, "/")
 	urlPath = strings.TrimSuffix(urlPath, "/")
 
@@ -35,7 +35,7 @@ func handleDirectoryMode(w http.ResponseWriter, r *http.Request, param *Param) {
 	isFile := err == nil && !info.IsDir()
 
 	if isFile {
-		handleFileRequest(w, r, param, currentDir, currentURLPath, extensions, textExtensions)
+		handleFileRequest(w, r, param, watcher, currentDir, currentURLPath, extensions, textExtensions)
 
 		return
 	}
@@ -87,7 +87,16 @@ func validateDirectoryAccess(w http.ResponseWriter, basePath, currentPath string
 	return isValid
 }
 
-func handleFileRequest(w http.ResponseWriter, r *http.Request, param *Param, currentDir, currentURLPath string, extensions, textExtensions []string) {
+func handleFileRequest(
+	w http.ResponseWriter,
+	r *http.Request,
+	param *Param,
+	watcher *watcher.Watcher,
+	currentDir string,
+	currentURLPath string,
+	extensions []string,
+	textExtensions []string,
+) {
 	fileDir := filepath.Dir(currentDir)
 
 	err := watcher.AddDirectory(fileDir)

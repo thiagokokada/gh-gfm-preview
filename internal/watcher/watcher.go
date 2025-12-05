@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"regexp"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -17,66 +16,78 @@ const (
 	lockTime      = 100 * time.Millisecond
 )
 
-var (
-	watchedDirs   = make(map[string]bool)
-	watcherMu     sync.Mutex
-	globalWatcher atomic.Pointer[fsnotify.Watcher]
+var ErrWatcherNotInitialized = errors.New("watcher not initialized")
 
-	ErrWatcherNotInitialized = errors.New("watcher not initialized")
-)
+type Watcher struct {
+	*fsnotify.Watcher
+	DoneCh   chan any
+	ErrorCh  chan error
+	ReloadCh chan bool
 
-func Init(dir string) error {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		return fmt.Errorf("failed to create watcher: %w", err)
-	}
-
-	swapped := globalWatcher.CompareAndSwap(nil, watcher)
-	if swapped {
-		utils.LogDebugf("Debug [watcher created]")
-	}
-
-	err = AddDirectory(dir)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	mu          sync.Mutex
+	watchedDirs map[string]bool
 }
 
-func AddDirectory(dir string) error {
-	watcher := globalWatcher.Load()
+func Init(dir string) (*Watcher, error) {
+	fsWatcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create watcher: %w", err)
+	}
+
+	utils.LogDebugf("Debug [watcher created]")
+
+	watcher := Watcher{
+		DoneCh:   make(chan any),
+		ErrorCh:  make(chan error),
+		ReloadCh: make(chan bool, 1),
+		Watcher:  fsWatcher,
+
+		watchedDirs: make(map[string]bool),
+	}
+
+	err = watcher.AddDirectory(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	return &watcher, nil
+}
+
+func (watcher *Watcher) Close() error {
+	return watcher.Watcher.Close()
+}
+
+func (watcher *Watcher) AddDirectory(dir string) error {
 	if watcher == nil {
 		return ErrWatcherNotInitialized
 	}
 
-	if watchedDirs[dir] {
+	if watcher.watchedDirs[dir] {
 		return nil // Already watching this directory
 	}
 
-	return addDirectoryToWatcher(watcher, dir)
+	return watcher.addDirectoryToWatcher(dir)
 }
 
-func addDirectoryToWatcher(watcher *fsnotify.Watcher, dir string) error {
-	watcherMu.Lock()
-	defer watcherMu.Unlock()
+func (watcher *Watcher) addDirectoryToWatcher(dir string) error {
+	watcher.mu.Lock()
+	defer watcher.mu.Unlock()
 
 	err := watcher.Add(dir)
 	if err != nil {
 		return fmt.Errorf("failed to add dir %s to watcher: %w", dir, err)
 	}
 
-	watchedDirs[dir] = true
+	watcher.watchedDirs[dir] = true
 
 	utils.LogInfof("Watching %s for changes", dir)
 
 	return nil
 }
 
-func Watch(doneCh <-chan any, errorCh chan<- error, reloadCh chan<- bool) {
+func (watcher *Watcher) Watch() {
 	re := regexp.MustCompile(ignorePattern)
 	mu := sync.Mutex{}
-	watcher := globalWatcher.Load()
 
 	for {
 		select {
@@ -105,14 +116,14 @@ func Watch(doneCh <-chan any, errorCh chan<- error, reloadCh chan<- bool) {
 
 					utils.LogInfof("Change detected in %s, refreshing", event.Name)
 
-					reloadCh <- true
+					watcher.ReloadCh <- true
 
 					time.Sleep(lockTime)
 				}()
 			}
 		case err := <-watcher.Errors:
-			errorCh <- err
-		case <-doneCh:
+			watcher.ErrorCh <- err
+		case <-watcher.DoneCh:
 			return
 		}
 	}
