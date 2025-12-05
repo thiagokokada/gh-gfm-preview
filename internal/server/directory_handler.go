@@ -24,7 +24,7 @@ func handleDirectoryMode(w http.ResponseWriter, r *http.Request, param *Param, w
 
 	err := watcher.AddDirectory(currentDir)
 	if err != nil {
-		utils.LogDebugf("Debug [add directory to watcher error]: %v", err)
+		utils.LogDebugf("[add directory to watcher error]: %v", err)
 	}
 
 	if !validateDirectoryAccess(w, param.DirectoryPath, currentDir) {
@@ -80,7 +80,7 @@ func validateDirectoryAccess(w http.ResponseWriter, basePath, currentPath string
 		strings.HasPrefix(absCurrent+string(filepath.Separator), absBase)
 
 	if !isValid {
-		utils.LogDebugf("Path traversal attempt: base=%s, current=%s", absBase, absCurrent)
+		utils.LogDebugf("[path traversal attempt]: base=%s, current=%s", absBase, absCurrent)
 		http.Error(w, "Forbidden", http.StatusForbidden)
 	}
 
@@ -101,7 +101,7 @@ func handleFileRequest(
 
 	err := watcher.AddDirectory(fileDir)
 	if err != nil {
-		utils.LogDebugf("Debug [add directory to watcher error]: %v", err)
+		utils.LogDebugf("[add directory to watcher error]: %v", err)
 	}
 
 	if !app.HasAllowedExtension(currentDir, extensions) {

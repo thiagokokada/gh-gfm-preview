@@ -18,7 +18,7 @@ func LogInfof(format string, v ...any) {
 
 func LogDebugf(format string, v ...any) {
 	if verbose {
-		log.Printf(format, v...)
+		log.Printf("DEBUG "+format, v...)
 	}
 }
 

@@ -34,7 +34,7 @@ func Init(dir string) (*Watcher, error) {
 		return nil, fmt.Errorf("failed to create watcher: %w", err)
 	}
 
-	utils.LogDebugf("Debug [watcher created]")
+	utils.LogDebugf("[watcher created]")
 
 	watcher := Watcher{
 		DoneCh:   make(chan any),
@@ -103,17 +103,17 @@ func (watcher *Watcher) Watch() {
 				continue
 			}
 
-			utils.LogDebugf("Debug [event]: op=%s name=%s", event.Op, event.Name)
+			utils.LogDebugf("[event]: op=%s name=%s", event.Op, event.Name)
 
 			if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
 				if re.MatchString(event.Name) {
-					utils.LogDebugf("Debug [ignore]: %s", event.Name)
+					utils.LogDebugf("[ignore]: %s", event.Name)
 
 					continue
 				}
 
 				if !mu.TryLock() {
-					utils.LogDebugf("Debug [event ignored]: op=%s name=%s", event.Op, event.Name)
+					utils.LogDebugf("[event ignored]: op=%s name=%s", event.Op, event.Name)
 
 					continue
 				}
