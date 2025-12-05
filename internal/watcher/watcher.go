@@ -23,9 +23,8 @@ type Watcher struct {
 	ErrorCh  chan error
 	ReloadCh chan bool
 
-	w           *fsnotify.Watcher
-	mu          sync.Mutex
-	watchedDirs map[string]bool
+	watcher     *fsnotify.Watcher
+	watchedDirs sync.Map
 }
 
 func Init(dir string) (*Watcher, error) {
@@ -40,9 +39,7 @@ func Init(dir string) (*Watcher, error) {
 		DoneCh:   make(chan any),
 		ErrorCh:  make(chan error),
 		ReloadCh: make(chan bool, 1),
-		w:        fsWatcher,
-
-		watchedDirs: make(map[string]bool),
+		watcher:  fsWatcher,
 	}
 
 	err = watcher.AddDirectory(dir)
@@ -53,8 +50,8 @@ func Init(dir string) (*Watcher, error) {
 	return &watcher, nil
 }
 
-func (watcher *Watcher) Close() error {
-	err := watcher.w.Close()
+func (w *Watcher) Close() error {
+	err := w.watcher.Close()
 	if err != nil {
 		return fmt.Errorf("error during watcher close call: %w", err)
 	}
@@ -62,43 +59,34 @@ func (watcher *Watcher) Close() error {
 	return nil
 }
 
-func (watcher *Watcher) AddDirectory(dir string) error {
-	if watcher == nil {
+func (w *Watcher) AddDirectory(dir string) error {
+	if w == nil {
 		return ErrWatcherNotInitialized
 	}
 
-	if watcher.watchedDirs[dir] {
+	if _, loaded := w.watchedDirs.LoadOrStore(dir, true); loaded {
 		return nil // Already watching this directory
 	}
 
-	err := watcher.addDirectory(dir)
+	err := w.watcher.Add(dir)
+	if err != nil {
+		// Roll back the map if Add failed
+		w.watchedDirs.Delete(dir)
+		return fmt.Errorf("failed to add dir %s to watcher: %w", dir, err)
+	}
 
 	utils.LogInfof("Watching %s for changes", dir)
 
 	return err
 }
 
-func (watcher *Watcher) addDirectory(dir string) error {
-	watcher.mu.Lock()
-	defer watcher.mu.Unlock()
-
-	err := watcher.w.Add(dir)
-	if err != nil {
-		return fmt.Errorf("failed to add dir %s to watcher: %w", dir, err)
-	}
-
-	watcher.watchedDirs[dir] = true
-
-	return nil
-}
-
-func (watcher *Watcher) Watch() {
+func (w *Watcher) Watch() {
 	re := regexp.MustCompile(ignorePattern)
 	mu := sync.Mutex{}
 
 	for {
 		select {
-		case event, ok := <-watcher.w.Events:
+		case event, ok := <-w.watcher.Events:
 			if !ok {
 				continue
 			}
@@ -123,14 +111,14 @@ func (watcher *Watcher) Watch() {
 
 					utils.LogInfof("Change detected in %s, refreshing", event.Name)
 
-					watcher.ReloadCh <- true
+					w.ReloadCh <- true
 
 					time.Sleep(lockTime)
 				}()
 			}
-		case err := <-watcher.w.Errors:
-			watcher.ErrorCh <- err
-		case <-watcher.DoneCh:
+		case err := <-w.watcher.Errors:
+			w.ErrorCh <- err
+		case <-w.DoneCh:
 			return
 		}
 	}
