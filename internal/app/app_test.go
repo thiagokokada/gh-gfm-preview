@@ -224,28 +224,3 @@ func TestParseExtensions(t *testing.T) {
 		})
 	}
 }
-
-func TestHasAllowedExtension(t *testing.T) {
-	tests := []struct {
-		name       string
-		filePath   string
-		extensions []string
-		want       bool
-	}{
-		{"Match .md", "test.md", []string{".md"}, true},
-		{"No match", "test.txt", []string{".md"}, false},
-		{"Match one of many", "test.rst", []string{".md", ".txt", ".rst"}, true},
-		{"Wildcard matches any", "test.xyz", []string{"*"}, true},
-		{"Wildcard matches no extension", "test", []string{"*"}, true},
-		{"Case insensitive", "test.MD", []string{".md"}, true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := HasAllowedExtension(tt.filePath, tt.extensions)
-			if got != tt.want {
-				t.Errorf("HasAllowedExtension(%q, %v) = %v, want %v", tt.filePath, tt.extensions, got, tt.want)
-			}
-		})
-	}
-}

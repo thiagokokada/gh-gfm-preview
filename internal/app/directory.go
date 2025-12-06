@@ -147,23 +147,6 @@ func ListDirectoryContents(dir string, extensions []string) ([]string, []string,
 	return files, dirs, nil
 }
 
-// HasAllowedExtension checks if a file path has one of the allowed extensions.
-func HasAllowedExtension(filePath string, extensions []string) bool {
-	// Wildcard allows all files
-	if len(extensions) == 1 && extensions[0] == "*" {
-		return true
-	}
-
-	ext := strings.ToLower(filepath.Ext(filePath))
-	for _, validExt := range extensions {
-		if ext == validExt {
-			return true
-		}
-	}
-
-	return false
-}
-
 // IsTextFile checks if a file is a text file based on allowed extensions (whitelist)
 // Returns true if the file extension is in the allowed list.
 func IsTextFile(filePath string, textExtensions []string) bool {
