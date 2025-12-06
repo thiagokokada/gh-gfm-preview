@@ -22,7 +22,8 @@ offline rendering.
 
 Open your browser:
 
-<img width="2013" alt="Screenshot 2025-04-24 at 19 44 45" src="https://github.com/user-attachments/assets/d31d3665-9f75-4ddc-a7c9-526c561eb472" />
+![Screenshot showing side-by-side a Markdown being editted on the left and being
+rendered with gh-gfm-markdown on the right](screenshot.png)
 
 Live reloading:
 
