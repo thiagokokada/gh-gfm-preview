@@ -75,8 +75,12 @@ func run(cmd *cobra.Command, args []string) {
 
 	flags := cmd.Flags()
 
-	h := slog.New(tint.NewHandler(os.Stdout, &tint.Options{
-		Level: logLevel, NoColor: os.Getenv("NO_COLOR") == "1"},
+	h := slog.New(tint.NewHandler(
+		os.Stdout,
+		&tint.Options{
+			Level:   logLevel,
+			NoColor: os.Getenv("NO_COLOR") == "1",
+		},
 	))
 	slog.SetDefault(h)
 

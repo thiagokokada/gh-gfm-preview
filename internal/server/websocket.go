@@ -59,7 +59,6 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 		go wsWriter(watcher.DoneCh, watcher.ErrorCh, watcher.ReloadCh)
 
 		err = <-watcher.ErrorCh
-
 		if err != nil {
 			slog.Error("Watcher channel error", "error", err)
 		}
