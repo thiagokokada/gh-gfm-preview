@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"os"
 	"runtime/debug"
@@ -39,6 +38,7 @@ func init() {
 	rootCmd.Flags().BoolP("verbose", "v", false, "show verbose output")
 	rootCmd.Flags().BoolP("light-mode", "l", false, "force light mode")
 	rootCmd.Flags().BoolP("dark-mode", "d", false, "force dark mode")
+	rootCmd.Flags().BoolP("no-color", "", false, "disable color for logs")
 	rootCmd.Flags().BoolP("directory-listing", "D", false, "enable directory browsing mode")
 	rootCmd.Flags().StringP("directory-listing-show-extensions", "", ".md,.txt", "file extensions to show in directory listing (comma-separated, use '*' for all files)")
 	rootCmd.Flags().StringP("directory-listing-text-extensions", "", ".md,.txt", "text file extensions for preview (comma-separated, others will be served as binary)")
@@ -49,7 +49,8 @@ func detectStdin(filename string) (bool, string) {
 	case "-":
 		data, err := io.ReadAll(os.Stdin)
 		if err != nil {
-			log.Fatalf("Error reading stdin: %v", err)
+			slog.Error("Error while reading stdin", "error", err)
+			os.Exit(1)
 		}
 
 		return true, string(data)
@@ -57,7 +58,8 @@ func detectStdin(filename string) (bool, string) {
 		if fi, _ := os.Stdin.Stat(); (fi.Mode() & os.ModeCharDevice) == 0 {
 			data, err := io.ReadAll(os.Stdin)
 			if err != nil {
-				log.Fatalf("Error reading stdin: %v", err)
+				slog.Error("Error while reading stdin", "error", err)
+				os.Exit(1)
 			}
 
 			return true, string(data)
@@ -75,11 +77,12 @@ func run(cmd *cobra.Command, args []string) {
 
 	flags := cmd.Flags()
 
+	nocolor := must(flags.GetBool("no-color"))
 	h := slog.New(tint.NewHandler(
 		os.Stdout,
 		&tint.Options{
 			Level:   logLevel,
-			NoColor: os.Getenv("NO_COLOR") == "1",
+			NoColor: nocolor || os.Getenv("NO_COLOR") == "1",
 		},
 	))
 	slog.SetDefault(h)
@@ -125,7 +128,8 @@ func run(cmd *cobra.Command, args []string) {
 
 	err := httpServer.Serve(param)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		slog.Error("Error while starting HTTP server", "error", err)
+		os.Exit(1)
 	}
 }
 

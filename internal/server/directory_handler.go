@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -24,7 +23,7 @@ func handleDirectoryMode(w http.ResponseWriter, r *http.Request, param *Param, w
 
 	err := watcher.AddDirectory(currentDir)
 	if err != nil {
-		slog.Error("Add directory to watcher error", "error", err)
+		slog.Debug("Add directory to watcher error", "error", err)
 	}
 
 	if !validateDirectoryAccess(w, param.DirectoryPath, currentDir) {
@@ -60,6 +59,11 @@ func resolveDirectoryPath(basePath, urlPath string) (string, string) {
 func validateDirectoryAccess(w http.ResponseWriter, basePath, currentPath string) bool {
 	absBase, err := filepath.Abs(basePath)
 	if err != nil {
+		slog.Error(
+			"Error while converting base path to absolute",
+			"path", basePath,
+			"error", err,
+		)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return false
@@ -67,6 +71,11 @@ func validateDirectoryAccess(w http.ResponseWriter, basePath, currentPath string
 
 	absCurrent, err := filepath.Abs(currentPath)
 	if err != nil {
+		slog.Error(
+			"Error while converting current path to absolute",
+			"path", currentPath,
+			"error", err,
+		)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return false
@@ -80,7 +89,11 @@ func validateDirectoryAccess(w http.ResponseWriter, basePath, currentPath string
 		strings.HasPrefix(absCurrent+string(filepath.Separator), absBase)
 
 	if !isValid {
-		slog.Debug("Path transversal attempt", "base", absBase, "current", absCurrent)
+		slog.Error(
+			"Path transversal attempt",
+			"base", absBase,
+			"current", absCurrent,
+		)
 		http.Error(w, "Forbidden", http.StatusForbidden)
 	}
 
@@ -101,7 +114,7 @@ func handleFileRequest(
 
 	err := watcher.AddDirectory(fileDir)
 	if err != nil {
-		slog.Error("Add directory to watcher error", "error", "err")
+		slog.Debug("Add directory to watcher error", "error", "err")
 	}
 
 	if !app.IsTextFile(currentDir, textExtensions) {
@@ -134,10 +147,7 @@ func renderFileTemplate(w http.ResponseWriter, r *http.Request, param *Param, cu
 		templateParam.FileTree = generateFileTree(files, dirs, dirURLPath)
 	}
 
-	err = tmpl.Execute(w, templateParam)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	renderTemplate(w, templateParam)
 }
 
 func handleDirectoryRequest(w http.ResponseWriter, r *http.Request, param *Param, currentDir, currentURLPath string, extensions []string) {
@@ -156,7 +166,8 @@ func handleDirectoryRequest(w http.ResponseWriter, r *http.Request, param *Param
 func renderDirectoryListing(w http.ResponseWriter, r *http.Request, param *Param, currentDir, currentURLPath string, extensions []string, hasReadme bool) {
 	files, dirs, err := app.ListDirectoryContents(currentDir, extensions)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error listing directory: %v", err), http.StatusInternalServerError)
+		slog.Error("Error listing directory", "error", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return
 	}
@@ -182,10 +193,7 @@ func renderDirectoryListing(w http.ResponseWriter, r *http.Request, param *Param
 		BreadcrumbItems:  generateBreadcrumbItems(getParentPath(currentURLPath), dirTitle, true),
 	}
 
-	err = tmpl.Execute(w, templateParam)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	renderTemplate(w, templateParam)
 }
 
 func renderReadmeTemplate(w http.ResponseWriter, r *http.Request, param *Param, currentDir, currentURLPath, readme string, extensions []string) {
@@ -208,10 +216,7 @@ func renderReadmeTemplate(w http.ResponseWriter, r *http.Request, param *Param, 
 		templateParam.FileTree = generateFileTree(files, dirs, currentURLPath)
 	}
 
-	err = tmpl.Execute(w, templateParam)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	renderTemplate(w, templateParam)
 }
 
 // generateFileTree creates FileTreeItem slice from files and directories.
@@ -365,8 +370,5 @@ func render404Error(w http.ResponseWriter, r *http.Request, param *Param, curren
 		templateParam.FileTree = generateFileTree(files, dirs, parentPath)
 	}
 
-	err = tmpl.Execute(w, templateParam)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	renderTemplate(w, templateParam)
 }
