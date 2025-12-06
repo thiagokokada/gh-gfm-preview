@@ -2,13 +2,13 @@ package server
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/thiagokokada/gh-gfm-preview/internal/app"
-	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 	"github.com/thiagokokada/gh-gfm-preview/internal/watcher"
 )
 
@@ -24,7 +24,7 @@ func handleDirectoryMode(w http.ResponseWriter, r *http.Request, param *Param, w
 
 	err := watcher.AddDirectory(currentDir)
 	if err != nil {
-		utils.LogDebugf("[add directory to watcher error]: %v", err)
+		slog.Error("Add directory to watcher error", "error", err)
 	}
 
 	if !validateDirectoryAccess(w, param.DirectoryPath, currentDir) {
@@ -80,7 +80,7 @@ func validateDirectoryAccess(w http.ResponseWriter, basePath, currentPath string
 		strings.HasPrefix(absCurrent+string(filepath.Separator), absBase)
 
 	if !isValid {
-		utils.LogDebugf("[path traversal attempt]: base=%s, current=%s", absBase, absCurrent)
+		slog.Debug("Path transversal attempt", "base", absBase, "current", absCurrent)
 		http.Error(w, "Forbidden", http.StatusForbidden)
 	}
 
@@ -101,7 +101,7 @@ func handleFileRequest(
 
 	err := watcher.AddDirectory(fileDir)
 	if err != nil {
-		utils.LogDebugf("[add directory to watcher error]: %v", err)
+		slog.Error("Add directory to watcher error", "error", "err")
 	}
 
 	if !app.HasAllowedExtension(currentDir, extensions) {

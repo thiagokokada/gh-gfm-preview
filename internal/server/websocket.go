@@ -2,12 +2,13 @@ package server
 
 import (
 	"errors"
+	"fmt"
+	"log/slog"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 	"github.com/thiagokokada/gh-gfm-preview/internal/watcher"
 )
 
@@ -33,21 +34,22 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 		socket, err = upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			if errors.Is(err, websocket.HandshakeError{}) {
-				utils.LogDebugf("[handshake error]: %v", err)
+				slog.Error("Handshake error", "error", err)
 			}
 
 			return
 		}
+		defer socket.Close()
 
 		err = socket.SetReadDeadline(time.Now().Add(pongWait))
 		if err != nil {
-			utils.LogDebugf("[set read deadline error]: %v", err)
+			slog.Error("Set read deadline error", "error", err)
 		}
 
 		socket.SetPongHandler(func(string) error {
 			err := socket.SetReadDeadline(time.Now().Add(pongWait))
 			if err != nil {
-				utils.LogDebugf("[set read deadline error in pong handler]: %v", err)
+				slog.Error("Set read deadline error in pong handler", "error", err)
 			}
 
 			return nil
@@ -57,10 +59,11 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 		go wsWriter(watcher.DoneCh, watcher.ErrorCh, watcher.ReloadCh)
 
 		err = <-watcher.ErrorCh
+		if err != nil {
+			slog.Error("Watcher channel error", "error", err)
+		}
 
 		close(watcher.DoneCh)
-		utils.LogInfof("Close WebSocket: %v\n", err)
-		socket.Close()
 	})
 }
 
@@ -68,9 +71,9 @@ func wsReader(doneCh <-chan any, errorCh chan<- error) {
 	for range doneCh {
 		_, _, err := socket.ReadMessage()
 		if err != nil {
-			utils.LogDebugf("[read message]: %v", err)
+			slog.Error("Websocket reader read message error", "error", err)
 
-			errorCh <- err
+			errorCh <- fmt.Errorf("websocket reader error: %w", err)
 		}
 	}
 }
@@ -89,19 +92,19 @@ func wsWriter(doneCh <-chan any, errorCh chan<- error, reloadCh <-chan bool) {
 			})
 
 			if err != nil {
-				utils.LogDebugf("[reload error]: %v", err)
+				slog.Error("Websocket writer reload error", "error", err)
 
-				errorCh <- err
+				errorCh <- fmt.Errorf("websocket writer error: %w", err)
 			}
 		case <-ticker.C:
-			utils.LogDebugf("[ping send]: ping to client")
+			slog.Debug("Sending ping to client")
 			withSocketLock(func() {
 				err = socket.WriteMessage(websocket.PingMessage, []byte{})
 			})
 
 			if err != nil {
 				// Do nothing
-				utils.LogDebugf("[ping error]: %v", err)
+				slog.Debug("Ping error", "error", err)
 			}
 		case <-doneCh:
 			return

@@ -6,7 +6,8 @@ require (
 	github.com/alecthomas/chroma/v2 v2.20.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gorilla/websocket v1.5.3
-	github.com/spf13/cobra v1.10.1
+	github.com/lmittmann/tint v1.1.2
+	github.com/spf13/cobra v1.10.2
 	github.com/thiagokokada/goldmark-gh-alerts v0.0.0-20250302164040-cf407c0ddfaf
 	github.com/yuin/goldmark v1.7.13
 	github.com/yuin/goldmark-emoji v1.0.6

@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"regexp"
 
 	chromahtml "github.com/alecthomas/chroma/v2/formatters/html"
-	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 	alerts "github.com/thiagokokada/goldmark-gh-alerts"
 	"github.com/yuin/goldmark"
 	emoji "github.com/yuin/goldmark-emoji"
@@ -118,7 +118,7 @@ func FindReadme(dir string) (string, error) {
 	if err != nil {
 		// Not returning since read dir will return the files
 		// that it read until the error
-		utils.LogDebugf("[read dir error]: %v", err)
+		slog.Error("Read directory error", "dir", "dir", "error", err)
 	}
 
 	for _, f := range files {
