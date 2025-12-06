@@ -23,7 +23,7 @@ func handleDirectoryMode(w http.ResponseWriter, r *http.Request, param *Param, w
 
 	err := watcher.AddDirectory(currentDir)
 	if err != nil {
-		slog.Error("Add directory to watcher error", "error", err)
+		slog.Debug("Add directory to watcher error", "error", err)
 	}
 
 	if !validateDirectoryAccess(w, param.DirectoryPath, currentDir) {
@@ -114,7 +114,7 @@ func handleFileRequest(
 
 	err := watcher.AddDirectory(fileDir)
 	if err != nil {
-		slog.Error("Add directory to watcher error", "error", "err")
+		slog.Debug("Add directory to watcher error", "error", "err")
 	}
 
 	if !app.IsTextFile(currentDir, textExtensions) {

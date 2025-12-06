@@ -199,9 +199,7 @@ func getMarkdown(filename string, param *Param) (string, error) {
 
 	markdown, err := app.Slurp(filename)
 	if err != nil {
-		slog.Error("Error while reading markdown", "error", err)
-
-		return "", fmt.Errorf("error while reading markdown: %w", err)
+		return "", fmt.Errorf("get markdown error: %w", err)
 	}
 
 	return markdown, nil
