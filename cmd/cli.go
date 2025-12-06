@@ -8,6 +8,7 @@ import (
 	"os"
 	"runtime/debug"
 
+	"github.com/lmittmann/tint"
 	"github.com/spf13/cobra"
 	"github.com/thiagokokada/gh-gfm-preview/internal/server"
 	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
@@ -75,10 +76,12 @@ func run(cmd *cobra.Command, args []string) {
 
 	flags := cmd.Flags()
 
-	verbose := utils.Must(flags.GetBool("verbose"))
-	h := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: logLevel})
-	slog.SetDefault(slog.New(h))
+	h := slog.New(tint.NewHandler(os.Stdout, &tint.Options{
+		Level: logLevel, NoColor: os.Getenv("NO_COLOR") == "1"},
+	))
+	slog.SetDefault(h)
 
+	verbose := utils.Must(flags.GetBool("verbose"))
 	if verbose {
 		logLevel.Set(slog.LevelDebug)
 	}
