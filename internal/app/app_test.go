@@ -13,8 +13,8 @@ func TestTargetFile(t *testing.T) {
 		expected string
 	}{
 		{"../../testdata/markdown-demo.md", "../../testdata/markdown-demo.md"},
-		{"../../README.md", "../../README.md"},
-		{"../../", "../../README.md"},
+		{"../../testdata/subdir/README.md", "../../testdata/subdir/README.md"},
+		{"../../testdata/subdir", "../../testdata/subdir/README.md"},
 	}
 	for _, tt := range tests {
 		actual, err := TargetFile(tt.input)
@@ -40,8 +40,8 @@ func TestTargetFile(t *testing.T) {
 }
 
 func TestFindReadme(t *testing.T) {
-	actual, _ := FindReadme("../../")
-	expected := "../../README.md"
+	actual, _ := FindReadme("../../testdata/subdir")
+	expected := "../../testdata/subdir/README.md"
 
 	if actual != expected {
 		t.Errorf("got %v\n want %v", actual, expected)
