@@ -176,6 +176,7 @@ func handler(filename string, param *Param, handler http.Handler, watcher *watch
 
 			err := tmpl.Execute(w, templateParam)
 			if err != nil {
+				slog.Error("Template execute error", "error", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 
 				return
@@ -189,25 +190,28 @@ func handler(filename string, param *Param, handler http.Handler, watcher *watch
 	})
 }
 
+func getMarkdown(filename string, param *Param) (string, error) {
+	if param.UseStdin && param.StdinContent != "" && filename == "" {
+		return param.StdinContent, nil
+	}
+
+	markdown, err := app.Slurp(filename)
+	if err != nil {
+		slog.Error("Error while reading markdown", "error", err)
+
+		return "", fmt.Errorf("error while reading markdown: %w", err)
+	}
+
+	return markdown, nil
+}
+
 func mdResponse(w http.ResponseWriter, filename string, param *Param) string {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	var markdown string
-
-	var err error
-
-	if param.UseStdin && param.StdinContent != "" && filename == "" {
-		markdown = param.StdinContent
-	} else {
-		markdown, err = app.Slurp(filename)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-
-			return ""
-		}
-	}
-
+	markdown, err := getMarkdown(filename, param)
 	if err != nil {
+		slog.Error("Error while reading markdown", "error", err)
+
 		if errors.Is(err, app.ErrFileNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 		} else {
@@ -219,6 +223,11 @@ func mdResponse(w http.ResponseWriter, filename string, param *Param) string {
 
 	html, err := app.ToHTML(markdown, param.MarkdownMode)
 	if err != nil {
+		slog.Error(
+			"Error while converting markdown to HTML",
+			"mode", param.MarkdownMode,
+			"error", err,
+		)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return ""
@@ -257,6 +266,7 @@ func mdHandler(filename string, param *Param) http.Handler {
 
 		body, err := json.Marshal(mdResponseJSON{HTML: html, Title: title})
 		if err != nil {
+			slog.Error("Error while JSON marshal", "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
@@ -293,8 +303,6 @@ func getTitle(filename string) string {
 }
 
 func getTCPListener(host string, port int) (net.Listener, error) {
-	var err error
-
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, port))
 	if err != nil {
 		slog.Debug("Skipping port", "port", port, "error", err)

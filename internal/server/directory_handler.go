@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -60,6 +59,11 @@ func resolveDirectoryPath(basePath, urlPath string) (string, string) {
 func validateDirectoryAccess(w http.ResponseWriter, basePath, currentPath string) bool {
 	absBase, err := filepath.Abs(basePath)
 	if err != nil {
+		slog.Error(
+			"Error while converting base path to absolute",
+			"path", basePath,
+			"error", err,
+		)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return false
@@ -67,6 +71,11 @@ func validateDirectoryAccess(w http.ResponseWriter, basePath, currentPath string
 
 	absCurrent, err := filepath.Abs(currentPath)
 	if err != nil {
+		slog.Error(
+			"Error while converting current path to absolute",
+			"path", currentPath,
+			"error", err,
+		)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return false
@@ -80,7 +89,11 @@ func validateDirectoryAccess(w http.ResponseWriter, basePath, currentPath string
 		strings.HasPrefix(absCurrent+string(filepath.Separator), absBase)
 
 	if !isValid {
-		slog.Debug("Path transversal attempt", "base", absBase, "current", absCurrent)
+		slog.Error(
+			"Path transversal attempt",
+			"base", absBase,
+			"current", absCurrent,
+		)
 		http.Error(w, "Forbidden", http.StatusForbidden)
 	}
 
@@ -136,6 +149,7 @@ func renderFileTemplate(w http.ResponseWriter, r *http.Request, param *Param, cu
 
 	err = tmpl.Execute(w, templateParam)
 	if err != nil {
+		slog.Error("Template execute error", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -156,7 +170,8 @@ func handleDirectoryRequest(w http.ResponseWriter, r *http.Request, param *Param
 func renderDirectoryListing(w http.ResponseWriter, r *http.Request, param *Param, currentDir, currentURLPath string, extensions []string, hasReadme bool) {
 	files, dirs, err := app.ListDirectoryContents(currentDir, extensions)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error listing directory: %v", err), http.StatusInternalServerError)
+		slog.Error("Error listing directory", "error", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 
 		return
 	}
@@ -184,6 +199,7 @@ func renderDirectoryListing(w http.ResponseWriter, r *http.Request, param *Param
 
 	err = tmpl.Execute(w, templateParam)
 	if err != nil {
+		slog.Error("Template execute error", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -210,6 +226,7 @@ func renderReadmeTemplate(w http.ResponseWriter, r *http.Request, param *Param, 
 
 	err = tmpl.Execute(w, templateParam)
 	if err != nil {
+		slog.Error("Template execute error", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -367,6 +384,7 @@ func render404Error(w http.ResponseWriter, r *http.Request, param *Param, curren
 
 	err = tmpl.Execute(w, templateParam)
 	if err != nil {
+		slog.Error("Template execute error", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"os"
 	"runtime/debug"
@@ -49,7 +48,8 @@ func detectStdin(filename string) (bool, string) {
 	case "-":
 		data, err := io.ReadAll(os.Stdin)
 		if err != nil {
-			log.Fatalf("Error reading stdin: %v", err)
+			slog.Error("Error while reading stdin", "error", err)
+			os.Exit(1)
 		}
 
 		return true, string(data)
@@ -57,7 +57,8 @@ func detectStdin(filename string) (bool, string) {
 		if fi, _ := os.Stdin.Stat(); (fi.Mode() & os.ModeCharDevice) == 0 {
 			data, err := io.ReadAll(os.Stdin)
 			if err != nil {
-				log.Fatalf("Error reading stdin: %v", err)
+				slog.Error("Error while reading stdin", "error", err)
+				os.Exit(1)
 			}
 
 			return true, string(data)
@@ -125,7 +126,8 @@ func run(cmd *cobra.Command, args []string) {
 
 	err := httpServer.Serve(param)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		slog.Error("Error while starting HTTP server", "error", err)
+		os.Exit(1)
 	}
 }
 
