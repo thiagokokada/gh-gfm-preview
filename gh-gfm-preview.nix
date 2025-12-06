@@ -7,7 +7,16 @@
 buildGoModule {
   pname = "gh-gfm-preview";
   inherit version;
-  src = lib.cleanSource ./.;
+  src = lib.fileset.toSource {
+    root = ./.;
+    fileset = lib.fileset.unions [
+      ./cmd
+      ./internal
+      ./testdata
+      ./go.mod
+      ./go.sum
+    ];
+  };
   vendorHash = "sha256-xrLG+Jkm2prSG9fcnJSkWGFpxMpynYVchl9SVyxC280=";
 
   env.CGO_ENABLED = "0";

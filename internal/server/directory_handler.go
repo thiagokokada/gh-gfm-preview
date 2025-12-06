@@ -104,12 +104,6 @@ func handleFileRequest(
 		slog.Error("Add directory to watcher error", "error", "err")
 	}
 
-	if !app.HasAllowedExtension(currentDir, extensions) {
-		http.Error(w, "Forbidden: File type not allowed", http.StatusForbidden)
-
-		return
-	}
-
 	if !app.IsTextFile(currentDir, textExtensions) {
 		http.ServeFile(w, r, currentDir)
 

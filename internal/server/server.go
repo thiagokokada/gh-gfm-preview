@@ -275,6 +275,11 @@ func (lrw *loggingResponseWriter) WriteHeader(code int) {
 
 func wrapHandler(wrappedHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Disable cache, otherwise e.g., images will be cached and will not update
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
+
 		lrw := newLoggingResponseWriter(w)
 		wrappedHandler.ServeHTTP(lrw, r)
 
