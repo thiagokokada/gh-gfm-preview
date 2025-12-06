@@ -11,7 +11,6 @@ import (
 	"github.com/lmittmann/tint"
 	"github.com/spf13/cobra"
 	"github.com/thiagokokada/gh-gfm-preview/internal/server"
-	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 )
 
 var logLevel = new(slog.LevelVar)
@@ -81,30 +80,30 @@ func run(cmd *cobra.Command, args []string) {
 	))
 	slog.SetDefault(h)
 
-	verbose := utils.Must(flags.GetBool("verbose"))
+	verbose := must(flags.GetBool("verbose"))
 	if verbose {
 		logLevel.Set(slog.LevelDebug)
 	}
 
-	host := utils.Must(flags.GetString("host"))
-	port := utils.Must(flags.GetInt("port"))
+	host := must(flags.GetString("host"))
+	port := must(flags.GetInt("port"))
 	httpServer := server.Server{Host: host, Port: port}
 
-	disableReload := utils.Must(flags.GetBool("disable-reload"))
+	disableReload := must(flags.GetBool("disable-reload"))
 
-	forceLightMode := utils.Must(flags.GetBool("light-mode"))
-	forceDarkMode := utils.Must(flags.GetBool("dark-mode"))
+	forceLightMode := must(flags.GetBool("light-mode"))
+	forceDarkMode := must(flags.GetBool("dark-mode"))
 
-	markdownMode := utils.Must(flags.GetBool("markdown-mode"))
+	markdownMode := must(flags.GetBool("markdown-mode"))
 
-	disableAutoOpen := utils.Must(flags.GetBool("disable-auto-open"))
+	disableAutoOpen := must(flags.GetBool("disable-auto-open"))
 
 	// Detect stdin usage
 	useStdin, stdinContent := detectStdin(filename)
 
-	directoryListing := utils.Must(flags.GetBool("directory-listing"))
-	directoryListingShowExtensions := utils.Must(flags.GetString("directory-listing-show-extensions"))
-	directoryListingTextExtensions := utils.Must(flags.GetString("directory-listing-text-extensions"))
+	directoryListing := must(flags.GetBool("directory-listing"))
+	directoryListingShowExtensions := must(flags.GetString("directory-listing-show-extensions"))
+	directoryListingTextExtensions := must(flags.GetString("directory-listing-text-extensions"))
 
 	param := &server.Param{
 		Filename:                       filename,
@@ -133,4 +132,12 @@ func version() string {
 	}
 
 	return buildInfo.Main.Version
+}
+
+func must[T any](v T, err error) T { //nolint:ireturn
+	if err != nil {
+		panic(err)
+	}
+
+	return v
 }
