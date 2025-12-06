@@ -174,13 +174,7 @@ func handler(filename string, param *Param, handler http.Handler, watcher *watch
 				Mode:   param.getMode().String(),
 			}
 
-			err := tmpl.Execute(w, templateParam)
-			if err != nil {
-				slog.Error("Template execute error", "error", err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-
-				return
-			}
+			renderTemplate(w, templateParam)
 
 			return
 		}
@@ -188,6 +182,14 @@ func handler(filename string, param *Param, handler http.Handler, watcher *watch
 		// Directory browsing mode
 		handleDirectoryMode(w, r, param, watcher)
 	})
+}
+
+func renderTemplate(w http.ResponseWriter, templateParam TemplateParam) {
+	err := tmpl.Execute(w, templateParam)
+	if err != nil {
+		slog.Error("Template execute error", "error", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func getMarkdown(filename string, param *Param) (string, error) {

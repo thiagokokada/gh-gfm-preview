@@ -147,11 +147,7 @@ func renderFileTemplate(w http.ResponseWriter, r *http.Request, param *Param, cu
 		templateParam.FileTree = generateFileTree(files, dirs, dirURLPath)
 	}
 
-	err = tmpl.Execute(w, templateParam)
-	if err != nil {
-		slog.Error("Template execute error", "error", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	renderTemplate(w, templateParam)
 }
 
 func handleDirectoryRequest(w http.ResponseWriter, r *http.Request, param *Param, currentDir, currentURLPath string, extensions []string) {
@@ -197,11 +193,7 @@ func renderDirectoryListing(w http.ResponseWriter, r *http.Request, param *Param
 		BreadcrumbItems:  generateBreadcrumbItems(getParentPath(currentURLPath), dirTitle, true),
 	}
 
-	err = tmpl.Execute(w, templateParam)
-	if err != nil {
-		slog.Error("Template execute error", "error", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	renderTemplate(w, templateParam)
 }
 
 func renderReadmeTemplate(w http.ResponseWriter, r *http.Request, param *Param, currentDir, currentURLPath, readme string, extensions []string) {
@@ -224,11 +216,7 @@ func renderReadmeTemplate(w http.ResponseWriter, r *http.Request, param *Param, 
 		templateParam.FileTree = generateFileTree(files, dirs, currentURLPath)
 	}
 
-	err = tmpl.Execute(w, templateParam)
-	if err != nil {
-		slog.Error("Template execute error", "error", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	renderTemplate(w, templateParam)
 }
 
 // generateFileTree creates FileTreeItem slice from files and directories.
@@ -382,9 +370,5 @@ func render404Error(w http.ResponseWriter, r *http.Request, param *Param, curren
 		templateParam.FileTree = generateFileTree(files, dirs, parentPath)
 	}
 
-	err = tmpl.Execute(w, templateParam)
-	if err != nil {
-		slog.Error("Template execute error", "error", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	renderTemplate(w, templateParam)
 }
