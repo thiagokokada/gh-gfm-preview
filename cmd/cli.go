@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"os"
 	"runtime/debug"
 
@@ -11,6 +12,8 @@ import (
 	"github.com/thiagokokada/gh-gfm-preview/internal/server"
 	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 )
+
+var logLevel = new(slog.LevelVar)
 
 var rootCmd = &cobra.Command{
 	Use:     "gh-gfm-preview",
@@ -73,7 +76,12 @@ func run(cmd *cobra.Command, args []string) {
 	flags := cmd.Flags()
 
 	verbose := utils.Must(flags.GetBool("verbose"))
-	utils.SetVerbose(verbose)
+	h := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: logLevel})
+	slog.SetDefault(slog.New(h))
+
+	if verbose {
+		logLevel.Set(slog.LevelDebug)
+	}
 
 	host := utils.Must(flags.GetString("host"))
 	port := utils.Must(flags.GetInt("port"))

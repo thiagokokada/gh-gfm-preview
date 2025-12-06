@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -16,7 +17,6 @@ import (
 
 	"github.com/thiagokokada/gh-gfm-preview/internal/app"
 	"github.com/thiagokokada/gh-gfm-preview/internal/browser"
-	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 	"github.com/thiagokokada/gh-gfm-preview/internal/watcher"
 )
 
@@ -127,16 +127,17 @@ func (server *Server) Serve(param *Param) error {
 	}
 
 	address := listener.Addr()
+	url := fmt.Sprintf("http://%s/", address)
 
-	utils.LogInfof("Accepting connections at http://%s/\n", address)
+	slog.Info("Accepting connections", "url", url)
 
 	if param.AutoOpen {
-		utils.LogInfof("Open http://%s/ on your browser\n", address)
+		slog.Info("Opening URL in your browser", "url", url)
 
 		go func() {
-			err := browser.OpenBrowser(fmt.Sprintf("http://%s/", address))
+			err := browser.OpenBrowser(url)
 			if err != nil {
-				utils.LogInfof("Error while opening browser: %s\n", err)
+				slog.Error("Error while opening browser", "error", err)
 			}
 		}()
 	}
@@ -278,7 +279,7 @@ func wrapHandler(wrappedHandler http.Handler) http.Handler {
 		wrappedHandler.ServeHTTP(lrw, r)
 
 		statusCode := lrw.statusCode
-		utils.LogInfof("%s [%d] %s", r.Method, statusCode, r.URL)
+		slog.Debug("HTTP request", "method", r.Method, "code", statusCode, "url", r.URL)
 	})
 }
 
@@ -291,7 +292,7 @@ func getTCPListener(host string, port int) (net.Listener, error) {
 
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, port))
 	if err != nil {
-		utils.LogInfof("Skipping port %d: %v", port, err)
+		slog.Debug("Skipping port", "port", port, "error", err)
 		listener, err = net.Listen("tcp", host+":0")
 	}
 

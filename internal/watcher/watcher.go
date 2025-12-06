@@ -3,12 +3,12 @@ package watcher
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"regexp"
 	"sync"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/thiagokokada/gh-gfm-preview/internal/utils"
 )
 
 const (
@@ -33,7 +33,7 @@ func Init(dir string) (*Watcher, error) {
 		return nil, fmt.Errorf("failed to create watcher: %w", err)
 	}
 
-	utils.LogDebugf("[watcher created]")
+	slog.Debug("Watcher created")
 
 	watcher := Watcher{
 		DoneCh:   make(chan any),
@@ -76,7 +76,7 @@ func (w *Watcher) AddDirectory(dir string) error {
 		return fmt.Errorf("failed to add dir %s to watcher: %w", dir, err)
 	}
 
-	utils.LogInfof("Watching %s for changes", dir)
+	slog.Info("Watching directory for changes", "dir", dir)
 
 	return nil
 }
@@ -92,25 +92,28 @@ func (w *Watcher) Watch() {
 				continue
 			}
 
-			utils.LogDebugf("[event]: op=%s name=%s", event.Op, event.Name)
+			path := event.Name
+			op := event.Op
 
 			if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
 				if re.MatchString(event.Name) {
-					utils.LogDebugf("[ignore]: %s", event.Name)
+					slog.Debug("FS event from ignored pattern", "op", op, "path", path)
 
 					continue
 				}
 
 				if !mu.TryLock() {
-					utils.LogDebugf("[event ignored]: op=%s name=%s", event.Op, event.Name)
+					slog.Debug("FS event debounced", "op", op, "path", path)
 
 					continue
 				}
 
+				slog.Debug("FS event", "op", op, "path", path)
+
 				go func() {
 					defer mu.Unlock()
 
-					utils.LogInfof("Change detected in %s, refreshing", event.Name)
+					slog.Info("Change detected, refreshing", "path", event.Name)
 
 					w.ReloadCh <- true
 
