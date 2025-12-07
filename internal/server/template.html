@@ -20,17 +20,107 @@
     <link rel="stylesheet" href="/static/directory-listing.css" />
 
     <style>
+    :root {
+      --background-dark: #0d1117;
+      --background-light: #ffffff;
+      --color-dark: #c9d1d9;
+      --color-light: #1f2328;
+    }
+
     body {
-      background-color: #0d1117;
-      color: #c9d1d9;
+      background-color: var(--background-dark);
+      color: var(--color-dark);
     }
 
     @media (prefers-color-scheme: light) {
       body {
-        background-color: #ffffff;
-        color: #1f2328;
+        background-color: var(--background-light);
+        color: var(--color-light);
       }
     }
+
+    {{ if eq .Mode "light" }}
+      body {
+        background-color: var(--background-light);
+        color: var(--color-light);
+      }
+      .file-tree-popover .file-tree-item a:hover {
+        background: #f6f8fa;
+      }
+      .file-icon-small {
+        fill: #57606a;
+      }
+      .breadcrumb-container {
+        background: var(--background-light);
+        border-bottom-color: #d0d7de;
+      }
+      .breadcrumb a {
+        color: #0969da;
+      }
+      .breadcrumb .separator {
+        color: #57606a;
+      }
+      .directory-title {
+        border-bottom-color: #d0d7de;
+      }
+      .file-tree {
+        border-color: #d0d7de;
+      }
+      .file-item {
+        border-bottom-color: #d0d7de;
+      }
+      .file-item:hover {
+        background-color: #f6f8fa;
+      }
+      .file-icon {
+        fill: #57606a;
+      }
+      .files-popover {
+        background: white;
+        border-color: #d0d7de;
+        box-shadow: 0 8px 24px rgba(140, 149, 159, 0.2);
+      }
+      .popover-header {
+        border-bottom-color: #d0d7de;
+      }
+      .close-btn {
+        color: #57606a;
+      }
+      .close-btn:hover {
+        color: var(--background-light);
+      }
+      .file-tree-popover .file-tree-item a:hover {
+        background: #f6f8fa;
+      }
+      .file-icon-small {
+        fill: #57606a;
+      }
+      .breadcrumb-container {
+        background: var(--background-light);
+        border-bottom-color: #d0d7de;
+      }
+      .breadcrumb a {
+        color: #0969da;
+      }
+      .breadcrumb .separator {
+        color: #57606a;
+      }
+      .directory-title {
+        border-bottom-color: #d0d7de;
+      }
+      .file-tree {
+        border-color: #d0d7de;
+      }
+      .file-item {
+        border-bottom-color: #d0d7de;
+      }
+      .file-item:hover {
+        background-color: #f6f8fa;
+      }
+      .file-icon {
+        fill: #57606a;
+      }
+    {{ end }}
 
     .markdown-body {
       box-sizing: border-box;

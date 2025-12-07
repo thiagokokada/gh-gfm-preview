@@ -1,10 +1,3 @@
-:root {
-  --background-dark: #0d1117;
-  --background-light: #ffffff;
-  --color-dark: #c9d1d9;
-  --color-light: #1f2328;
-}
-
 /* Directory browsing styles */
 .browse-button-container {
   position: relative;
@@ -46,19 +39,19 @@
   right: 0;
   width: 300px;
   max-height: 500px;
-  background: white;
-  border: 1px solid #d0d7de;
+  background: #161b22;
+  border: 1px solid #30363d;
   border-radius: 6px;
-  box-shadow: 0 8px 24px rgba(140, 149, 159, 0.2);
+  box-shadow: 0 8px 24px rgba(1, 4, 9, 0.8);
   z-index: 999;
   overflow: hidden;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .files-popover {
-    background: #161b22;
-    border-color: #30363d;
-    box-shadow: 0 8px 24px rgba(1, 4, 9, 0.8);
+    background: white;
+    border-color: #d0d7de;
+    box-shadow: 0 8px 24px rgba(140, 149, 159, 0.2);
   }
 }
 
@@ -67,12 +60,12 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid #d0d7de;
+  border-bottom: 1px solid #d0d7de#30363d;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .popover-header {
-    border-bottom-color: #30363d;
+    border-bottom-color: #d0d7de;
   }
 }
 
@@ -92,21 +85,22 @@
   height: 24px;
   line-height: 1;
   color: #57606a;
+  color: #8b949e;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .close-btn {
-    color: #8b949e;
+    color: #57606a;
   }
 }
 
 .close-btn:hover {
-  color: var(--background-light);
+  color: var(--background-dark);
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .close-btn:hover {
-    color: var(--background-dark);
+    color: var(--background-light);
   }
 }
 
@@ -133,12 +127,12 @@
 }
 
 .file-tree-popover .file-tree-item a:hover {
-  background: #f6f8fa;
+  background: #21262d;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .file-tree-popover .file-tree-item a:hover {
-    background: #21262d;
+    background: #f6f8fa;
   }
 }
 
@@ -148,13 +142,13 @@
 }
 
 .file-icon-small {
-  fill: #57606a;
+  fill: #8b949e;
   flex-shrink: 0;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .file-icon-small {
-    fill: #8b949e;
+    fill: #57606a;
   }
 }
 
@@ -164,15 +158,15 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid #d0d7de;
-  background: var(--background-light);
+  border-bottom: 1px solid #30363d;
+  background: var(--background-dark);
   font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .breadcrumb-container {
-    background: var(--background-dark);
-    border-bottom-color: #30363d;
+    background: var(--background-light);
+    border-bottom-color: #d0d7de;
   }
 }
 
@@ -184,13 +178,13 @@
 }
 
 .breadcrumb a {
-  color: #0969da;
+  color: #58a6ff;
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .breadcrumb a {
-    color: #58a6ff;
+    color: #0969da;
   }
 }
 
@@ -199,12 +193,12 @@
 }
 
 .breadcrumb .separator {
-  color: #57606a;
+  color: #8b949e;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .breadcrumb .separator {
-    color: #8b949e;
+    color: #57606a;
   }
 }
 
@@ -230,12 +224,12 @@
   font-weight: 600;
   margin-bottom: 20px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #d0d7de;
+  border-bottom: 1px solid #30363d;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .directory-title {
-    border-bottom-color: #30363d;
+    border-bottom-color: #d0d7de;
   }
 }
 
@@ -244,25 +238,25 @@
 }
 
 .file-tree {
-  border: 1px solid #d0d7de;
+  border: 1px solid #30363d;
   border-radius: 6px;
   overflow: hidden;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .file-tree {
-    border-color: #30363d;
+    border-color: #d0d7de;
   }
 }
 
 .file-item {
-  border-bottom: 1px solid #d0d7de;
+  border-bottom: 1px solid #30363d;
   padding: 0;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .file-item {
-    border-bottom-color: #30363d;
+    border-bottom-color: #d0d7de;
   }
 }
 
@@ -281,12 +275,12 @@
 }
 
 .file-item:hover {
-  background-color: #f6f8fa;
+  background-color: #161b22;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .file-item:hover {
-    background-color: #161b22;
+    background-color: #f6f8fa;
   }
 }
 
@@ -304,12 +298,12 @@
 
 .file-icon {
   flex-shrink: 0;
-  fill: #57606a;
+  fill: #8b949e;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   .file-icon {
-    fill: #8b949e;
+    fill: #57606a;
   }
 }
 
