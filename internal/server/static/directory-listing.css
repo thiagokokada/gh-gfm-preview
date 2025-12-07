@@ -1,10 +1,3 @@
-:root {
-  --background-dark: #0d1117;
-  --background-light: #ffffff;
-  --color-dark: #c9d1d9;
-  --color-light: #1f2328;
-}
-
 /* Directory browsing styles */
 .browse-button-container {
   position: relative;
@@ -46,20 +39,12 @@
   right: 0;
   width: 300px;
   max-height: 500px;
-  background: white;
-  border: 1px solid #d0d7de;
+  background: #161b22;
+  border: 1px solid #30363d;
   border-radius: 6px;
-  box-shadow: 0 8px 24px rgba(140, 149, 159, 0.2);
+  box-shadow: 0 8px 24px rgba(1, 4, 9, 0.8);
   z-index: 999;
   overflow: hidden;
-}
-
-@media (prefers-color-scheme: dark) {
-  .files-popover {
-    background: #161b22;
-    border-color: #30363d;
-    box-shadow: 0 8px 24px rgba(1, 4, 9, 0.8);
-  }
 }
 
 .popover-header {
@@ -67,13 +52,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid #d0d7de;
-}
-
-@media (prefers-color-scheme: dark) {
-  .popover-header {
-    border-bottom-color: #30363d;
-  }
+  border-bottom: 1px solid #d0d7de#30363d;
 }
 
 .popover-header h3 {
@@ -92,22 +71,11 @@
   height: 24px;
   line-height: 1;
   color: #57606a;
-}
-
-@media (prefers-color-scheme: dark) {
-  .close-btn {
-    color: #8b949e;
-  }
+  color: #8b949e;
 }
 
 .close-btn:hover {
-  color: var(--background-light);
-}
-
-@media (prefers-color-scheme: dark) {
-  .close-btn:hover {
-    color: var(--background-dark);
-  }
+  color: var(--background-dark);
 }
 
 .popover-body {
@@ -133,13 +101,7 @@
 }
 
 .file-tree-popover .file-tree-item a:hover {
-  background: #f6f8fa;
-}
-
-@media (prefers-color-scheme: dark) {
-  .file-tree-popover .file-tree-item a:hover {
-    background: #21262d;
-  }
+  background: #21262d;
 }
 
 .dir-icon {
@@ -148,14 +110,8 @@
 }
 
 .file-icon-small {
-  fill: #57606a;
+  fill: #8b949e;
   flex-shrink: 0;
-}
-
-@media (prefers-color-scheme: dark) {
-  .file-icon-small {
-    fill: #8b949e;
-  }
 }
 
 /* Breadcrumb styles */
@@ -164,16 +120,9 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid #d0d7de;
-  background: var(--background-light);
+  border-bottom: 1px solid #30363d;
+  background: var(--background-dark);
   font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
-}
-
-@media (prefers-color-scheme: dark) {
-  .breadcrumb-container {
-    background: var(--background-dark);
-    border-bottom-color: #30363d;
-  }
 }
 
 .breadcrumb {
@@ -184,14 +133,8 @@
 }
 
 .breadcrumb a {
-  color: #0969da;
+  color: #58a6ff;
   text-decoration: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  .breadcrumb a {
-    color: #58a6ff;
-  }
 }
 
 .breadcrumb a:hover {
@@ -199,13 +142,7 @@
 }
 
 .breadcrumb .separator {
-  color: #57606a;
-}
-
-@media (prefers-color-scheme: dark) {
-  .breadcrumb .separator {
-    color: #8b949e;
-  }
+  color: #8b949e;
 }
 
 .breadcrumb .current {
@@ -230,13 +167,7 @@
   font-weight: 600;
   margin-bottom: 20px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #d0d7de;
-}
-
-@media (prefers-color-scheme: dark) {
-  .directory-title {
-    border-bottom-color: #30363d;
-  }
+  border-bottom: 1px solid #30363d;
 }
 
 .folder-icon {
@@ -244,26 +175,14 @@
 }
 
 .file-tree {
-  border: 1px solid #d0d7de;
+  border: 1px solid #30363d;
   border-radius: 6px;
   overflow: hidden;
 }
 
-@media (prefers-color-scheme: dark) {
-  .file-tree {
-    border-color: #30363d;
-  }
-}
-
 .file-item {
-  border-bottom: 1px solid #d0d7de;
+  border-bottom: 1px solid #30363d;
   padding: 0;
-}
-
-@media (prefers-color-scheme: dark) {
-  .file-item {
-    border-bottom-color: #30363d;
-  }
 }
 
 .file-item:last-child {
@@ -281,13 +200,7 @@
 }
 
 .file-item:hover {
-  background-color: #f6f8fa;
-}
-
-@media (prefers-color-scheme: dark) {
-  .file-item:hover {
-    background-color: #161b22;
-  }
+  background-color: #161b22;
 }
 
 .file-item[data-depth="1"] a {
@@ -304,13 +217,7 @@
 
 .file-icon {
   flex-shrink: 0;
-  fill: #57606a;
-}
-
-@media (prefers-color-scheme: dark) {
-  .file-icon {
-    fill: #8b949e;
-  }
+  fill: #8b949e;
 }
 
 .file-name {

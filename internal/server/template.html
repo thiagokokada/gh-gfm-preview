@@ -5,32 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title id="markdown-title">{{ .Title }}</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <link rel="stylesheet" href="/static/directory-listing.css" />
     {{ if eq .Mode "dark" }}
     <link rel="stylesheet" href="/static/chroma-github-dark.css" />
     <link rel="stylesheet" href="/static/github-markdown-dark.css" />
     {{ else if eq .Mode "light" }}
     <link rel="stylesheet" href="/static/chroma-github-light.css" />
     <link rel="stylesheet" href="/static/github-markdown-light.css" />
+    <link rel="stylesheet" href="/static/directory-listing-light.css" />
     {{ else }}
     <link rel="stylesheet" href="/static/chroma-github-light.css" media="(prefers-color-scheme: light)" />
     <link rel="stylesheet" href="/static/github-markdown-light.css" media="(prefers-color-scheme: light)" />
     <link rel="stylesheet" href="/static/chroma-github-dark.css" media="(prefers-color-scheme: no-preference),(prefers-color-scheme: dark)" />
     <link rel="stylesheet" href="/static/github-markdown-dark.css" media="(prefers-color-scheme: no-preference),(prefers-color-scheme: dark)" />
+    <link rel="stylesheet" href="/static/directory-listing-light.css" media="(prefers-color-scheme: light)" />
     {{ end }}
-    <link rel="stylesheet" href="/static/directory-listing.css" />
 
     <style>
-    body {
-      background-color: #0d1117;
-      color: #c9d1d9;
+    :root {
+      --background-dark: #0d1117;
+      --background-light: #ffffff;
+      --color-dark: #c9d1d9;
+      --color-light: #1f2328;
     }
 
-    @media (prefers-color-scheme: light) {
-      body {
-        background-color: #ffffff;
-        color: #1f2328;
-      }
+    body {
+      background-color: var(--background-dark);
+      color: var(--color-dark);
     }
+
+    {{ if eq .Mode "auto" }}
+      @media (prefers-color-scheme: light) {
+        body {
+          background-color: var(--background-light);
+          color: var(--color-light);
+        }
+      }
+    {{ else if eq .Mode "light" }}
+      body {
+        background-color: var(--background-light);
+        color: var(--color-light);
+      }
+    {{ end }}
 
     .markdown-body {
       box-sizing: border-box;
