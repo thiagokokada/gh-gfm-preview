@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -21,7 +22,7 @@ var (
 	upgrader   = websocket.Upgrader{ReadBufferSize: 1024, WriteBufferSize: 1024}
 	pongWait   = defaultPongWait
 	pingPeriod = defaultPingPeriod
-	socket     *websocket.Conn
+	socket     atomic.Pointer[websocket.Conn]
 	socketMu   sync.Mutex
 )
 
@@ -29,9 +30,7 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 	go watcher.Watch()
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var err error
-
-		socket, err = upgrader.Upgrade(w, r, nil)
+		s, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			if errors.Is(err, websocket.HandshakeError{}) {
 				slog.Error("Handshake error", "error", err)
@@ -39,21 +38,23 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 
 			return
 		}
-		defer socket.Close()
+		defer s.Close()
 
-		err = socket.SetReadDeadline(time.Now().Add(pongWait))
+		err = s.SetReadDeadline(time.Now().Add(pongWait))
 		if err != nil {
 			slog.Error("Set read deadline error", "error", err)
 		}
 
-		socket.SetPongHandler(func(string) error {
-			err := socket.SetReadDeadline(time.Now().Add(pongWait))
+		s.SetPongHandler(func(string) error {
+			err := s.SetReadDeadline(time.Now().Add(pongWait))
 			if err != nil {
 				slog.Error("Set read deadline error in pong handler", "error", err)
 			}
 
 			return nil
 		})
+
+		socket.Store(s)
 
 		go wsReader(watcher.DoneCh, watcher.ErrorCh)
 		go wsWriter(watcher.DoneCh, watcher.ErrorCh, watcher.ReloadCh)
@@ -69,7 +70,7 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 
 func wsReader(doneCh <-chan any, errorCh chan<- error) {
 	for range doneCh {
-		_, _, err := socket.ReadMessage()
+		_, _, err := socket.Load().ReadMessage()
 		if err != nil {
 			slog.Error("Websocket reader read message error", "error", err)
 
@@ -88,7 +89,7 @@ func wsWriter(doneCh <-chan any, errorCh chan<- error, reloadCh <-chan bool) {
 		select {
 		case <-reloadCh:
 			withSocketLock(func() {
-				err = socket.WriteMessage(websocket.TextMessage, []byte("reload"))
+				err = socket.Load().WriteMessage(websocket.TextMessage, []byte("reload"))
 			})
 
 			if err != nil {
@@ -99,7 +100,7 @@ func wsWriter(doneCh <-chan any, errorCh chan<- error, reloadCh <-chan bool) {
 		case <-ticker.C:
 			slog.Debug("Sending ping to client")
 			withSocketLock(func() {
-				err = socket.WriteMessage(websocket.PingMessage, []byte{})
+				err = socket.Load().WriteMessage(websocket.PingMessage, []byte{})
 			})
 
 			if err != nil {

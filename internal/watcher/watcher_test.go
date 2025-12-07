@@ -3,6 +3,7 @@ package watcher
 import (
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -110,7 +111,8 @@ func TestWatch_DebounceLogic(t *testing.T) {
 	// The watcher logic has a TryLock and a Sleep(lockTime) which is 100ms.
 	// If we write 5 times in 10ms, we should realistically only get 1 or 2 events processed.
 
-	counter := 0
+	var counter atomic.Uint32
+
 	done := make(chan bool)
 
 	// Listener routine
@@ -118,7 +120,7 @@ func TestWatch_DebounceLogic(t *testing.T) {
 		for {
 			select {
 			case <-w.ReloadCh:
-				counter++
+				counter.Add(1)
 			case <-done:
 				return
 			}
@@ -139,11 +141,11 @@ func TestWatch_DebounceLogic(t *testing.T) {
 	close(done)
 
 	// We expect fewer events than writes because of the lockTime logic
-	if counter == 0 {
+	if counter.Load() == 0 {
 		t.Error("Expected at least one event, got 0")
 	}
 
-	if counter == 5 {
+	if counter.Load() == 5 {
 		t.Log("Warning: Debounce might not be catching all rapid events, got 5 events for 5 writes")
 	}
 }
