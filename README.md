@@ -124,19 +124,19 @@ Firefox, or Safari.
 Available options:
 
 ```
-  -d, --dark-mode                                  force dark mode
-  -D, --directory-listing                          enable directory browsing mode
-      --directory-listing-show-extensions string   file extensions to show in directory listing (comma-separated, use '*' for all files) (default".md,.txt")
-      --directory-listing-text-extensions string   text file extensions for preview (comma-separated, others will be served as binary) (default ".md,.txt")
-  -A, --disable-auto-open                          disable auto opening your browser
-  -R, --disable-reload                             disable live reloading
-  -h, --help                                       help for gh-gfm-preview
-  -H, --host string                                hostname this server will bind (default "localhost")
-  -l, --light-mode                                 force light mode
-  -m, --markdown-mode                              force "markdown" mode (rather than default "gfm")
   -p, --port int                                   TCP port number of this server (default 3333)
+  -H, --host string                                hostname this server will bind (default "localhost")
+  -R, --disable-reload                             disable live reloading
+  -A, --disable-auto-open                          disable auto opening your browser
+  -l, --light-mode                                 force light mode
+  -d, --dark-mode                                  force dark mode
+  -m, --markdown-mode                              force "markdown" mode (rather than default "gfm")
+  -D, --directory-listing                          enable directory browsing mode
+      --directory-listing-show-extensions string   file extensions to show in directory listing (comma-separated, use '*' for all files) (default ".md,.txt")
+      --directory-listing-text-extensions string   text file extensions for preview (comma-separated, others will be served as binary) (default ".md,.txt")
+      --no-color                                   disable color for logs
   -v, --verbose                                    show verbose output
-      --version                                    version for gh-gfm-preview
+      --version                                    show program version
 ```
 
 ### Directory Listing
