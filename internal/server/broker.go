@@ -29,36 +29,48 @@ func (b *wsBroker) run() {
 	for {
 		select {
 		case c := <-b.register:
-			b.mu.Lock()
-			b.clients[c] = true
-			b.mu.Unlock()
+			b.withLock(func() {
+				b.clients[c] = true
+			})
+
 		case c := <-b.unregister:
-			b.mu.Lock()
-
-			if _, ok := b.clients[c]; ok {
-				delete(b.clients, c)
-				close(c.send)
-			}
-
-			b.mu.Unlock()
-		case msg := <-b.broadcast:
-			b.mu.RLock()
-
-			for c := range b.clients {
-				// try sending without blocking the broker
-				select {
-				case c.send <- msg:
-				default:
-					// client send channel is full or blocked; unregister it to avoid leaking
-					b.mu.RUnlock()
-
-					b.unregister <- c
-
-					b.mu.RLock()
+			b.withLock(func() {
+				if _, ok := b.clients[c]; ok {
+					delete(b.clients, c)
+					close(c.send)
 				}
-			}
+			})
 
-			b.mu.RUnlock()
+		case msg := <-b.broadcast:
+			b.withRLock(func() {
+				for c := range b.clients {
+					// try sending without blocking the broker
+					select {
+					case c.send <- msg:
+					default:
+						// client send channel is full or blocked; unregister it to avoid leaking
+						b.mu.RUnlock()
+
+						b.unregister <- c
+
+						b.mu.RLock()
+					}
+				}
+			})
 		}
 	}
+}
+
+func (b *wsBroker) withLock(f func()) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	f()
+}
+
+func (b *wsBroker) withRLock(f func()) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	f()
 }
