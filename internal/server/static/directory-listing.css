@@ -47,26 +47,12 @@
   overflow: hidden;
 }
 
-@media (prefers-color-scheme: light) {
-  .files-popover {
-    background: white;
-    border-color: #d0d7de;
-    box-shadow: 0 8px 24px rgba(140, 149, 159, 0.2);
-  }
-}
-
 .popover-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
   border-bottom: 1px solid #d0d7de#30363d;
-}
-
-@media (prefers-color-scheme: light) {
-  .popover-header {
-    border-bottom-color: #d0d7de;
-  }
 }
 
 .popover-header h3 {
@@ -88,20 +74,8 @@
   color: #8b949e;
 }
 
-@media (prefers-color-scheme: light) {
-  .close-btn {
-    color: #57606a;
-  }
-}
-
 .close-btn:hover {
   color: var(--background-dark);
-}
-
-@media (prefers-color-scheme: light) {
-  .close-btn:hover {
-    color: var(--background-light);
-  }
 }
 
 .popover-body {
@@ -130,12 +104,6 @@
   background: #21262d;
 }
 
-@media (prefers-color-scheme: light) {
-  .file-tree-popover .file-tree-item a:hover {
-    background: #f6f8fa;
-  }
-}
-
 .dir-icon {
   fill: #54aeff;
   flex-shrink: 0;
@@ -144,12 +112,6 @@
 .file-icon-small {
   fill: #8b949e;
   flex-shrink: 0;
-}
-
-@media (prefers-color-scheme: light) {
-  .file-icon-small {
-    fill: #57606a;
-  }
 }
 
 /* Breadcrumb styles */
@@ -161,13 +123,6 @@
   border-bottom: 1px solid #30363d;
   background: var(--background-dark);
   font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
-}
-
-@media (prefers-color-scheme: light) {
-  .breadcrumb-container {
-    background: var(--background-light);
-    border-bottom-color: #d0d7de;
-  }
 }
 
 .breadcrumb {
@@ -182,24 +137,12 @@
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: light) {
-  .breadcrumb a {
-    color: #0969da;
-  }
-}
-
 .breadcrumb a:hover {
   text-decoration: underline;
 }
 
 .breadcrumb .separator {
   color: #8b949e;
-}
-
-@media (prefers-color-scheme: light) {
-  .breadcrumb .separator {
-    color: #57606a;
-  }
 }
 
 .breadcrumb .current {
@@ -227,12 +170,6 @@
   border-bottom: 1px solid #30363d;
 }
 
-@media (prefers-color-scheme: light) {
-  .directory-title {
-    border-bottom-color: #d0d7de;
-  }
-}
-
 .folder-icon {
   fill: #54aeff;
 }
@@ -243,21 +180,9 @@
   overflow: hidden;
 }
 
-@media (prefers-color-scheme: light) {
-  .file-tree {
-    border-color: #d0d7de;
-  }
-}
-
 .file-item {
   border-bottom: 1px solid #30363d;
   padding: 0;
-}
-
-@media (prefers-color-scheme: light) {
-  .file-item {
-    border-bottom-color: #d0d7de;
-  }
 }
 
 .file-item:last-child {
@@ -278,12 +203,6 @@
   background-color: #161b22;
 }
 
-@media (prefers-color-scheme: light) {
-  .file-item:hover {
-    background-color: #f6f8fa;
-  }
-}
-
 .file-item[data-depth="1"] a {
   padding-left: 32px;
 }
@@ -299,12 +218,6 @@
 .file-icon {
   flex-shrink: 0;
   fill: #8b949e;
-}
-
-@media (prefers-color-scheme: light) {
-  .file-icon {
-    fill: #57606a;
-  }
 }
 
 .file-name {
