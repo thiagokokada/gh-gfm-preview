@@ -5,19 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title id="markdown-title">{{ .Title }}</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <link rel="stylesheet" href="/static/directory-listing.css" />
     {{ if eq .Mode "dark" }}
     <link rel="stylesheet" href="/static/chroma-github-dark.css" />
     <link rel="stylesheet" href="/static/github-markdown-dark.css" />
     {{ else if eq .Mode "light" }}
     <link rel="stylesheet" href="/static/chroma-github-light.css" />
     <link rel="stylesheet" href="/static/github-markdown-light.css" />
+    <link rel="stylesheet" href="/static/directory-listing-light.css" />
     {{ else }}
     <link rel="stylesheet" href="/static/chroma-github-light.css" media="(prefers-color-scheme: light)" />
     <link rel="stylesheet" href="/static/github-markdown-light.css" media="(prefers-color-scheme: light)" />
     <link rel="stylesheet" href="/static/chroma-github-dark.css" media="(prefers-color-scheme: no-preference),(prefers-color-scheme: dark)" />
     <link rel="stylesheet" href="/static/github-markdown-dark.css" media="(prefers-color-scheme: no-preference),(prefers-color-scheme: dark)" />
     {{ end }}
-    <link rel="stylesheet" href="/static/directory-listing.css" />
 
     <style>
     :root {
@@ -43,82 +44,6 @@
       body {
         background-color: var(--background-light);
         color: var(--color-light);
-      }
-      .file-tree-popover .file-tree-item a:hover {
-        background: #f6f8fa;
-      }
-      .file-icon-small {
-        fill: #57606a;
-      }
-      .breadcrumb-container {
-        background: var(--background-light);
-        border-bottom-color: #d0d7de;
-      }
-      .breadcrumb a {
-        color: #0969da;
-      }
-      .breadcrumb .separator {
-        color: #57606a;
-      }
-      .directory-title {
-        border-bottom-color: #d0d7de;
-      }
-      .file-tree {
-        border-color: #d0d7de;
-      }
-      .file-item {
-        border-bottom-color: #d0d7de;
-      }
-      .file-item:hover {
-        background-color: #f6f8fa;
-      }
-      .file-icon {
-        fill: #57606a;
-      }
-      .files-popover {
-        background: white;
-        border-color: #d0d7de;
-        box-shadow: 0 8px 24px rgba(140, 149, 159, 0.2);
-      }
-      .popover-header {
-        border-bottom-color: #d0d7de;
-      }
-      .close-btn {
-        color: #57606a;
-      }
-      .close-btn:hover {
-        color: var(--background-light);
-      }
-      .file-tree-popover .file-tree-item a:hover {
-        background: #f6f8fa;
-      }
-      .file-icon-small {
-        fill: #57606a;
-      }
-      .breadcrumb-container {
-        background: var(--background-light);
-        border-bottom-color: #d0d7de;
-      }
-      .breadcrumb a {
-        color: #0969da;
-      }
-      .breadcrumb .separator {
-        color: #57606a;
-      }
-      .directory-title {
-        border-bottom-color: #d0d7de;
-      }
-      .file-tree {
-        border-color: #d0d7de;
-      }
-      .file-item {
-        border-bottom-color: #d0d7de;
-      }
-      .file-item:hover {
-        background-color: #f6f8fa;
-      }
-      .file-icon {
-        fill: #57606a;
       }
     {{ end }}
 
