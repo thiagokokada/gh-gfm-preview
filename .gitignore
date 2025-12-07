@@ -17,3 +17,6 @@ gh-gfm-preview
 
 # Nix
 result*
+
+# jslint.sh
+jslint.mjs

@@ -36,4 +36,5 @@ jobs:
         version: v2.5.0
 
     - name: Run JSLint
-      run: ./jslint.sh
+      run: |
+        ./jslint.sh internal/server/static/script.js
