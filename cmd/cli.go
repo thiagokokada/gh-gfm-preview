@@ -8,40 +8,79 @@ import (
 	"runtime/debug"
 
 	"github.com/lmittmann/tint"
-	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/thiagokokada/gh-gfm-preview/internal/server"
 )
 
 var logLevel = new(slog.LevelVar)
 
-var rootCmd = &cobra.Command{
-	Use:     "gh-gfm-preview",
-	Short:   "GitHub CLI extension to preview Markdown",
-	Run:     run,
-	Args:    cobra.RangeArgs(0, 1),
-	Version: version(),
-}
-
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+	fs := pflag.NewFlagSet("gh-gfm-preview", pflag.ExitOnError)
+	fs.SortFlags = false
+
+	port := fs.IntP("port", "p", 3333, "TCP port number of this server")
+	host := fs.StringP("host", "H", "localhost", "hostname this server will bind")
+	disableReload := fs.BoolP("disable-reload", "R", false, "disable live reloading")
+	disableAutoOpen := fs.BoolP("disable-auto-open", "A", false, "disable auto opening your browser")
+	lightMode := fs.BoolP("light-mode", "l", false, "force light mode")
+	darkMode := fs.BoolP("dark-mode", "d", false, "force dark mode")
+	markdownMode := fs.BoolP("markdown-mode", "m", false, `force "markdown" mode (rather than default "gfm")`)
+	directoryListing := fs.BoolP("directory-listing", "D", false, "enable directory browsing mode")
+	directoryListingShowExtensions := fs.StringP("directory-listing-show-extensions", "", ".md,.txt", "file extensions to show in directory listing (comma-separated, use '*' for all files)")
+	directoryListingTextExtensions := fs.StringP("directory-listing-text-extensions", "", ".md,.txt", "text file extensions for preview (comma-separated, others will be served as binary)")
+	noColor := fs.BoolP("no-color", "", false, "disable color for logs")
+	verbose := fs.BoolP("verbose", "v", false, "show verbose output")
+	version := fs.BoolP("version", "", false, "show program version")
+
+	_ = fs.Parse(os.Args[1:])
+
+	if *version {
+		fmt.Println(getVersion())
+		os.Exit(0)
+	}
+
+	filename := ""
+	if fs.NArg() > 0 {
+		filename = fs.Arg(0)
+	}
+
+	if *verbose {
+		logLevel.Set(slog.LevelDebug)
+	}
+
+	h := slog.New(tint.NewHandler(
+		os.Stdout,
+		&tint.Options{
+			Level:   logLevel,
+			NoColor: *noColor || os.Getenv("NO_COLOR") == "1",
+		},
+	))
+	slog.SetDefault(h)
+
+	// Detect stdin usage
+	useStdin, stdinContent := detectStdin(filename)
+
+	param := &server.Param{
+		Filename:                       filename,
+		MarkdownMode:                   *markdownMode,
+		Reload:                         !*disableReload,
+		ForceLightMode:                 *lightMode,
+		ForceDarkMode:                  *darkMode,
+		AutoOpen:                       !*disableAutoOpen,
+		UseStdin:                       useStdin,
+		StdinContent:                   stdinContent,
+		DirectoryListing:               *directoryListing,
+		DirectoryListingShowExtensions: *directoryListingShowExtensions,
+		DirectoryListingTextExtensions: *directoryListingTextExtensions,
+	}
+
+	httpServer := server.Server{Host: *host, Port: *port}
+
+	err := httpServer.Serve(param)
+	if err != nil {
+		slog.Error("Error while starting HTTP server", "error", err)
 		os.Exit(1)
 	}
-}
-
-func init() {
-	rootCmd.Flags().IntP("port", "p", 3333, "TCP port number of this server")
-	rootCmd.Flags().StringP("host", "H", "localhost", "hostname this server will bind")
-	rootCmd.Flags().BoolP("disable-reload", "R", false, "disable live reloading")
-	rootCmd.Flags().BoolP("markdown-mode", "m", false, "force \"markdown\" mode (rather than default \"gfm\")")
-	rootCmd.Flags().BoolP("disable-auto-open", "A", false, "disable auto opening your browser")
-	rootCmd.Flags().BoolP("verbose", "v", false, "show verbose output")
-	rootCmd.Flags().BoolP("light-mode", "l", false, "force light mode")
-	rootCmd.Flags().BoolP("dark-mode", "d", false, "force dark mode")
-	rootCmd.Flags().BoolP("no-color", "", false, "disable color for logs")
-	rootCmd.Flags().BoolP("directory-listing", "D", false, "enable directory browsing mode")
-	rootCmd.Flags().StringP("directory-listing-show-extensions", "", ".md,.txt", "file extensions to show in directory listing (comma-separated, use '*' for all files)")
-	rootCmd.Flags().StringP("directory-listing-text-extensions", "", ".md,.txt", "text file extensions for preview (comma-separated, others will be served as binary)")
 }
 
 func detectStdin(filename string) (bool, string) {
@@ -69,83 +108,11 @@ func detectStdin(filename string) (bool, string) {
 	return false, ""
 }
 
-func run(cmd *cobra.Command, args []string) {
-	filename := ""
-	if len(args) > 0 {
-		filename = args[0]
-	}
-
-	flags := cmd.Flags()
-
-	nocolor := must(flags.GetBool("no-color"))
-	h := slog.New(tint.NewHandler(
-		os.Stdout,
-		&tint.Options{
-			Level:   logLevel,
-			NoColor: nocolor || os.Getenv("NO_COLOR") == "1",
-		},
-	))
-	slog.SetDefault(h)
-
-	verbose := must(flags.GetBool("verbose"))
-	if verbose {
-		logLevel.Set(slog.LevelDebug)
-	}
-
-	host := must(flags.GetString("host"))
-	port := must(flags.GetInt("port"))
-	httpServer := server.Server{Host: host, Port: port}
-
-	disableReload := must(flags.GetBool("disable-reload"))
-
-	forceLightMode := must(flags.GetBool("light-mode"))
-	forceDarkMode := must(flags.GetBool("dark-mode"))
-
-	markdownMode := must(flags.GetBool("markdown-mode"))
-
-	disableAutoOpen := must(flags.GetBool("disable-auto-open"))
-
-	// Detect stdin usage
-	useStdin, stdinContent := detectStdin(filename)
-
-	directoryListing := must(flags.GetBool("directory-listing"))
-	directoryListingShowExtensions := must(flags.GetString("directory-listing-show-extensions"))
-	directoryListingTextExtensions := must(flags.GetString("directory-listing-text-extensions"))
-
-	param := &server.Param{
-		Filename:                       filename,
-		MarkdownMode:                   markdownMode,
-		Reload:                         !disableReload,
-		ForceLightMode:                 forceLightMode,
-		ForceDarkMode:                  forceDarkMode,
-		AutoOpen:                       !disableAutoOpen,
-		UseStdin:                       useStdin,
-		StdinContent:                   stdinContent,
-		DirectoryListing:               directoryListing,
-		DirectoryListingShowExtensions: directoryListingShowExtensions,
-		DirectoryListingTextExtensions: directoryListingTextExtensions,
-	}
-
-	err := httpServer.Serve(param)
-	if err != nil {
-		slog.Error("Error while starting HTTP server", "error", err)
-		os.Exit(1)
-	}
-}
-
-func version() string {
+func getVersion() string {
 	buildInfo, ok := debug.ReadBuildInfo()
 	if !ok {
 		return "unknown"
 	}
 
 	return buildInfo.Main.Version
-}
-
-func must[T any](v T, err error) T { //nolint:ireturn
-	if err != nil {
-		panic(err)
-	}
-
-	return v
 }
