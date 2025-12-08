@@ -17,8 +17,8 @@ import (
 
 // TestConcurrentWriteWithMutex verifies that the mutex fix prevents panics.
 func TestConcurrentWriteWithMutex(t *testing.T) {
-	pingPeriod = 10 * time.Millisecond
-	pongWait = 60 * time.Second
+	pongWait = 10 * time.Millisecond
+	pingPeriod = (pongWait * 9) / 10
 
 	defer func() {
 		pingPeriod = defaultPingPeriod
