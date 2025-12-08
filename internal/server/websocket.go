@@ -141,6 +141,8 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 				slog.Debug("Watcher channel error", "error", err)
 			}
 
+			client.broker.unregister <- client
+
 			client.conn.Close()
 		case <-doneCh:
 			// client has disconnected normally
