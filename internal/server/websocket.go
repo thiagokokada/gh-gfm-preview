@@ -12,7 +12,7 @@ import (
 
 const (
 	defaultPongWait   = 60 * time.Second
-	defaultPingPeriod = (defaultPongWait * 9) / 10
+	defaultPingPeriod = (defaultPongWait * 9) / 10 // must be less than pong wait
 )
 
 var (
@@ -39,6 +39,28 @@ func (c *wsClient) cleanup(doneCh chan<- struct{}) {
 
 func (c *wsClient) readPump(doneCh chan<- struct{}) {
 	defer c.cleanup(doneCh)
+
+	err := c.conn.SetReadDeadline(time.Now().Add(pongWait))
+	if err != nil {
+		slog.Warn(
+			"WS set read deadline error",
+			"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
+			"error", err,
+		)
+	}
+
+	c.conn.SetPongHandler(func(string) error {
+		err := c.conn.SetReadDeadline(time.Now().Add(pongWait))
+		if err != nil {
+			slog.Warn(
+				"WS set read deadline error",
+				"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
+				"error", err,
+			)
+		}
+
+		return nil
+	})
 
 	for {
 		if _, _, err := c.conn.ReadMessage(); err != nil {
@@ -124,15 +146,6 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 			}
 
 			return
-		}
-
-		err = conn.SetReadDeadline(time.Now().Add(pongWait))
-		if err != nil {
-			slog.Warn(
-				"WS set read deadline error",
-				"remote_addr", conn.UnderlyingConn().RemoteAddr(),
-				"error", err,
-			)
 		}
 
 		client := &wsClient{
