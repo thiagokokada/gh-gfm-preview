@@ -42,7 +42,11 @@ func (c *wsClient) readPump(doneCh chan<- struct{}) {
 
 	for {
 		if _, _, err := c.conn.ReadMessage(); err != nil {
-			slog.Debug("Websocket read message error", "error", err)
+			slog.Debug(
+				"WS read message error",
+				"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
+				"error", err,
+			)
 
 			return
 		}
@@ -57,13 +61,20 @@ func (c *wsClient) writePump() {
 		select {
 		case msg, ok := <-c.send:
 			if !ok {
-				slog.Debug("Broker closed the channel")
+				slog.Debug(
+					"Broker closed the channel",
+					"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
+				)
 
 				return
 			}
 
 			if err := c.conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-				slog.Debug("Websocket write message error", "error", err)
+				slog.Debug(
+					"WS write message error",
+					"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
+					"error", err,
+				)
 
 				return
 			}
@@ -71,7 +82,11 @@ func (c *wsClient) writePump() {
 		case <-ticker.C:
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				// do nothing
-				slog.Debug("Ping error", "error", err)
+				slog.Debug(
+					"WS ping error",
+					"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
+					"error", err,
+				)
 
 				return
 			}
@@ -101,7 +116,11 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			if errors.Is(err, websocket.HandshakeError{}) {
-				slog.Error("Handshake error", "error", err)
+				slog.Error(
+					"WS handshake error",
+					"remote_addr", conn.UnderlyingConn().RemoteAddr(),
+					"error", err,
+				)
 			}
 
 			return
@@ -109,7 +128,11 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 
 		err = conn.SetReadDeadline(time.Now().Add(pongWait))
 		if err != nil {
-			slog.Warn("Set read deadline error", "error", err)
+			slog.Warn(
+				"WS set read deadline error",
+				"remote_addr", conn.UnderlyingConn().RemoteAddr(),
+				"error", err,
+			)
 		}
 
 		client := &wsClient{
@@ -129,7 +152,7 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 		select {
 		case err := <-watcher.ErrorCh:
 			if err != nil {
-				slog.Error("Watcher channel error", "error", err)
+				slog.Error("FS watcher channel error", "error", err)
 			}
 		case <-doneCh:
 			// client has disconnected normally

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log/slog"
 	"maps"
 	"sync"
 )
@@ -32,11 +33,21 @@ func (b *wsBroker) run() {
 	for {
 		select {
 		case c := <-b.register:
+			slog.Debug(
+				"Registering client in broker",
+				"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
+			)
+
 			b.mu.Lock()
 			b.clients[c] = true
 			b.mu.Unlock()
 
 		case c := <-b.unregister:
+			slog.Debug(
+				"Unregistering client from broker",
+				"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
+			)
+
 			b.mu.Lock()
 
 			if _, ok := b.clients[c]; ok {
@@ -52,6 +63,12 @@ func (b *wsBroker) run() {
 			b.mu.RUnlock()
 
 			for c := range clients {
+				slog.Debug(
+					"Sending message to client",
+					"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
+					"msg", string(msg),
+				)
+
 				select {
 				case c.send <- msg:
 					// ok
