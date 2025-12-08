@@ -6,6 +6,11 @@ import (
 	"sync"
 )
 
+type wsMessage struct {
+	message []byte
+	err     error
+}
+
 // wsBroker handles registering/unregistering clients and broadcasting messages to them.
 type wsBroker struct {
 	// Registered clients.
@@ -15,7 +20,7 @@ type wsBroker struct {
 	// Unregister requests from clients.
 	unregister chan *wsClient
 	// Broadcast messages to all clients.
-	broadcast chan []byte
+	broadcast chan wsMessage
 	// Protect clients map during iteration if needed elsewhere.
 	mu sync.RWMutex
 }
@@ -25,7 +30,7 @@ func newBroker() *wsBroker {
 		clients:    make(map[*wsClient]bool),
 		register:   make(chan *wsClient),
 		unregister: make(chan *wsClient),
-		broadcast:  make(chan []byte, 1),
+		broadcast:  make(chan wsMessage, 1),
 	}
 }
 
@@ -33,20 +38,14 @@ func (b *wsBroker) run() {
 	for {
 		select {
 		case c := <-b.register:
-			slog.Debug(
-				"Registering client in broker",
-				"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
-			)
+			slog.Debug("Registering client in broker", "remote_addr", c.remoteAddr())
 
 			b.mu.Lock()
 			b.clients[c] = true
 			b.mu.Unlock()
 
 		case c := <-b.unregister:
-			slog.Debug(
-				"Unregistering client from broker",
-				"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
-			)
+			slog.Debug("Unregistering client from broker", "remote_addr", c.remoteAddr())
 
 			b.mu.Lock()
 
@@ -66,7 +65,8 @@ func (b *wsBroker) run() {
 				slog.Debug(
 					"Sending message to client",
 					"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
-					"msg", string(msg),
+					"message", string(msg.message),
+					"error", msg.err,
 				)
 
 				select {

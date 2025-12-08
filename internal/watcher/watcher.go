@@ -121,6 +121,8 @@ func (w *Watcher) Watch() {
 				}()
 			}
 		case err := <-w.watcher.Errors:
+			slog.Error("FS watcher error", "error", err)
+
 			w.ErrorCh <- err
 		case <-w.DoneCh:
 			return

@@ -3,6 +3,7 @@ package server
 import (
 	"errors"
 	"log/slog"
+	"net"
 	"net/http"
 	"time"
 
@@ -24,7 +25,7 @@ var (
 type wsClient struct {
 	broker *wsBroker
 	conn   *websocket.Conn
-	send   chan []byte
+	send   chan wsMessage
 }
 
 func (c *wsClient) cleanup(doneCh chan<- struct{}) {
@@ -37,26 +38,22 @@ func (c *wsClient) cleanup(doneCh chan<- struct{}) {
 	doneCh <- struct{}{}
 }
 
+func (c *wsClient) remoteAddr() net.Addr {
+	return c.conn.UnderlyingConn().RemoteAddr()
+}
+
 func (c *wsClient) readPump(doneCh chan<- struct{}) {
 	defer c.cleanup(doneCh)
 
 	err := c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	if err != nil {
-		slog.Warn(
-			"WS set read deadline error",
-			"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
-			"error", err,
-		)
+		slog.Warn("WS set read deadline error", "remote_addr", c.remoteAddr(), "error", err)
 	}
 
 	c.conn.SetPongHandler(func(string) error {
 		err := c.conn.SetReadDeadline(time.Now().Add(pongWait))
 		if err != nil {
-			slog.Warn(
-				"WS set read deadline error",
-				"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
-				"error", err,
-			)
+			slog.Warn("WS set read deadline error", "remote_addr", c.remoteAddr(), "error", err)
 		}
 
 		return nil
@@ -64,11 +61,7 @@ func (c *wsClient) readPump(doneCh chan<- struct{}) {
 
 	for {
 		if _, _, err := c.conn.ReadMessage(); err != nil {
-			slog.Debug(
-				"WS read message error",
-				"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
-				"error", err,
-			)
+			slog.Debug("WS read message error", "remote_addr", c.remoteAddr(), "error", err)
 
 			return
 		}
@@ -83,20 +76,19 @@ func (c *wsClient) writePump() {
 		select {
 		case msg, ok := <-c.send:
 			if !ok {
-				slog.Debug(
-					"Broker closed the channel",
-					"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
-				)
+				slog.Debug("Broker closed the channel", "remote_addr", c.remoteAddr())
 
 				return
 			}
 
-			if err := c.conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-				slog.Debug(
-					"WS write message error",
-					"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
-					"error", err,
-				)
+			if msg.err != nil {
+				slog.Debug("Error received from broker", "remote_addr", c.remoteAddr(), "error", msg.err)
+
+				return
+			}
+
+			if err := c.conn.WriteMessage(websocket.TextMessage, msg.message); err != nil {
+				slog.Debug("WS write message error", "remote_addr", c.remoteAddr(), "error", err)
 
 				return
 			}
@@ -104,11 +96,7 @@ func (c *wsClient) writePump() {
 		case <-ticker.C:
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				// do nothing
-				slog.Debug(
-					"WS ping error",
-					"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
-					"error", err,
-				)
+				slog.Debug("WS ping error", "remote_addr", c.remoteAddr(), "error", err)
 
 				return
 			}
@@ -122,12 +110,12 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 
 	// forward watcher reload signals to the broker
 	go func() {
-		for message := range watcher.MessageCh {
-			// non-blocking send; if broker.broadcast is full we drop the message briefly
+		for {
 			select {
-			case broker.broadcast <- message:
-			default:
-				slog.Debug("Broker broadcast is busy, dropping reload")
+			case message := <-watcher.MessageCh:
+				broker.broadcast <- wsMessage{message: message}
+			case err := <-watcher.ErrorCh:
+				broker.broadcast <- wsMessage{err: err}
 			}
 		}
 	}()
@@ -143,6 +131,12 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 					"remote_addr", conn.UnderlyingConn().RemoteAddr(),
 					"error", err,
 				)
+			} else {
+				slog.Debug(
+					"WS connection upgrade error",
+					"remote_addr", conn.UnderlyingConn().RemoteAddr(),
+					"error", err,
+				)
 			}
 
 			return
@@ -151,7 +145,7 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 		client := &wsClient{
 			broker: broker,
 			conn:   conn,
-			send:   make(chan []byte, 4),
+			send:   make(chan wsMessage, 4),
 		}
 
 		broker.register <- client
@@ -162,13 +156,6 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 		go client.writePump()
 		go client.readPump(doneCh)
 
-		select {
-		case err := <-watcher.ErrorCh:
-			if err != nil {
-				slog.Error("FS watcher channel error", "error", err)
-			}
-		case <-doneCh:
-			// client has disconnected normally
-		}
+		<-doneCh
 	})
 }
