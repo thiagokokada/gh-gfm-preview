@@ -38,10 +38,12 @@ func (b *wsBroker) run() {
 
 		case c := <-b.unregister:
 			b.mu.Lock()
+
 			if _, ok := b.clients[c]; ok {
 				delete(b.clients, c)
 				close(c.send)
 			}
+
 			b.mu.Unlock()
 
 		case msg := <-b.broadcast:
