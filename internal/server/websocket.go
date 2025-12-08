@@ -2,7 +2,6 @@ package server
 
 import (
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -38,22 +37,19 @@ func (c *wsClient) cleanup(doneCh chan<- struct{}) {
 	doneCh <- struct{}{}
 }
 
-func (c *wsClient) readPump(errorCh chan<- error, doneCh chan<- struct{}) {
+func (c *wsClient) readPump(doneCh chan<- struct{}) {
 	defer c.cleanup(doneCh)
 
 	for {
-		// we only care about errors from ReadMessage; payloads are ignored here
 		if _, _, err := c.conn.ReadMessage(); err != nil {
-			slog.Debug("Websocket reader read message error", "error", err)
-
-			errorCh <- fmt.Errorf("websocket reader error: %w", err)
+			slog.Debug("Websocket read message error", "error", err)
 
 			return
 		}
 	}
 }
 
-func (c *wsClient) writePump(errorCh chan<- error) {
+func (c *wsClient) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
 
@@ -67,9 +63,7 @@ func (c *wsClient) writePump(errorCh chan<- error) {
 			}
 
 			if err := c.conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-				slog.Warn("Websocket writer write message error", "error", err)
-
-				errorCh <- fmt.Errorf("websocket writer error: %w", err)
+				slog.Debug("Websocket write message error", "error", err)
 
 				return
 			}
@@ -129,21 +123,14 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 		// per-connection done channel to allow the handler to wait for client close
 		doneCh := make(chan struct{}, 1)
 
-		go client.writePump(watcher.ErrorCh)
-		go client.readPump(watcher.ErrorCh, doneCh)
+		go client.writePump()
+		go client.readPump(doneCh)
 
-		// wait until watcher signals an error (from anywhere) or the client connection
-		// is done. If watcher signals an error, we close the client and let the broker
-		// handle unregistering.
 		select {
 		case err := <-watcher.ErrorCh:
 			if err != nil {
-				slog.Debug("Watcher channel error", "error", err)
+				slog.Error("Watcher channel error", "error", err)
 			}
-
-			client.broker.unregister <- client
-
-			client.conn.Close()
 		case <-doneCh:
 			// client has disconnected normally
 		}
