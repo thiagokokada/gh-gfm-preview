@@ -19,9 +19,9 @@ const (
 var ErrWatcherNotInitialized = errors.New("watcher not initialized")
 
 type Watcher struct {
-	DoneCh   chan any
-	ErrorCh  chan error
-	ReloadCh chan bool
+	DoneCh    chan struct{}
+	ErrorCh   chan error
+	MessageCh chan []byte
 
 	watcher     *fsnotify.Watcher
 	watchedDirs sync.Map
@@ -36,10 +36,10 @@ func Init(dir string) (*Watcher, error) {
 	slog.Debug("Watcher created")
 
 	watcher := Watcher{
-		DoneCh:   make(chan any),
-		ErrorCh:  make(chan error),
-		ReloadCh: make(chan bool, 1),
-		watcher:  fsWatcher,
+		DoneCh:    make(chan struct{}),
+		ErrorCh:   make(chan error),
+		MessageCh: make(chan []byte, 1),
+		watcher:   fsWatcher,
 	}
 
 	err = watcher.AddDirectory(dir)
@@ -115,7 +115,7 @@ func (w *Watcher) Watch() {
 
 					slog.Info("Change detected, refreshing", "path", event.Name)
 
-					w.ReloadCh <- true
+					w.MessageCh <- []byte("reload")
 
 					time.Sleep(lockTime)
 				}()

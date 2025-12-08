@@ -122,10 +122,10 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 
 	// forward watcher reload signals to the broker
 	go func() {
-		for range watcher.ReloadCh {
+		for message := range watcher.MessageCh {
 			// non-blocking send; if broker.broadcast is full we drop the message briefly
 			select {
-			case broker.broadcast <- []byte("reload"):
+			case broker.broadcast <- message:
 			default:
 				slog.Debug("Broker broadcast is busy, dropping reload")
 			}

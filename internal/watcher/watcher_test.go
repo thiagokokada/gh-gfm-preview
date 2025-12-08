@@ -49,9 +49,9 @@ func TestWatch_DetectsFileCreation(t *testing.T) {
 
 	// Wait for the reload signal
 	select {
-	case val := <-w.ReloadCh:
-		if !val {
-			t.Error("Expected true from ReloadCh")
+	case val := <-w.MessageCh:
+		if string(val) != "reload" {
+			t.Errorf("Expected reload from MessageCh, got: %s", val)
 		}
 	case <-time.After(1 * time.Second):
 		t.Fatal("Timeout waiting for file creation event")
@@ -84,7 +84,7 @@ func TestWatch_DetectsFileWrite(t *testing.T) {
 	}
 
 	select {
-	case <-w.ReloadCh:
+	case <-w.MessageCh:
 		// Success
 	case <-time.After(1 * time.Second):
 		t.Fatal("Timeout waiting for file write event")
@@ -119,7 +119,7 @@ func TestWatch_DebounceLogic(t *testing.T) {
 	go func() {
 		for {
 			select {
-			case <-w.ReloadCh:
+			case <-w.MessageCh:
 				counter.Add(1)
 			case <-done:
 				return
