@@ -2,7 +2,6 @@ package server
 
 import (
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -38,22 +37,23 @@ func (c *wsClient) cleanup(doneCh chan<- struct{}) {
 	doneCh <- struct{}{}
 }
 
-func (c *wsClient) readPump(errorCh chan<- error, doneCh chan<- struct{}) {
+func (c *wsClient) readPump(doneCh chan<- struct{}) {
 	defer c.cleanup(doneCh)
 
 	for {
-		// we only care about errors from ReadMessage; payloads are ignored here
 		if _, _, err := c.conn.ReadMessage(); err != nil {
-			slog.Debug("Websocket reader read message error", "error", err)
-
-			errorCh <- fmt.Errorf("websocket reader error: %w", err)
+			slog.Debug(
+				"WS read message error",
+				"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
+				"error", err,
+			)
 
 			return
 		}
 	}
 }
 
-func (c *wsClient) writePump(errorCh chan<- error) {
+func (c *wsClient) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
 
@@ -61,15 +61,20 @@ func (c *wsClient) writePump(errorCh chan<- error) {
 		select {
 		case msg, ok := <-c.send:
 			if !ok {
-				slog.Debug("Broker closed the channel")
+				slog.Debug(
+					"Broker closed the channel",
+					"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
+				)
 
 				return
 			}
 
 			if err := c.conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-				slog.Warn("Websocket writer write message error", "error", err)
-
-				errorCh <- fmt.Errorf("websocket writer error: %w", err)
+				slog.Debug(
+					"WS write message error",
+					"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
+					"error", err,
+				)
 
 				return
 			}
@@ -77,7 +82,11 @@ func (c *wsClient) writePump(errorCh chan<- error) {
 		case <-ticker.C:
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				// do nothing
-				slog.Debug("Ping error", "error", err)
+				slog.Debug(
+					"WS ping error",
+					"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
+					"error", err,
+				)
 
 				return
 			}
@@ -107,7 +116,11 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			if errors.Is(err, websocket.HandshakeError{}) {
-				slog.Error("Handshake error", "error", err)
+				slog.Error(
+					"WS handshake error",
+					"remote_addr", conn.UnderlyingConn().RemoteAddr(),
+					"error", err,
+				)
 			}
 
 			return
@@ -115,7 +128,11 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 
 		err = conn.SetReadDeadline(time.Now().Add(pongWait))
 		if err != nil {
-			slog.Warn("Set read deadline error", "error", err)
+			slog.Warn(
+				"WS set read deadline error",
+				"remote_addr", conn.UnderlyingConn().RemoteAddr(),
+				"error", err,
+			)
 		}
 
 		client := &wsClient{
@@ -129,21 +146,14 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 		// per-connection done channel to allow the handler to wait for client close
 		doneCh := make(chan struct{}, 1)
 
-		go client.writePump(watcher.ErrorCh)
-		go client.readPump(watcher.ErrorCh, doneCh)
+		go client.writePump()
+		go client.readPump(doneCh)
 
-		// wait until watcher signals an error (from anywhere) or the client connection
-		// is done. If watcher signals an error, we close the client and let the broker
-		// handle unregistering.
 		select {
 		case err := <-watcher.ErrorCh:
 			if err != nil {
-				slog.Debug("Watcher channel error", "error", err)
+				slog.Error("FS watcher channel error", "error", err)
 			}
-
-			client.broker.unregister <- client
-
-			client.conn.Close()
 		case <-doneCh:
 			// client has disconnected normally
 		}
