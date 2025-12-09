@@ -215,6 +215,12 @@ And you can run the following command to build:
 go build
 ```
 
+If you have `nix` with [Flakes](https://wiki.nixos.org/wiki/Flakes) enabled:
+
+```console
+nix develop
+```
+
 ## Related projects
 
 - GitHub CLI <https://cli.github.com>
