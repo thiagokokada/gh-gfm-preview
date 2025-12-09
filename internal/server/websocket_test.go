@@ -77,11 +77,11 @@ func TestConcurrentWrites(t *testing.T) {
 
 	<-time.After(50 * time.Millisecond)
 
-	errorChan := startConcurrentWrites(t, testFile, 10)
+	errorChan := startConcurrentWrites(t, testFile, 100)
 
 	messageCount := readReloadMessages(t, ws, errorChan)
 
-	t.Logf("successfully received %d reload messages without panic", messageCount)
+	assert.True(t, messageCount >= 1)
 }
 
 func startConcurrentWrites(t *testing.T, testFile *os.File, numWrites int) <-chan error {
@@ -148,7 +148,7 @@ func tryReadReloadMessage(t *testing.T, ws *websocket.Conn, messageCount *int) b
 			return true
 		}
 
-		if !strings.Contains(err.Error(), "timeout") && !strings.Contains(err.Error(), "i/o timeout") {
+		if !os.IsTimeout(err) {
 			t.Logf("read error (might be expected): %v", err)
 		}
 
@@ -159,7 +159,6 @@ func tryReadReloadMessage(t *testing.T, ws *websocket.Conn, messageCount *int) b
 
 	if msgType == websocket.TextMessage && string(msg) == expectedReloadMsg {
 		*messageCount++
-		t.Logf("received reload message #%d", *messageCount)
 	}
 
 	return *messageCount >= 5
@@ -217,11 +216,11 @@ func TestConcurrentWritesStress(t *testing.T) {
 	for {
 		select {
 		case <-done:
-			t.Log("all writes completed without panic")
+			t.Log("all writes completed without error")
 
 			return
 		case <-timeout:
-			t.Log("test completed with timeout")
+			t.Fatal("test completed with timeout")
 
 			return
 		default:
