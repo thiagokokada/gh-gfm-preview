@@ -14,7 +14,7 @@ import (
 	"github.com/thiagokokada/gh-gfm-preview/internal/watcher"
 )
 
-const expectedReloadMsg = "reload"
+var expectedReloadMsg = string(watcher.ReloadMessage)
 
 func TestWriter(t *testing.T) {
 	testFile, err := os.CreateTemp(t.TempDir(), "markdown-preview-test")
@@ -25,10 +25,10 @@ func TestWriter(t *testing.T) {
 	_, _ = testFile.WriteString("BEFORE.\n")
 	dir := filepath.Dir(testFile.Name())
 
-	watcher, err := watcher.Init(dir)
+	w, err := watcher.Init(dir)
 	assert.Nil(t, err)
 
-	s := httptest.NewServer(wsHandler(watcher))
+	s := httptest.NewServer(wsHandler(w))
 
 	u := "ws" + strings.TrimPrefix(s.URL, "http")
 
@@ -44,12 +44,9 @@ func TestWriter(t *testing.T) {
 	_, err = testFile.WriteString("AFTER.\n")
 	assert.Nil(t, err)
 
-	_, p, err := ws.ReadMessage()
+	_, actual, err := ws.ReadMessage()
 	assert.Nil(t, err)
-
-	actual := string(p)
-
-	assert.Equal(t, actual, expectedReloadMsg)
+	assert.Equal(t, string(actual), expectedReloadMsg)
 }
 
 func TestConcurrentWrites(t *testing.T) {

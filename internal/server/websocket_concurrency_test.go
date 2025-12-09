@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/thiagokokada/gh-gfm-preview/internal/assert"
 	"github.com/thiagokokada/gh-gfm-preview/internal/watcher"
 )
 
@@ -28,11 +29,9 @@ func TestConcurrentWriteWithMutex(t *testing.T) {
 	ws, testFile, cleanup := setupConcurrencyTest(t)
 	defer cleanup()
 
-	panicCount := runConcurrentWriteTest(t, ws, testFile)
-
-	if panicCount > 0 {
-		t.Logf("warning: panics occurred (likely from connection close): %d", panicCount)
-	}
+	messageCount, panicCount := runConcurrentWriteTest(t, ws, testFile)
+	assert.Equal(t, messageCount, 0) // XXX
+	assert.Equal(t, panicCount, 0)
 }
 
 func setupConcurrencyTest(t *testing.T) (*websocket.Conn, *os.File, func()) {
@@ -73,12 +72,12 @@ func setupConcurrencyTest(t *testing.T) (*websocket.Conn, *os.File, func()) {
 	return ws, testFile, cleanup
 }
 
-func runConcurrentWriteTest(t *testing.T, ws *websocket.Conn, testFile *os.File) int32 {
+func runConcurrentWriteTest(t *testing.T, ws *websocket.Conn, testFile *os.File) (int32, int32) {
 	t.Helper()
 
 	var wg sync.WaitGroup
-
-	panicCount := int32(0)
+	var panicCount atomic.Int32
+	var messageCount atomic.Int32
 	stopTest := make(chan bool)
 
 	numWriters := 200
@@ -90,7 +89,7 @@ func runConcurrentWriteTest(t *testing.T, ws *websocket.Conn, testFile *os.File)
 			defer wg.Done()
 			defer func() {
 				if r := recover(); r != nil {
-					atomic.AddInt32(&panicCount, 1)
+					panicCount.Add(1)
 
 					t.Logf("writer %d caught panic: %v", id, r)
 				}
@@ -109,7 +108,6 @@ func runConcurrentWriteTest(t *testing.T, ws *websocket.Conn, testFile *os.File)
 	}
 
 	stopReading := make(chan bool)
-	messageCount := int32(0)
 
 	go readWebSocketMessages(t, ws, stopReading, &panicCount, &messageCount)
 
@@ -131,13 +129,19 @@ func runConcurrentWriteTest(t *testing.T, ws *websocket.Conn, testFile *os.File)
 	case <-timeout:
 		close(stopTest)
 		close(stopReading)
-		t.Logf("Test timeout. Messages: %d", atomic.LoadInt32(&messageCount))
+		t.Logf("test timeout. messages: %d", messageCount.Load())
 	}
 
-	return atomic.LoadInt32(&panicCount)
+	return messageCount.Load(), panicCount.Load()
 }
 
-func readWebSocketMessages(t *testing.T, ws *websocket.Conn, stopReading <-chan bool, panicCount *int32, messageCount *int32) {
+func readWebSocketMessages(
+	t *testing.T,
+	ws *websocket.Conn,
+	stopReading <-chan bool,
+	panicCount *atomic.Int32,
+	messageCount *atomic.Int32,
+) {
 	t.Helper()
 
 	defer handleReaderPanic(t, panicCount)
@@ -152,45 +156,27 @@ func readWebSocketMessages(t *testing.T, ws *websocket.Conn, stopReading <-chan 
 	}
 }
 
-func handleReaderPanic(t *testing.T, panicCount *int32) {
+func handleReaderPanic(t *testing.T, panicCount *atomic.Int32) {
 	t.Helper()
 
 	if r := recover(); r != nil {
-		atomic.AddInt32(panicCount, 1)
-
 		errStr := fmt.Sprintf("%v", r)
 		if !strings.Contains(errStr, "repeated read") {
+			panicCount.Add(1)
 			t.Errorf("unexpected panic in reader: %v", r)
 		}
 	}
 }
 
-func readSingleMessage(t *testing.T, ws *websocket.Conn, messageCount *int32) {
+func readSingleMessage(t *testing.T, ws *websocket.Conn, messageCount *atomic.Int32) {
 	t.Helper()
 
 	_ = ws.SetReadDeadline(time.Now().Add(50 * time.Millisecond))
 
-	msgType, msg, err := ws.ReadMessage()
-	if err != nil {
-		handleReadError(t, err)
+	msgType, msg, _ := ws.ReadMessage()
 
-		return
-	}
-
-	atomic.AddInt32(messageCount, 1)
-
-	if msgType == websocket.TextMessage && string(msg) == "reload" {
-		t.Logf("Reload message received")
-	}
-}
-
-func handleReadError(t *testing.T, err error) {
-	t.Helper()
-
-	if !strings.Contains(err.Error(), "timeout") &&
-		!strings.Contains(err.Error(), "i/o timeout") {
-		if strings.Contains(err.Error(), "close") {
-			t.Logf("Connection closed (possibly due to panic): %v", err)
-		}
+	if msgType == websocket.TextMessage && string(msg) == expectedReloadMsg {
+		messageCount.Add(1)
+		t.Logf("reload message received")
 	}
 }

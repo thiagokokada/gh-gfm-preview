@@ -16,6 +16,7 @@ const (
 	lockTime      = 100 * time.Millisecond
 )
 
+var ReloadMessage = []byte("reload")
 var ErrWatcherNotInitialized = errors.New("watcher not initialized")
 
 type Watcher struct {
@@ -115,7 +116,7 @@ func (w *Watcher) Watch() {
 
 					slog.Info("Change detected, refreshing", "path", event.Name)
 
-					w.MessageCh <- []byte("reload")
+					w.MessageCh <- ReloadMessage
 
 					time.Sleep(lockTime)
 				}()
