@@ -16,8 +16,10 @@ const (
 	lockTime      = 100 * time.Millisecond
 )
 
-var ReloadMessage = []byte("reload")
-var ErrWatcherNotInitialized = errors.New("watcher not initialized")
+var (
+	ReloadMessage            = []byte("reload")
+	ErrWatcherNotInitialized = errors.New("watcher not initialized")
+)
 
 type Watcher struct {
 	DoneCh    chan struct{}

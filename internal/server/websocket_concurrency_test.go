@@ -75,9 +75,12 @@ func setupConcurrencyTest(t *testing.T) (*websocket.Conn, *os.File, func()) {
 func runConcurrentWriteTest(t *testing.T, ws *websocket.Conn, testFile *os.File) (int32, int32) {
 	t.Helper()
 
-	var wg sync.WaitGroup
-	var panicCount atomic.Int32
-	var messageCount atomic.Int32
+	var (
+		wg           sync.WaitGroup
+		panicCount   atomic.Int32
+		messageCount atomic.Int32
+	)
+
 	stopTest := make(chan bool)
 
 	numWriters := 200
