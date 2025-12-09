@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/chroma/v2/formatters/html"
@@ -206,6 +207,7 @@ Got: %s
 	}
 
 	// Copy file to destination
+	fatal0(os.MkdirAll(filepath.Dir(dest), os.ModePerm))
 	file := fatal(os.Create(dest))
 	defer file.Close()
 	fatal(file.Write(bs))
