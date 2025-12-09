@@ -1,21 +1,21 @@
 package server
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/thiagokokada/gh-gfm-preview/internal/assert"
+)
 
 func TestGetMode(t *testing.T) {
 	param := &Param{ForceLightMode: true}
 	modeString := param.getMode().String()
 	expected := "light"
 
-	if modeString != expected {
-		t.Errorf("mode string is not: %s", modeString)
-	}
+	assert.Equal(t, modeString, expected)
 
 	param = &Param{ForceDarkMode: true}
 	modeString = param.getMode().String()
 	expected = "dark"
 
-	if modeString != expected {
-		t.Errorf("mode string is not: %s", modeString)
-	}
+	assert.Equal(t, modeString, expected)
 }

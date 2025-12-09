@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/thiagokokada/gh-gfm-preview/internal/assert"
 	"github.com/thiagokokada/gh-gfm-preview/internal/watcher"
 )
 
@@ -17,39 +18,29 @@ func TestHandler(t *testing.T) {
 		Reload: false,
 	}
 
-	watcher, _ := watcher.Init(dir)
+	watcher, err := watcher.Init(dir)
+	assert.Nil(t, err)
+
 	defer watcher.Close()
 
 	ts := httptest.NewServer(handler(filename, param, http.FileServer(http.Dir(dir)), watcher))
 	defer ts.Close()
 
 	r1, err := http.Get(ts.URL)
-	if err != nil {
-		t.Fatalf("unexpected: %v\n", err)
-	}
+	assert.Nil(t, err)
+
 	defer r1.Body.Close()
 
-	if r1.StatusCode != http.StatusOK {
-		t.Errorf("server status error, got: %v", r1.StatusCode)
-	}
-
-	if r1.Header.Get("Content-Type") != "text/html; charset=utf-8" {
-		t.Errorf("content type error, got: %s\n", r1.Header.Get("Content-Type"))
-	}
+	assert.Equal(t, r1.StatusCode, http.StatusOK)
+	assert.Equal(t, r1.Header.Get("Content-Type"), "text/html; charset=utf-8")
 
 	r2, err := http.Get(ts.URL + "/images/dinotocat.png")
-	if err != nil {
-		t.Fatalf("unexpected: %v\n", err)
-	}
+	assert.Nil(t, err)
+
 	defer r2.Body.Close()
 
-	if r2.StatusCode != http.StatusOK {
-		t.Errorf("server status error, got: %v", r1.StatusCode)
-	}
-
-	if r2.Header.Get("Content-Type") != "image/png" {
-		t.Errorf("content type error, got: %s\n", r2.Header.Get("Content-Type"))
-	}
+	assert.Equal(t, r2.StatusCode, http.StatusOK)
+	assert.Equal(t, r2.Header.Get("Content-Type"), "image/png")
 }
 
 func TestMdHandler(t *testing.T) {
@@ -59,18 +50,12 @@ func TestMdHandler(t *testing.T) {
 	defer ts.Close()
 
 	res, err := http.Get(ts.URL)
-	if err != nil {
-		t.Fatalf("unexpected: %v\n", err)
-	}
+	assert.Nil(t, err)
+
 	defer res.Body.Close()
 
-	if res.StatusCode != http.StatusOK {
-		t.Errorf("server status error, got: %v", res.StatusCode)
-	}
-
-	if res.Header.Get("Content-Type") != "text/html; charset=utf-8" {
-		t.Errorf("content type error, got: %s\n", res.Header.Get("Content-Type"))
-	}
+	assert.Equal(t, res.StatusCode, http.StatusOK)
+	assert.Equal(t, res.Header.Get("Content-Type"), "text/html; charset=utf-8")
 }
 
 func TestWrapHandler(t *testing.T) {
@@ -81,24 +66,18 @@ func TestWrapHandler(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		lrw := newLoggingResponseWriter(w)
 		wrappedHandler.ServeHTTP(lrw, r)
-		statusCode := lrw.statusCode
 
 		// XXX
-		if statusCode != http.StatusOK {
-			t.Errorf("logging response status code error, got: %v", statusCode)
-		}
+		assert.Equal(t, lrw.statusCode, http.StatusOK)
 	})
 
 	ts := httptest.NewServer(handler)
 	defer ts.Close()
 
 	res, err := http.Get(ts.URL)
-	if err != nil {
-		t.Fatalf("unexpected: %v\n", err)
-	}
+	assert.Nil(t, err)
+
 	defer res.Body.Close()
 
-	if res.StatusCode != http.StatusOK {
-		t.Errorf("server status error, got: %v", res.StatusCode)
-	}
+	assert.Equal(t, res.StatusCode, http.StatusOK)
 }

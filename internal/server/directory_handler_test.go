@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/thiagokokada/gh-gfm-preview/internal/assert"
 	"github.com/thiagokokada/gh-gfm-preview/internal/watcher"
 )
 
@@ -25,7 +26,9 @@ func TestDirectoryBrowsingMode(t *testing.T) {
 		Reload:                         false,
 	}
 
-	watcher, _ := watcher.Init(testDir)
+	watcher, err := watcher.Init(testDir)
+	assert.Nil(t, err)
+
 	defer watcher.Close()
 
 	ts := httptest.NewServer(handler("", param, http.FileServer(http.Dir(testDir)), watcher))
@@ -48,14 +51,11 @@ func TestDirectoryBrowsingMode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			res, err := http.Get(ts.URL + tt.path)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
+			assert.Nil(t, err)
+
 			defer res.Body.Close()
 
-			if res.StatusCode != tt.wantStatus {
-				t.Errorf("status code error for %s: got %v, want %v", tt.path, res.StatusCode, tt.wantStatus)
-			}
+			assert.Equal(t, res.StatusCode, tt.wantStatus)
 		})
 	}
 }
@@ -72,7 +72,9 @@ func TestSubdirectoryReadmeAccess(t *testing.T) {
 		Reload:                         false,
 	}
 
-	watcher, _ := watcher.Init(testDir)
+	watcher, err := watcher.Init(testDir)
+	assert.Nil(t, err)
+
 	defer watcher.Close()
 
 	ts := httptest.NewServer(handler("", param, http.FileServer(http.Dir(testDir)), watcher))
@@ -117,33 +119,18 @@ func TestSubdirectoryReadmeAccess(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			res, err := http.Get(ts.URL + tt.path)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
+			assert.Nil(t, err)
+
 			defer res.Body.Close()
 
-			if res.StatusCode != tt.wantStatus {
-				t.Errorf("status code error for %s: got %v, want %v", tt.path, res.StatusCode, tt.wantStatus)
-			}
+			assert.Equal(t, res.StatusCode, tt.wantStatus)
 
 			body, err := io.ReadAll(res.Body)
-			if err != nil {
-				t.Fatalf("failed to read response body: %v", err)
-			}
+			assert.Nil(t, err)
 
 			bodyStr := string(body)
-
-			if tt.wantInBody != "" && !strings.Contains(bodyStr, tt.wantInBody) {
-				t.Errorf("response body should contain %q for %s", tt.wantInBody, tt.path)
-				t.Logf("Body length: %d", len(bodyStr))
-				t.Logf("Body preview (first 2000 chars): %s", bodyStr[:min(2000, len(bodyStr))])
-			}
-
-			if tt.wantNotInBody != "" && strings.Contains(bodyStr, tt.wantNotInBody) {
-				t.Errorf("response body should not contain %q for %s", tt.wantNotInBody, tt.path)
-				t.Logf("Body length: %d", len(bodyStr))
-				t.Logf("Body preview (first 2000 chars): %s", bodyStr[:min(2000, len(bodyStr))])
-			}
+			assert.True(t, tt.wantInBody != "" && strings.Contains(bodyStr, tt.wantInBody))
+			assert.False(t, tt.wantNotInBody != "" && strings.Contains(bodyStr, tt.wantNotInBody))
 		})
 	}
 }
@@ -211,33 +198,23 @@ func Test404ErrorRendering(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			res, err := http.Get(ts.URL + tt.path)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
+			assert.Nil(t, err)
+
 			defer res.Body.Close()
 
-			if res.StatusCode != tt.wantStatus {
-				t.Errorf("status code error for %s: got %v, want %v", tt.path, res.StatusCode, tt.wantStatus)
-			}
+			assert.Equal(t, res.StatusCode, tt.wantStatus)
 
 			body, err := io.ReadAll(res.Body)
-			if err != nil {
-				t.Fatalf("failed to read response body: %v", err)
-			}
+			assert.Nil(t, err)
 
 			bodyStr := string(body)
 
 			for _, want := range tt.wantInBody {
-				if !strings.Contains(bodyStr, want) {
-					t.Errorf("response body should contain %q for %s", want, tt.path)
-					t.Logf("Body preview (first 500 chars): %s", bodyStr[:min(500, len(bodyStr))])
-				}
+				assert.True(t, strings.Contains(bodyStr, want))
 			}
 
 			for _, notWant := range tt.wantNotInBody {
-				if strings.Contains(bodyStr, notWant) {
-					t.Errorf("response body should not contain %q for %s", notWant, tt.path)
-				}
+				assert.False(t, strings.Contains(bodyStr, notWant))
 			}
 		})
 	}
@@ -300,16 +277,12 @@ func TestGenerateFileTree(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := generateFileTree(tt.files, tt.dirs, tt.currentPath)
-			if len(got) != len(tt.want) {
-				t.Errorf("generateFileTree() length = %v, want %v", len(got), len(tt.want))
-
-				return
-			}
+			assert.Equal(t, len(got), len(tt.want))
 
 			for i := range got {
-				if got[i].Name != tt.want[i].Name || got[i].Path != tt.want[i].Path || got[i].IsDir != tt.want[i].IsDir {
-					t.Errorf("generateFileTree()[%d] = %+v, want %+v", i, got[i], tt.want[i])
-				}
+				assert.Equal(t, got[i].Name, tt.want[i].Name)
+				assert.Equal(t, got[i].Path, tt.want[i].Path)
+				assert.Equal(t, got[i].IsDir, tt.want[i].IsDir)
 			}
 		})
 	}
