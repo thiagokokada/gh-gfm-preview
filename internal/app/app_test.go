@@ -151,34 +151,3 @@ func TestRawHTML(t *testing.T) {
 		assert.True(t, strings.Contains(actual, target))
 	}
 }
-
-func TestParseExtensions(t *testing.T) {
-	tests := []struct {
-		name  string
-		input string
-		want  []string
-	}{
-		{"Empty string", "", []string{".md"}},
-		{"Single extension with dot", ".txt", []string{".txt"}},
-		{"Single extension without dot", "txt", []string{".txt"}},
-		{"Multiple extensions", ".md,.txt,.rst", []string{".md", ".txt", ".rst"}},
-		{"Multiple extensions without dots", "md,txt,rst", []string{".md", ".txt", ".rst"}},
-		{"Wildcard", "*", []string{"*"}},
-		{"Wildcard with spaces", " * ", []string{"*"}},
-		{"Wildcard in middle", ".txt,*,.md", []string{"*"}},
-		{"Wildcard at end", ".txt,.md,*", []string{"*"}},
-		{"Mixed case", ".MD,.TxT", []string{".md", ".txt"}},
-		{"With spaces", " .md , .txt ", []string{".md", ".txt"}},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := ParseExtensions(tt.input)
-			assert.Equal(t, len(got), len(tt.want))
-
-			for i := range got {
-				assert.Equal(t, got[i], tt.want[i])
-			}
-		})
-	}
-}

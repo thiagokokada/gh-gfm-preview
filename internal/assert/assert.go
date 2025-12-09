@@ -29,6 +29,14 @@ func Equal[T comparable](tb testing.TB, got, want T) {
 	}
 }
 
+func DeepEqual(tb testing.TB, got, want any) {
+	tb.Helper()
+
+	if !reflect.DeepEqual(got, want) {
+		tb.Errorf("got: %#v, want: %#v", got, want)
+	}
+}
+
 func Nil(tb testing.TB, got any) {
 	tb.Helper()
 
