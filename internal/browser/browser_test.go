@@ -3,6 +3,8 @@ package browser
 import (
 	"errors"
 	"testing"
+
+	"github.com/thiagokokada/gh-gfm-preview/internal/assert"
 )
 
 type mockFileReader struct {
@@ -69,10 +71,7 @@ func TestIsWSL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := isWSLWithReader(tt.reader)
-			if result != tt.expected {
-				t.Errorf("expected %v, got %v", tt.expected, result)
-			}
+			assert.Equal(t, isWSLWithReader(tt.reader), tt.expected)
 		})
 	}
 }

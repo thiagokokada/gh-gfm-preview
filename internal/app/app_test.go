@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/thiagokokada/gh-gfm-preview/internal/assert"
 )
 
 func TestTargetFile(t *testing.T) {
@@ -18,93 +20,67 @@ func TestTargetFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		actual, err := TargetFile(tt.input)
-		if err != nil {
-			t.Errorf("%s", err.Error())
-		}
+		assert.Nil(t, err)
 
 		expected := tt.expected
-		if actual != expected {
-			t.Errorf("got %v\n want %v", actual, expected)
-		}
+		assert.Equal(t, actual, expected)
 	}
 
 	_, err := TargetFile("../../notfound.md")
-	if err == nil {
-		t.Errorf("err is nil")
-	}
+	assert.NotNil(t, err)
 
 	_, err = TargetFile("./")
-	if err == nil {
-		t.Errorf("err is nil")
-	}
+	assert.NotNil(t, err)
 }
 
 func TestFindReadme(t *testing.T) {
-	actual, _ := FindReadme("../../testdata/subdir")
+	actual, err := FindReadme("../../testdata/subdir")
+	assert.Nil(t, err)
+
 	expected := "../../testdata/subdir/README.md"
 
-	if actual != expected {
-		t.Errorf("got %v\n want %v", actual, expected)
-	}
+	assert.Equal(t, actual, expected)
 
 	actual, _ = FindReadme("../../testdata")
 	expected = "../../testdata/README"
 
-	if actual != expected {
-		t.Errorf("got %v\n want %v", actual, expected)
-	}
+	assert.Equal(t, actual, expected)
 
-	_, err := FindReadme("../../cmd")
-	if err == nil {
-		t.Errorf("err is nil")
-	}
+	_, err = FindReadme("../../cmd")
+	assert.NotNil(t, err)
 }
 
 func TestSlurp(t *testing.T) {
 	result, err := Slurp("../../testdata/markdown-demo.md")
-	if err != nil {
-		t.Errorf("%s", err.Error())
-	}
+	assert.Nil(t, err)
 
 	match := "Headings"
 	r := regexp.MustCompile(match)
 
-	if r.MatchString(result) == false {
-		t.Errorf("content do not match %v\n", match)
-	}
+	assert.True(t, r.MatchString(result))
 
 	_, err = Slurp("non-existing-file.md")
-	if !errors.Is(err, ErrFileNotFound) {
-		t.Errorf("wrong error for non-existing-file %v\n", err)
-	}
+	assert.True(t, errors.Is(err, ErrFileNotFound))
 }
 
 func TestToHTML(t *testing.T) {
 	markdown := "text"
 
 	html, err := ToHTML(markdown, false)
-	if err != nil {
-		t.Errorf("%s", err.Error())
-	}
+	assert.Nil(t, err)
 
 	actual := strings.TrimSpace(html)
 	expected := "<p>text</p>"
 
-	if actual != expected {
-		t.Errorf("got %v\n want %v", actual, expected)
-	}
+	assert.Equal(t, actual, expected)
 }
 
 func TestGfmCheckboxes(t *testing.T) {
 	result, err := Slurp("../../testdata/gfm-checkboxes.md")
-	if err != nil {
-		t.Errorf("%s", err.Error())
-	}
+	assert.Nil(t, err)
 
 	html, err := ToHTML(result, false)
-	if err != nil {
-		t.Errorf("%s", err.Error())
-	}
+	assert.Nil(t, err)
 
 	actual := strings.TrimSpace(html)
 
@@ -112,7 +88,7 @@ func TestGfmCheckboxes(t *testing.T) {
 	checkedCheckBoxes := 0
 	uncheckedCheckBoxes := 0
 
-	for _, line := range strings.Split(actual, "\n") {
+	for line := range strings.SplitSeq(actual, "\n") {
 		if strings.Contains(line, "type=\"checkbox\"") {
 			checkBoxes++
 
@@ -124,17 +100,9 @@ func TestGfmCheckboxes(t *testing.T) {
 		}
 	}
 
-	if checkBoxes != 2 {
-		t.Errorf("got %v checkboxes, want 2", checkBoxes)
-	}
-
-	if checkedCheckBoxes != 1 {
-		t.Errorf("got %v checked checkboxes, want 1", checkedCheckBoxes)
-	}
-
-	if uncheckedCheckBoxes != 1 {
-		t.Errorf("got %v unchecked checkboxes, want 1", uncheckedCheckBoxes)
-	}
+	assert.Equal(t, checkBoxes, 2)
+	assert.Equal(t, checkedCheckBoxes, 1)
+	assert.Equal(t, uncheckedCheckBoxes, 1)
 }
 
 func TestGfmAlerts(t *testing.T) {
@@ -157,9 +125,7 @@ func TestGfmAlerts(t *testing.T) {
 		"markdown-alert-warning",
 		"markdown-alert-caution",
 	} {
-		if !strings.Contains(actual, target) {
-			t.Errorf("expected but not found: %s", target)
-		}
+		assert.True(t, strings.Contains(actual, target))
 	}
 }
 
@@ -182,9 +148,7 @@ func TestRawHTML(t *testing.T) {
 		"<summary>",
 		`<sup id="backToMyFootnote">`,
 	} {
-		if !strings.Contains(actual, target) {
-			t.Errorf("expected but not found: %s", target)
-		}
+		assert.True(t, strings.Contains(actual, target))
 	}
 }
 
@@ -210,16 +174,10 @@ func TestParseExtensions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := ParseExtensions(tt.input)
-			if len(got) != len(tt.want) {
-				t.Errorf("ParseExtensions(%q) length = %v, want %v", tt.input, len(got), len(tt.want))
-
-				return
-			}
+			assert.Equal(t, len(got), len(tt.want))
 
 			for i := range got {
-				if got[i] != tt.want[i] {
-					t.Errorf("ParseExtensions(%q)[%d] = %v, want %v", tt.input, i, got[i], tt.want[i])
-				}
+				assert.Equal(t, got[i], tt.want[i])
 			}
 		})
 	}

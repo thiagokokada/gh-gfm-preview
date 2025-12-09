@@ -6,6 +6,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/thiagokokada/gh-gfm-preview/internal/assert"
 )
 
 // setupTestDir creates a temporary directory for testing and returns its path
@@ -26,9 +28,8 @@ func TestWatch_DetectsFileCreation(t *testing.T) {
 	defer cleanup()
 
 	w, err := Init(dir)
-	if err != nil {
-		t.Fatalf("Init failed: %v", err)
-	}
+	assert.Nil(t, err)
+
 	defer w.Close()
 
 	// Run Watch in a goroutine
@@ -41,20 +42,15 @@ func TestWatch_DetectsFileCreation(t *testing.T) {
 	filePath := filepath.Join(dir, "test.txt")
 
 	f, err := os.Create(filePath)
-	if err != nil {
-		t.Fatalf("Failed to create file: %v", err)
-	}
-
+	assert.Nil(t, err)
 	f.Close()
 
 	// Wait for the reload signal
 	select {
 	case val := <-w.MessageCh:
-		if string(val) != "reload" {
-			t.Errorf("Expected reload from MessageCh, got: %s", val)
-		}
+		assert.Equal(t, string(val), "reload")
 	case <-time.After(1 * time.Second):
-		t.Fatal("Timeout waiting for file creation event")
+		t.Fatal("timeout waiting for file creation event")
 	}
 }
 
@@ -64,14 +60,12 @@ func TestWatch_DetectsFileWrite(t *testing.T) {
 
 	// Pre-create the file before initializing watcher
 	filePath := filepath.Join(dir, "test.md")
-	if err := os.WriteFile(filePath, []byte("initial"), 0o600); err != nil {
-		t.Fatalf("Failed to create initial file: %v", err)
-	}
+	err := os.WriteFile(filePath, []byte("initial"), 0o600)
+	assert.Nil(t, err)
 
 	w, err := Init(dir)
-	if err != nil {
-		t.Fatalf("Init failed: %v", err)
-	}
+	assert.Nil(t, err)
+
 	defer w.Close()
 
 	go w.Watch()
@@ -79,15 +73,14 @@ func TestWatch_DetectsFileWrite(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 
 	// Modify the file
-	if err := os.WriteFile(filePath, []byte("updated"), 0o600); err != nil {
-		t.Fatalf("Failed to write to file: %v", err)
-	}
+	err = os.WriteFile(filePath, []byte("updated"), 0o600)
+	assert.Nil(t, err)
 
 	select {
 	case <-w.MessageCh:
 		// Success
 	case <-time.After(1 * time.Second):
-		t.Fatal("Timeout waiting for file write event")
+		t.Fatal("timeout waiting for file write event")
 	}
 }
 
@@ -96,9 +89,8 @@ func TestWatch_DebounceLogic(t *testing.T) {
 	defer cleanup()
 
 	w, err := Init(dir)
-	if err != nil {
-		t.Fatalf("Init failed: %v", err)
-	}
+	assert.Nil(t, err)
+
 	defer w.Close()
 
 	go w.Watch()
@@ -129,9 +121,8 @@ func TestWatch_DebounceLogic(t *testing.T) {
 
 	// Fire rapid events
 	for range 5 {
-		if err := os.WriteFile(filePath, []byte(time.Now().String()), 0o600); err != nil {
-			t.Fatalf("Failed to write to file: %v", err)
-		}
+		err := os.WriteFile(filePath, []byte(time.Now().String()), 0o600)
+		assert.Nil(t, err)
 
 		time.Sleep(10 * time.Millisecond) // Fast, but distinct enough for fsnotify
 	}
@@ -141,11 +132,6 @@ func TestWatch_DebounceLogic(t *testing.T) {
 	close(done)
 
 	// We expect fewer events than writes because of the lockTime logic
-	if counter.Load() == 0 {
-		t.Error("Expected at least one event, got 0")
-	}
-
-	if counter.Load() == 5 {
-		t.Log("Warning: Debounce might not be catching all rapid events, got 5 events for 5 writes")
-	}
+	assert.True(t, counter.Load() > 0)
+	assert.True(t, counter.Load() <= 5)
 }

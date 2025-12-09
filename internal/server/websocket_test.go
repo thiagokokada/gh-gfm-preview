@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/thiagokokada/gh-gfm-preview/internal/assert"
 	"github.com/thiagokokada/gh-gfm-preview/internal/watcher"
 )
 
@@ -17,27 +18,22 @@ const expectedReloadMsg = "reload"
 
 func TestWriter(t *testing.T) {
 	testFile, err := os.CreateTemp(t.TempDir(), "markdown-preview-test")
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	assert.Nil(t, err)
+
 	defer os.Remove(testFile.Name())
 
 	_, _ = testFile.WriteString("BEFORE.\n")
 	dir := filepath.Dir(testFile.Name())
 
 	watcher, err := watcher.Init(dir)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	assert.Nil(t, err)
 
 	s := httptest.NewServer(wsHandler(watcher))
 
 	u := "ws" + strings.TrimPrefix(s.URL, "http")
 
 	ws, res, err := websocket.DefaultDialer.Dial(u, nil)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	assert.Nil(t, err)
 
 	<-time.After(50 * time.Millisecond) // XXX
 
@@ -46,36 +42,27 @@ func TestWriter(t *testing.T) {
 	defer s.Close()
 
 	_, err = testFile.WriteString("AFTER.\n")
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	assert.Nil(t, err)
 
 	_, p, err := ws.ReadMessage()
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	assert.Nil(t, err)
 
 	actual := string(p)
 
-	if actual != expectedReloadMsg {
-		t.Errorf("got %v\n want %v", actual, expectedReloadMsg)
-	}
+	assert.Equal(t, actual, expectedReloadMsg)
 }
 
 func TestConcurrentWrites(t *testing.T) {
 	testFile, err := os.CreateTemp(t.TempDir(), "markdown-preview-test")
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	assert.Nil(t, err)
+
 	defer os.Remove(testFile.Name())
 
 	_, _ = testFile.WriteString("INITIAL.\n")
 	dir := filepath.Dir(testFile.Name())
 
 	watcher, err := watcher.Init(dir)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	assert.Nil(t, err)
 
 	s := httptest.NewServer(wsHandler(watcher))
 	defer s.Close()
@@ -83,9 +70,8 @@ func TestConcurrentWrites(t *testing.T) {
 	u := "ws" + strings.TrimPrefix(s.URL, "http")
 
 	ws, res, err := websocket.DefaultDialer.Dial(u, nil)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	assert.Nil(t, err)
+
 	defer ws.Close()
 	defer res.Body.Close()
 
@@ -137,9 +123,7 @@ func readReloadMessages(t *testing.T, ws *websocket.Conn, errorChan <-chan error
 	for {
 		select {
 		case err := <-errorChan:
-			if err != nil {
-				t.Fatalf("error during concurrent writes: %v", err)
-			}
+			assert.Nil(t, err)
 		case <-timeout:
 			t.Logf("received %d messages before timeout", messageCount)
 
@@ -155,7 +139,8 @@ func readReloadMessages(t *testing.T, ws *websocket.Conn, errorChan <-chan error
 func tryReadReloadMessage(t *testing.T, ws *websocket.Conn, messageCount *int) bool {
 	t.Helper()
 
-	_ = ws.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
+	err := ws.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
+	assert.Nil(t, err)
 
 	msgType, msg, err := ws.ReadMessage()
 	if err != nil {
@@ -182,18 +167,17 @@ func tryReadReloadMessage(t *testing.T, ws *websocket.Conn, messageCount *int) b
 
 func TestConcurrentWritesStress(t *testing.T) {
 	testFile, err := os.CreateTemp(t.TempDir(), "markdown-preview-test")
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	assert.Nil(t, err)
+
 	defer os.Remove(testFile.Name())
 
-	_, _ = testFile.WriteString("INITIAL.\n")
+	_, err = testFile.WriteString("INITIAL.\n")
+	assert.Nil(t, err)
+
 	dir := filepath.Dir(testFile.Name())
 
 	watcher, err := watcher.Init(dir)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	assert.Nil(t, err)
 
 	s := httptest.NewServer(wsHandler(watcher))
 	defer s.Close()
@@ -201,9 +185,8 @@ func TestConcurrentWritesStress(t *testing.T) {
 	u := "ws" + strings.TrimPrefix(s.URL, "http")
 
 	ws, res, err := websocket.DefaultDialer.Dial(u, nil)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	assert.Nil(t, err)
+
 	defer ws.Close()
 	defer res.Body.Close()
 
