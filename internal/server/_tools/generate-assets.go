@@ -14,7 +14,7 @@ import (
 	"github.com/alecthomas/chroma/v2/styles"
 )
 
-const assetsDir = "./static"
+const assetsDir = "./static/generated"
 
 func main() {
 	fatal0(os.MkdirAll(assetsDir, os.ModePerm))

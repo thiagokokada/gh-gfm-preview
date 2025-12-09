@@ -19,7 +19,12 @@ jobs:
         go-version-file: go.mod
 
     - name: Generate
-      run: go generate -v ./... && git diff --exit-code
+      run: |
+        # delete the generated files and re-generate to make sure that
+        # the contents are reproducible
+        rm -rf internal/server/static/generated
+        go generate -v ./...
+        git diff --exit-code
 
     - name: Build
       run: go build -v -o /dev/null ./...

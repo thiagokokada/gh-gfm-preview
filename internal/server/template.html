@@ -4,20 +4,20 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title id="markdown-title">{{ .Title }}</title>
-    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/static/generated/favicon.svg" />
     <link rel="stylesheet" href="/static/directory-listing.css" />
     {{ if eq .Mode "dark" }}
-    <link rel="stylesheet" href="/static/chroma-github-dark.css" />
-    <link rel="stylesheet" href="/static/github-markdown-dark.css" />
+    <link rel="stylesheet" href="/static/generated/chroma-github-dark.css" />
+    <link rel="stylesheet" href="/static/generated/github-markdown-dark.css" />
     {{ else if eq .Mode "light" }}
-    <link rel="stylesheet" href="/static/chroma-github-light.css" />
-    <link rel="stylesheet" href="/static/github-markdown-light.css" />
+    <link rel="stylesheet" href="/static/generated/chroma-github-light.css" />
+    <link rel="stylesheet" href="/static/generated/github-markdown-light.css" />
     <link rel="stylesheet" href="/static/directory-listing-light.css" />
     {{ else }}
-    <link rel="stylesheet" href="/static/chroma-github-light.css" media="(prefers-color-scheme: light)" />
-    <link rel="stylesheet" href="/static/github-markdown-light.css" media="(prefers-color-scheme: light)" />
-    <link rel="stylesheet" href="/static/chroma-github-dark.css" media="(prefers-color-scheme: no-preference),(prefers-color-scheme: dark)" />
-    <link rel="stylesheet" href="/static/github-markdown-dark.css" media="(prefers-color-scheme: no-preference),(prefers-color-scheme: dark)" />
+    <link rel="stylesheet" href="/static/generated/chroma-github-light.css" media="(prefers-color-scheme: light)" />
+    <link rel="stylesheet" href="/static/generated/github-markdown-light.css" media="(prefers-color-scheme: light)" />
+    <link rel="stylesheet" href="/static/generated/chroma-github-dark.css" media="(prefers-color-scheme: no-preference),(prefers-color-scheme: dark)" />
+    <link rel="stylesheet" href="/static/generated/github-markdown-dark.css" media="(prefers-color-scheme: no-preference),(prefers-color-scheme: dark)" />
     <link rel="stylesheet" href="/static/directory-listing-light.css" media="(prefers-color-scheme: light)" />
     {{ end }}
 
@@ -214,8 +214,8 @@
         },
       };
     </script>
-    <script type="text/javascript" src="/static/tex-mml-chtml.min.js"></script>
-    <script type="text/javascript" src="/static/mermaid.min.js"></script>
+    <script type="text/javascript" src="/static/generated/tex-mml-chtml.min.js"></script>
+    <script type="text/javascript" src="/static/generated/mermaid.min.js"></script>
     <script type="text/javascript" src="/static/script.js"></script>
   </body>
 
