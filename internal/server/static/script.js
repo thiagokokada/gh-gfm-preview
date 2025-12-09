@@ -139,3 +139,40 @@
     }
   }());
 }());
+
+// Popover functionality
+document.addEventListener("DOMContentLoaded", function () {
+  const browseBtn = document.getElementById("browse-files-btn");
+  const popover = document.getElementById("files-popover");
+  const closeBtn = document.getElementById("close-popover");
+
+  if (browseBtn && popover) {
+    browseBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      const isVisible = popover.style.display !== "none";
+      popover.style.display = (
+        isVisible
+        ? "none"
+        : "block"
+      );
+    });
+
+    if (closeBtn) {
+      closeBtn.addEventListener("click", function () {
+        popover.style.display = "none";
+      });
+    }
+
+    // Close popover when clicking outside
+    document.addEventListener("click", function (e) {
+      if (
+        popover.style.display !== "none"
+        && !popover.contains(e.target)
+        && e.target !== browseBtn
+        && !browseBtn.contains(e.target)
+      ) {
+        popover.style.display = "none";
+      }
+    });
+  }
+});
