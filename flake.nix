@@ -32,6 +32,23 @@
         };
       });
 
+      devShells = forAllSystems (
+        system:
+        let
+          pkgs = nixpkgsFor.${system};
+        in
+        {
+          default = pkgs.mkShell {
+            packages = with pkgs; [
+              # ideally this would be the same version as used in CI,
+              # but this works for now
+              golangci-lint
+            ];
+            inputsFrom = [ self.packages.${system}.default ];
+          };
+        }
+      );
+
       packages = forAllSystems (
         system:
         let
