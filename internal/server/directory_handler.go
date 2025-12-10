@@ -114,7 +114,7 @@ func handleFileRequest(
 
 	err := watcher.AddDirectory(fileDir)
 	if err != nil {
-		slog.Debug("Add directory to watcher error", "error", "err")
+		slog.Debug("Add directory to watcher error", "error", err)
 	}
 
 	if !app.IsTextFile(currentDir, textExtensions) {
