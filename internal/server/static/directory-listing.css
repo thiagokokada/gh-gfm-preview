@@ -250,6 +250,10 @@
   display: none;
 }
 
+.popover-details.hidden {
+  visibility: hidden;
+}
+
 .files-popover {
   display: block;
   margin-top: 8px;
