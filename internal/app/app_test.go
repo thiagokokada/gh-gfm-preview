@@ -2,6 +2,8 @@ package app
 
 import (
 	"errors"
+	"io"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -56,11 +58,37 @@ func TestSlurp(t *testing.T) {
 
 	match := "Headings"
 	r := regexp.MustCompile(match)
-
 	assert.True(t, r.MatchString(result))
 
 	_, err = Slurp("non-existing-file.md")
 	assert.True(t, errors.Is(err, ErrFileNotFound))
+
+	// Make sure we convert dos/mac style line endings to unix
+	tests := []struct {
+		name     string
+		fileName string
+	}{
+		{name: "CRLF", fileName: "../../testdata/CRLF.md"},
+		{name: "CR", fileName: "../../testdata/CR.md"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f, err := os.Open(tt.fileName)
+			assert.Nil(t, err)
+
+			defer f.Close()
+
+			original, err := io.ReadAll(f)
+			assert.Nil(t, err)
+			assert.True(t, strings.Contains(string(original), "\r"))
+
+			result, err = Slurp(tt.fileName)
+			assert.Nil(t, err)
+			assert.True(t, strings.Contains(result, "\n"))
+			assert.False(t, strings.Contains(result, "\r"))
+		})
+	}
 }
 
 func TestToHTML(t *testing.T) {
