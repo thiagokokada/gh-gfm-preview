@@ -113,12 +113,12 @@ func Slurp(fileName string) (string, error) {
 		return "", fmt.Errorf("file read error: %w", err)
 	}
 
-	text, _, err := transform.String(normalize, string(b))
+	t, _, err := transform.Bytes(normalize, b)
 	if err != nil {
 		return "", fmt.Errorf("CRLF normalization error: %w", err)
 	}
 
-	return text, nil
+	return string(t), nil
 }
 
 // FindReadme finds a README file in the specified directory.
