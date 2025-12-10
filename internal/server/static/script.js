@@ -142,37 +142,24 @@
 
 // Popover functionality
 document.addEventListener("DOMContentLoaded", function () {
-  const browseBtn = document.getElementById("browse-files-btn");
-  const popover = document.getElementById("files-popover");
-  const closeBtn = document.getElementById("close-popover");
+  const details = document.getElementById("file-browser");
 
-  if (browseBtn && popover) {
-    browseBtn.addEventListener("click", function (e) {
-      e.stopPropagation();
-      const isVisible = popover.style.display !== "none";
-      popover.style.display = (
-        isVisible
-        ? "none"
-        : "block"
-      );
-    });
+  if (!details) {
+    return;
+  }
 
-    if (closeBtn) {
-      closeBtn.addEventListener("click", function () {
-        popover.style.display = "none";
-      });
+  document.addEventListener("click", function (e) {
+    // If <details> isn't open, nothing to do
+    if (!details.open) {
+      return;
     }
 
-    // Close popover when clicking outside
-    document.addEventListener("click", function (e) {
-      if (
-        popover.style.display !== "none"
-        && !popover.contains(e.target)
-        && e.target !== browseBtn
-        && !browseBtn.contains(e.target)
-      ) {
-        popover.style.display = "none";
-      }
-    });
-  }
+    // If click is inside the <details>, allow it
+    if (details.contains(e.target)) {
+      return;
+    }
+
+    // Otherwise close it
+    details.open = false;
+  });
 });
