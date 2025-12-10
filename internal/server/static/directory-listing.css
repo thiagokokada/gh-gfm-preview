@@ -240,3 +240,21 @@
     font-size: 12px;
   }
 }
+
+.popover-details > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.popover-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.files-popover {
+  display: block;
+  margin-top: 8px;
+}
+
+.close-btn {
+  display: inline-block;
+}
