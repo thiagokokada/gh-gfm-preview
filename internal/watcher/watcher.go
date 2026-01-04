@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"path/filepath"
 	"regexp"
 	"sync"
 	"time"
@@ -97,9 +98,10 @@ func (w *Watcher) Watch() {
 
 			path := event.Name
 			op := event.Op
+			base := filepath.Base(path)
 
 			if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
-				if re.MatchString(event.Name) {
+				if re.MatchString(base) {
 					slog.Debug("FS event from ignored pattern", "op", op, "path", path)
 
 					continue
