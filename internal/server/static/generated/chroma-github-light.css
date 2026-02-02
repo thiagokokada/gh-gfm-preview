@@ -1,10 +1,10 @@
 /* Background */ .bg { background-color: #f6f8fa; }
-/* PreWrapper */ .chroma { background-color: #f6f8fa; }
+/* PreWrapper */ .chroma { background-color: #f6f8fa; -webkit-text-size-adjust: none; }
 /* Error */ .chroma .err { color: #f6f8fa; background-color: #82071e }
 /* LineLink */ .chroma .lnlinks { outline: none; text-decoration: none; color: inherit }
 /* LineTableTD */ .chroma .lntd { vertical-align: top; padding: 0; margin: 0; border: 0; }
 /* LineTable */ .chroma .lntable { border-spacing: 0; padding: 0; margin: 0; border: 0; }
-/* LineHighlight */ .chroma .hl { background-color: #e5e5e5 }
+/* LineHighlight */ .chroma .hl { background-color: #dedede }
 /* LineNumbersTable */ .chroma .lnt { white-space: pre; -webkit-user-select: none; user-select: none; margin-right: 0.4em; padding: 0 0.4em 0 0.4em;color: #7f7f7f }
 /* LineNumbers */ .chroma .ln { white-space: pre; -webkit-user-select: none; user-select: none; margin-right: 0.4em; padding: 0 0.4em 0 0.4em;color: #7f7f7f }
 /* Line */ .chroma .line { display: flex; }
