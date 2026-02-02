@@ -179,6 +179,10 @@ When $a \ne 0$, there are two solutions to $(ax^2 + bx + c = 0)$ and they are
 
 $$ x = {-b \pm \sqrt{b^2-4ac} \over 2a} $$
 
+Testing `\boldsymbol`
+
+$p(\\mathbf{x}|\\boldsymbol{\\mu}, \\kappa) \\propto \\exp(\\kappa \\boldsymbol{\\mu}^T \\mathbf{x})$
+
 ------------------------------------------
 
 ## Raw HTML
