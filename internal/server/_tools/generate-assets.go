@@ -62,6 +62,11 @@ func main() {
 		"11d5c53772a9eb9b95a26d6df0cd8bc4b93d6e305dea4407e611f7e2a7c68657",
 	)
 	getAsset(
+		"https://raw.githubusercontent.com/mathjax/MathJax/refs/tags/3.2.2/es5/input/tex/extensions/boldsymbol.js",
+		assetsDir+"/input/tex/extensions/boldsymbol.js",
+		"d6771fee0772db2657796c8d0e20e1878bb3237f6d3ed1e828e1834a4ff743ca",
+	)
+	getAsset(
 		"https://github.com/mathjax/MathJax/raw/refs/tags/3.2.2/es5/output/chtml/fonts/woff-v2/MathJax_AMS-Regular.woff",
 		assetsDir+"/output/chtml/fonts/woff-v2/MathJax_AMS-Regular.woff",
 		"3de784d07b9fa8f104c10928a878ee879cf3305cae5195cba663c9c2bb0195eb",
