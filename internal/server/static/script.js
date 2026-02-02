@@ -80,13 +80,24 @@
     markdownTitle.innerHTML = result.title;
 
     initMermaid();
-    typesetMathJax();
+    await typesetMathJax();
     addCopyButtons();
   }
 
-  function typesetMathJax() {
+  async function typesetMathJax() {
     if (window.MathJax) {
-      window.MathJax.typeset();
+      try {
+        if (window.MathJax.startup && window.MathJax.startup.promise) {
+          await window.MathJax.startup.promise;
+        }
+        if (window.MathJax.typesetPromise) {
+          await window.MathJax.typesetPromise();
+        } else if (window.MathJax.typeset) {
+          window.MathJax.typeset();
+        }
+      } catch (error) {
+        console.error(error);
+      }
     }
   }
 

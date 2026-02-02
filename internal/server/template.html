@@ -205,6 +205,11 @@
       };
 
       MathJax = {
+        loader: {
+          paths: {
+            mathjax: "/static/generated",
+          },
+        },
         tex: {
           inlineMath: [
             ['$', '$'],
@@ -217,7 +222,7 @@
         },
       };
     </script>
-    <script type="text/javascript" src="/static/generated/tex-mml-chtml.min.js"></script>
+    <script id="MathJax-script" type="text/javascript" src="/static/generated/tex-mml-chtml.min.js"></script>
     <script type="text/javascript" src="/static/generated/mermaid.min.js"></script>
     <script type="text/javascript" src="/static/script.js"></script>
   </body>
