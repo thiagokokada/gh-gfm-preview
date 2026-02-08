@@ -82,6 +82,7 @@
     initMermaid();
     await typesetMathJax();
     addCopyButtons();
+    buildHeadingsList();
   }
 
   async function typesetMathJax() {
@@ -124,6 +125,72 @@
     });
   }
 
+  function slugify(text) {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
+  }
+
+  function buildHeadingsList() {
+    const details = document.getElementById("heading-list");
+    const list = document.getElementById("headings-tree");
+    const markdownBody = document.getElementById("markdown-body");
+
+    if (!details || !list || !markdownBody) {
+      if (details) {
+        details.classList.add("hidden");
+      }
+      return;
+    }
+
+    const headings = Array.from(
+      markdownBody.querySelectorAll("h1, h2, h3, h4, h5, h6")
+    );
+    list.innerHTML = "";
+
+    if (headings.length === 0) {
+      details.classList.add("hidden");
+      return;
+    }
+
+    details.classList.remove("hidden");
+
+    const usedIds = new Map();
+    headings.forEach((heading) => {
+      const level = Number(heading.tagName.slice(1));
+      const text = heading.textContent.trim();
+      if (!text) {
+        return;
+      }
+
+      let id = heading.id;
+      if (!id) {
+        const base = slugify(text) || "heading";
+        let candidate = base;
+        let index = 1;
+        while (usedIds.has(candidate) || document.getElementById(candidate)) {
+          index += 1;
+          candidate = `${base}-${index}`;
+        }
+        id = candidate;
+        heading.id = id;
+      }
+
+      usedIds.set(id, true);
+
+      const link = document.createElement("a");
+      link.href = `#${id}`;
+      link.className = `heading-item heading-level-${level}`;
+      link.textContent = text;
+      link.addEventListener("click", () => {
+        details.open = false;
+      });
+      list.appendChild(link);
+    });
+  }
+
   (async function () {
     // Only load markdown initially if not in directory index mode
     if (!window.Param.isDirectoryIndex) {
@@ -153,24 +220,26 @@
 
 // Popover functionality
 document.addEventListener("DOMContentLoaded", function () {
-  const details = document.getElementById("file-browser");
+  const popovers = [
+    document.getElementById("file-browser"),
+    document.getElementById("heading-list"),
+  ].filter(Boolean);
 
-  if (!details) {
+  if (popovers.length === 0) {
     return;
   }
 
   document.addEventListener("click", function (e) {
-    // If <details> isn't open, nothing to do
-    if (!details.open) {
-      return;
-    }
+    popovers.forEach((details) => {
+      if (!details.open) {
+        return;
+      }
 
-    // If click is inside the <details>, allow it
-    if (details.contains(e.target)) {
-      return;
-    }
+      if (details.contains(e.target)) {
+        return;
+      }
 
-    // Otherwise close it
-    details.open = false;
+      details.open = false;
+    });
   });
 });

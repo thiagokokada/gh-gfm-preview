@@ -3,6 +3,7 @@
   position: relative;
   display: flex;
   align-items: center;
+  gap: 8px;
 }
 
 .btn-browse,
@@ -22,14 +23,38 @@
   transition: background 0.2s ease;
 }
 
+.btn-headings {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #21262d;
+  color: #c9d1d9;
+  border-radius: 6px;
+  text-decoration: none;
+  border: 1px solid #30363d;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
 .btn-browse:hover,
 .btn-back:hover {
   background: #2ea043;
 }
 
+.btn-headings:hover {
+  background: #30363d;
+}
+
 .btn-browse svg,
 .btn-back svg {
   fill: white;
+}
+
+.btn-headings svg {
+  fill: currentColor;
 }
 
 /* Popover styles */
@@ -46,6 +71,47 @@
   z-index: 999;
   overflow: hidden;
 }
+
+.headings-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 260px;
+  max-height: 500px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(1, 4, 9, 0.8);
+  z-index: 999;
+  overflow: hidden;
+}
+
+.headings-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.heading-item {
+  display: block;
+  padding: 6px 8px;
+  border-radius: 4px;
+  text-decoration: none;
+  color: inherit;
+  font-size: 13px;
+  transition: background 0.15s ease;
+}
+
+.heading-item:hover {
+  background: #21262d;
+}
+
+.heading-level-1 { padding-left: 8px; }
+.heading-level-2 { padding-left: 20px; }
+.heading-level-3 { padding-left: 32px; }
+.heading-level-4 { padding-left: 44px; }
+.heading-level-5 { padding-left: 56px; }
+.heading-level-6 { padding-left: 68px; }
 
 .popover-header {
   display: flex;
@@ -252,6 +318,14 @@
 
 .popover-details.hidden {
   visibility: hidden;
+}
+
+.heading-details.hidden {
+  display: none;
+}
+
+.popover-details {
+  position: relative;
 }
 
 .files-popover {

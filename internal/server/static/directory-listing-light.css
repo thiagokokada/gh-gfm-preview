@@ -38,6 +38,11 @@ body {
   border-color: #d0d7de;
   box-shadow: 0 8px 24px rgba(140, 149, 159, 0.2);
 }
+.headings-popover {
+  background: white;
+  border-color: #d0d7de;
+  box-shadow: 0 8px 24px rgba(140, 149, 159, 0.2);
+}
 .popover-header {
   border-bottom-color: #d0d7de;
 }
@@ -46,6 +51,17 @@ body {
 }
 .close-btn:hover {
   color: var(--background-light);
+}
+.btn-headings {
+  background: #f6f8fa;
+  color: #24292f;
+  border-color: #d0d7de;
+}
+.btn-headings:hover {
+  background: #eaeef2;
+}
+.heading-item:hover {
+  background: #f6f8fa;
 }
 .file-tree-popover .file-tree-item a:hover {
   background: #f6f8fa;
