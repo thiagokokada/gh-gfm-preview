@@ -1,10 +1,14 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/thiagokokada/gh-gfm-preview/internal/assert"
@@ -56,6 +60,47 @@ func TestMdHandler(t *testing.T) {
 
 	assert.Equal(t, res.StatusCode, http.StatusOK)
 	assert.Equal(t, res.Header.Get("Content-Type"), "text/html; charset=utf-8")
+
+	body, err := io.ReadAll(res.Body)
+	assert.Nil(t, err)
+
+	var payload mdResponseJSON
+
+	err = json.Unmarshal(body, &payload)
+	assert.Nil(t, err)
+
+	assert.True(t, payload.HasHeadings)
+	assert.True(t, strings.Contains(payload.HeadingsHTML, `class="heading-item heading-level-1"`))
+	assert.True(t, strings.Contains(payload.HeadingsHTML, `href="#headings"`))
+}
+
+func TestMdHandlerWithoutHeadings(t *testing.T) {
+	tmpFile, err := os.CreateTemp(t.TempDir(), "no-headings-*.md")
+	assert.Nil(t, err)
+
+	defer tmpFile.Close()
+
+	_, err = tmpFile.WriteString("just plain text")
+	assert.Nil(t, err)
+
+	ts := httptest.NewServer(mdHandler(tmpFile.Name(), &Param{}))
+	defer ts.Close()
+
+	res, err := http.Get(ts.URL)
+	assert.Nil(t, err)
+
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	assert.Nil(t, err)
+
+	var payload mdResponseJSON
+
+	err = json.Unmarshal(body, &payload)
+	assert.Nil(t, err)
+
+	assert.False(t, payload.HasHeadings)
+	assert.Equal(t, payload.HeadingsHTML, "")
 }
 
 func TestWrapHandler(t *testing.T) {

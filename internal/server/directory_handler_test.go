@@ -287,3 +287,38 @@ func TestGenerateFileTree(t *testing.T) {
 		})
 	}
 }
+
+func TestServerRenderedHeadingsList(t *testing.T) {
+	testDir := testDataDir
+	param := &Param{
+		DirectoryListing:               true,
+		DirectoryListingShowExtensions: ".md",
+		DirectoryListingTextExtensions: ".md,.txt",
+		IsDirectoryMode:                true,
+		DirectoryPath:                  testDir,
+		ReadmeFile:                     filepath.Join(testDir, "README"),
+		Reload:                         false,
+	}
+
+	watcher, err := watcher.Init(testDir)
+	assert.Nil(t, err)
+
+	defer watcher.Close()
+
+	ts := httptest.NewServer(handler("", param, http.FileServer(http.Dir(testDir)), watcher))
+	defer ts.Close()
+
+	res, err := http.Get(ts.URL + "/")
+	assert.Nil(t, err)
+
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	assert.Nil(t, err)
+
+	bodyStr := string(body)
+	assert.True(t, strings.Contains(bodyStr, `id="headings-tree"`))
+	assert.True(t, strings.Contains(bodyStr, `class="heading-item heading-level-1"`))
+	assert.True(t, strings.Contains(bodyStr, `href="#dummy-readme"`))
+	assert.False(t, strings.Contains(bodyStr, `<noscript><style>#heading-list { display: none !important; }</style></noscript>`))
+}
