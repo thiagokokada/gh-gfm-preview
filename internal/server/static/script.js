@@ -139,25 +139,26 @@
     const markdownBody = document.getElementById("markdown-body");
 
     if (!details || !list || !markdownBody) {
-      if (details) {
-        details.classList.add("hidden");
-      }
       return;
     }
 
     const headings = Array.from(
       markdownBody.querySelectorAll("h1, h2, h3, h4, h5, h6")
     );
-    list.innerHTML = "";
 
     if (headings.length === 0) {
-      details.classList.add("hidden");
+      details.classList.add("is-disabled");
+      details.setAttribute("aria-disabled", "true");
+      details.open = false;
+      list.replaceChildren();
       return;
     }
 
-    details.classList.remove("hidden");
+    details.classList.remove("is-disabled");
+    details.removeAttribute("aria-disabled");
 
     const usedIds = new Map();
+    const fragment = document.createDocumentFragment();
     headings.forEach((heading) => {
       const level = Number(heading.tagName.slice(1));
       const text = heading.textContent.trim();
@@ -187,13 +188,17 @@
       link.addEventListener("click", () => {
         details.open = false;
       });
-      list.appendChild(link);
+      fragment.appendChild(link);
     });
+
+    list.replaceChildren(fragment);
   }
 
   (async function () {
     // Only load markdown initially if not in directory index mode
     if (!window.Param.isDirectoryIndex) {
+      // Build from the initial server-rendered HTML first for faster UI feedback.
+      buildHeadingsList();
       await loadMarkdown();
     }
 
@@ -240,6 +245,22 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       details.open = false;
+    });
+  });
+
+  popovers.forEach((details) => {
+    if (details.id !== "heading-list") {
+      return;
+    }
+    const summary = details.querySelector("summary");
+    if (!summary) {
+      return;
+    }
+    summary.addEventListener("click", function (e) {
+      if (details.classList.contains("is-disabled")) {
+        e.preventDefault();
+        details.open = false;
+      }
     });
   });
 });
