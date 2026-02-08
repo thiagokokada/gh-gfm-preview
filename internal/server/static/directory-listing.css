@@ -320,12 +320,17 @@
   visibility: hidden;
 }
 
-.heading-details.hidden {
-  display: none;
-}
-
 .popover-details {
   position: relative;
+}
+
+.heading-details.is-disabled > summary {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.heading-details.is-disabled > summary:hover {
+  background: inherit;
 }
 
 .files-popover {
