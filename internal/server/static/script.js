@@ -204,9 +204,6 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   popovers.forEach((details) => {
-    if (details.id !== "heading-list") {
-      return;
-    }
     const summary = details.querySelector("summary");
     if (!summary) {
       return;
@@ -217,6 +214,10 @@ document.addEventListener("DOMContentLoaded", function () {
         details.open = false;
       }
     });
+
+    if (details.id !== "heading-list") {
+      return;
+    }
 
     const headingsTree = details.querySelector("#headings-tree");
     if (!headingsTree) {

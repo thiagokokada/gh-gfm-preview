@@ -21,6 +21,8 @@
   font-size: 14px;
   font-weight: 500;
   transition: background 0.2s ease;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .btn-headings {
@@ -37,6 +39,8 @@
   font-size: 14px;
   font-weight: 500;
   transition: background 0.2s ease;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .btn-browse:hover,
@@ -316,10 +320,6 @@
   display: none;
 }
 
-.popover-details.hidden {
-  visibility: hidden;
-}
-
 .popover-details {
   position: relative;
 }
@@ -327,9 +327,20 @@
 .heading-details.is-disabled > summary {
   opacity: 0.5;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
 .heading-details.is-disabled > summary:hover {
+  background: inherit;
+}
+
+.file-details.is-disabled > summary {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.file-details.is-disabled > summary:hover {
   background: inherit;
 }
 
