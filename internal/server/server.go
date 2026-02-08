@@ -166,12 +166,16 @@ func handler(filename string, param *Param, handler http.Handler, watcher *watch
 				return
 			}
 
+			markdownView := mdResponse(w, filename, param)
+
 			templateParam := TemplateParam{
-				Title:  getTitle(filename),
-				Body:   mdResponse(w, filename, param),
-				Host:   r.Host,
-				Reload: param.Reload,
-				Mode:   param.getMode().String(),
+				Title:        getTitle(filename),
+				Body:         markdownView.HTML,
+				HeadingsHTML: markdownView.HeadingsHTML,
+				HasHeadings:  markdownView.HasHeadings,
+				Host:         r.Host,
+				Reload:       param.Reload,
+				Mode:         param.getMode().String(),
 			}
 
 			renderTemplate(w, templateParam)
@@ -205,7 +209,7 @@ func getMarkdown(filename string, param *Param) (string, error) {
 	return markdown, nil
 }
 
-func mdResponse(w http.ResponseWriter, filename string, param *Param) string {
+func mdResponse(w http.ResponseWriter, filename string, param *Param) markdownView {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	markdown, err := getMarkdown(filename, param)
@@ -218,7 +222,7 @@ func mdResponse(w http.ResponseWriter, filename string, param *Param) string {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
-		return ""
+		return markdownView{}
 	}
 
 	html, err := app.ToHTML(markdown, param.MarkdownMode)
@@ -230,10 +234,16 @@ func mdResponse(w http.ResponseWriter, filename string, param *Param) string {
 		)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 
-		return ""
+		return markdownView{}
 	}
 
-	return html
+	headingsHTML, hasHeadings := renderHeadingsHTML(html)
+
+	return markdownView{
+		HTML:         html,
+		HeadingsHTML: headingsHTML,
+		HasHeadings:  hasHeadings,
+	}
 }
 
 func mdHandler(filename string, param *Param) http.Handler {
@@ -261,10 +271,15 @@ func mdHandler(filename string, param *Param) http.Handler {
 			}
 		}
 
-		html := mdResponse(w, file, param)
+		markdownView := mdResponse(w, file, param)
 		title := getTitle(file)
 
-		body, err := json.Marshal(mdResponseJSON{HTML: html, Title: title})
+		body, err := json.Marshal(mdResponseJSON{
+			HTML:         markdownView.HTML,
+			Title:        title,
+			HeadingsHTML: markdownView.HeadingsHTML,
+			HasHeadings:  markdownView.HasHeadings,
+		})
 		if err != nil {
 			slog.Error("Error while JSON marshal", "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)

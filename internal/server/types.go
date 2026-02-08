@@ -5,6 +5,8 @@ import "net/http"
 type TemplateParam struct {
 	Title            string
 	Body             string
+	HeadingsHTML     string
+	HasHeadings      bool
 	Host             string
 	Reload           bool
 	Mode             string
@@ -47,8 +49,16 @@ type loggingResponseWriter struct {
 }
 
 type mdResponseJSON struct {
-	HTML  string `json:"html"`
-	Title string `json:"title"`
+	HTML         string `json:"html"`
+	Title        string `json:"title"`
+	HeadingsHTML string `json:"headings_html"`
+	HasHeadings  bool   `json:"has_headings"`
+}
+
+type markdownView struct {
+	HTML         string
+	HeadingsHTML string
+	HasHeadings  bool
 }
 
 type FileInfo struct {

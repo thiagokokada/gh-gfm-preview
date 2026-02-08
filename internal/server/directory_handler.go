@@ -127,9 +127,13 @@ func handleFileRequest(
 }
 
 func renderFileTemplate(w http.ResponseWriter, r *http.Request, param *Param, currentDir, currentURLPath, fileDir string, extensions []string) {
+	markdownView := mdResponse(w, currentDir, param)
+
 	templateParam := TemplateParam{
 		Title:            getTitle(currentDir),
-		Body:             mdResponse(w, currentDir, param),
+		Body:             markdownView.HTML,
+		HeadingsHTML:     markdownView.HeadingsHTML,
+		HasHeadings:      markdownView.HasHeadings,
 		Host:             r.Host,
 		Reload:           param.Reload,
 		Mode:             param.getMode().String(),
@@ -197,9 +201,13 @@ func renderDirectoryListing(w http.ResponseWriter, r *http.Request, param *Param
 }
 
 func renderReadmeTemplate(w http.ResponseWriter, r *http.Request, param *Param, currentDir, currentURLPath, readme string, extensions []string) {
+	markdownView := mdResponse(w, readme, param)
+
 	templateParam := TemplateParam{
 		Title:            getTitle(readme),
-		Body:             mdResponse(w, readme, param),
+		Body:             markdownView.HTML,
+		HeadingsHTML:     markdownView.HeadingsHTML,
+		HasHeadings:      markdownView.HasHeadings,
 		Host:             r.Host,
 		Reload:           param.Reload,
 		Mode:             param.getMode().String(),
