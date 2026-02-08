@@ -126,11 +126,7 @@
   }
 
   function slugify(text) {
-    return text
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)+/g, "");
+    return text.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/gm, "");
   }
 
   function buildHeadingsList() {
@@ -225,10 +221,15 @@
 
 // Popover functionality
 document.addEventListener("DOMContentLoaded", function () {
-  const popovers = [
-    document.getElementById("file-browser"),
-    document.getElementById("heading-list"),
-  ].filter(Boolean);
+  const popovers = [];
+  const fileBrowser = document.getElementById("file-browser");
+  if (fileBrowser) {
+    popovers.push(fileBrowser);
+  }
+  const headingList = document.getElementById("heading-list");
+  if (headingList) {
+    popovers.push(headingList);
+  }
 
   if (popovers.length === 0) {
     return;
