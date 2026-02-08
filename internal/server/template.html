@@ -120,8 +120,6 @@
               <h3>Headings</h3>
 
               <button type="button" class="close-btn" onclick="this.closest('details').removeAttribute('open')">×</button>
-              <!-- hide close-btn since it doesn't work without JS -->
-              <noscript><style>.close-btn { display: none !important; }</style></noscript>
             </div>
 
             <div class="popover-body">
@@ -129,6 +127,9 @@
             </div>
           </div>
         </details>
+        <!-- hide headings since it doesn't work without JS -->
+        <noscript><style>#heading-list { display: none !important; }</style></noscript>
+
         <details id="file-browser" class="popover-details {{if not .ShowBrowseButton}}hidden{{end}}">
           <summary class="btn-browse">
             <svg class="file-icon" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true">
@@ -141,9 +142,9 @@
             <div class="popover-header">
               <h3>Files</h3>
 
-              <button type="button" class="close-btn" onclick="this.closest('details').removeAttribute('open')">×</button>
+              <button type="button" class="close-btn" id="files-close-btn" onclick="this.closest('details').removeAttribute('open')">×</button>
               <!-- hide close-btn since it doesn't work without JS -->
-              <noscript><style>.close-btn { display: none !important; }</style></noscript>
+              <noscript><style>#files-close-btn { display: none !important; }</style></noscript>
             </div>
 
             <div class="popover-body">
