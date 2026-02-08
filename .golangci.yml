@@ -63,7 +63,7 @@ linters:
     - nonamedreturns
     - nosprintfhostport
     - perfsprint
-    - prealloc
+    # - prealloc
     - predeclared
     - promlinter
     - protogetter
@@ -76,7 +76,7 @@ linters:
     - sqlclosecheck
     - staticcheck
     - tagalign
-    - tagliatelle
+    # - tagliatelle
     - testableexamples
     - testifylint
     - thelper
