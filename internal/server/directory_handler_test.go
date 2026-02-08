@@ -322,3 +322,50 @@ func TestServerRenderedHeadingsList(t *testing.T) {
 	assert.True(t, strings.Contains(bodyStr, `href="#dummy-readme"`))
 	assert.False(t, strings.Contains(bodyStr, `<noscript><style>#heading-list { display: none !important; }</style></noscript>`))
 }
+
+func TestFileBrowserButtonDisabledState(t *testing.T) {
+	testDir := testDataDir
+	param := &Param{
+		DirectoryListing:               true,
+		DirectoryListingShowExtensions: ".md",
+		DirectoryListingTextExtensions: ".md,.txt",
+		IsDirectoryMode:                true,
+		DirectoryPath:                  testDir,
+		ReadmeFile:                     filepath.Join(testDir, "README"),
+		Reload:                         false,
+	}
+
+	watcher, err := watcher.Init(testDir)
+	assert.Nil(t, err)
+
+	defer watcher.Close()
+
+	ts := httptest.NewServer(handler("", param, http.FileServer(http.Dir(testDir)), watcher))
+	defer ts.Close()
+
+	readmeRes, err := http.Get(ts.URL + "/")
+	assert.Nil(t, err)
+
+	defer readmeRes.Body.Close()
+
+	readmeBody, err := io.ReadAll(readmeRes.Body)
+	assert.Nil(t, err)
+
+	readmeBodyStr := string(readmeBody)
+	assert.True(t, strings.Contains(readmeBodyStr, `id="file-browser" class="popover-details file-details"`))
+	assert.False(t, strings.Contains(readmeBodyStr, `id="file-browser" class="popover-details file-details is-disabled"`))
+
+	indexRes, err := http.Get(ts.URL + "/?view=index")
+	assert.Nil(t, err)
+
+	defer indexRes.Body.Close()
+
+	indexBody, err := io.ReadAll(indexRes.Body)
+	assert.Nil(t, err)
+
+	indexBodyStr := string(indexBody)
+	assert.True(t, strings.Contains(indexBodyStr, `id="file-browser" class="popover-details file-details is-disabled"`))
+	assert.True(t, strings.Contains(indexBodyStr, `summary class="btn-browse" aria-disabled="true" tabindex="-1"`))
+	assert.True(t, strings.Contains(indexBodyStr, `summary class="btn-headings" aria-disabled="true" tabindex="-1"`))
+	assert.False(t, strings.Contains(indexBodyStr, `popover-details hidden`))
+}
