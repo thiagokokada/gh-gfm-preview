@@ -8,9 +8,6 @@
   const geoJSONQuery = "code.language-geojson";
   const topoJSONQuery = "code.language-topojson";
   const mapQuery = `${geoJSONQuery}, ${topoJSONQuery}`;
-  const diagramQuery = `${mermaidQuery}, ${mapQuery}`;
-  const diagramWidth = 720;
-  const diagramHeight = 420;
   const copyIcon = `<svg class="copy-icon" aria-hidden="true" fill="none" height="18" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="18" style="color:"currentColor";"><path d="M8 17.929H6c-1.105 0-2-.912-2-2.036V5.036C4 3.91 4.895 3 6 3h8c1.105 0 2 .911 2 2.036v1.866m-6 .17h8c1.105 0 2 .91 2 2.035v10.857C20 21.09 19.105 22 18 22h-8c-1.105 0-2-.911-2-2.036V9.107c0-1.124.895-2.036 2-2.036z"></path></svg>`;
   const tickIcon = `<svg class="tick-icon" aria-hidden="true" fill="none" height="18" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="18" style="color: "currentColor";"><path d="M5 13l4 4L19 7"></path></svg>`;
   let diagramMediaQuery;
@@ -62,22 +59,6 @@
     });
   }
 
-  function getIsLightMode() {
-    if (window.Param.mode === "dark") {
-      return false;
-    }
-
-    if (window.Param.mode === "light") {
-      return true;
-    }
-
-    if (!diagramMediaQuery) {
-      diagramMediaQuery = window.matchMedia("(prefers-color-scheme: light)");
-    }
-
-    return diagramMediaQuery.matches;
-  }
-
   function getMapFeatures(code, isTopoJSON) {
     const parsed = JSON.parse(code);
     let featureCollection;
@@ -125,110 +106,121 @@
     return featureCollection;
   }
 
-  function renderMap(codeElement, isLight) {
+  function renderMap(codeElement) {
     const isTopoJSON = codeElement.matches(topoJSONQuery);
+    const pre = codeElement.closest("pre");
     const featureCollection = getMapFeatures(
       codeElement.getAttribute("data-original-code") || codeElement.textContent,
       isTopoJSON,
     );
-    const projection = window.d3.geoMercator();
-    const path = window.d3.geoPath(projection);
-    const margin = 16;
-    projection.fitExtent(
-      [
-        [margin, margin],
-        [diagramWidth - margin, diagramHeight - margin],
-      ],
-      featureCollection,
-    );
+    const mapContainer = document.createElement("div");
 
-    const backgroundColor = (isLight ? "#f6f8fa" : "#0d1117");
-    const strokeColor = (isLight ? "#57606a" : "#8b949e");
-    const fillColor = (isLight ? "#dbeafe" : "#1f6feb");
-    const emptyFillColor = (isLight ? "#f6f8fa" : "#161b22");
+    if (pre) {
+      pre.classList.add("diagram-map-pre");
+    }
 
-    const svg = window.d3.create("svg")
-      .attr("xmlns", "http://www.w3.org/2000/svg")
-      .attr("viewBox", `0 0 ${diagramWidth} ${diagramHeight}`)
-      .attr("width", "100%")
-      .attr("role", "img")
-      .attr("aria-label", isTopoJSON ? "Rendered TopoJSON diagram" : "Rendered GeoJSON diagram")
-      .style("display", "block")
-      .style("max-width", `${diagramWidth}px`)
-      .style("height", "auto")
-      .style("background", backgroundColor)
-      .style("border-radius", "6px");
-
-    svg.append("rect")
-      .attr("width", diagramWidth)
-      .attr("height", diagramHeight)
-      .attr("fill", backgroundColor);
-
-    svg.append("g")
-      .selectAll("path")
-      .data(featureCollection.features)
-      .join("path")
-      .attr("d", path)
-      .attr("fill", (feature) => {
-        if (!feature.geometry || feature.geometry.type.indexOf("Line") !== -1) {
-          return "none";
-        }
-        return fillColor;
-      })
-      .attr("stroke", strokeColor)
-      .attr("stroke-width", 1)
-      .attr("vector-effect", "non-scaling-stroke")
-      .attr("opacity", 0.95);
-
-    svg.append("path")
-      .datum({type: "Sphere"})
-      .attr("d", path)
-      .attr("fill", "none")
-      .attr("stroke", emptyFillColor)
-      .attr("stroke-width", 1)
-      .attr("vector-effect", "non-scaling-stroke");
-
+    codeElement.classList.add("diagram-map-code");
+    mapContainer.classList.add("leaflet-diagram-map");
     codeElement.innerHTML = "";
-    codeElement.appendChild(svg.node());
+    codeElement.appendChild(mapContainer);
     codeElement.setAttribute("data-processed", "true");
-  }
 
-  function renderMaps(isLight) {
-    document.querySelectorAll(mapQuery).forEach((element) => {
-      try {
-        renderMap(element, isLight);
-      } catch (error) {
-        console.error(error);
-      }
+    const map = window.L.map(mapContainer, {
+      attributionControl: true,
+      scrollWheelZoom: false,
+      zoomControl: true,
     });
+
+    window.L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors",
+      maxZoom: 19,
+    }).addTo(map);
+
+    const layer = window.L.geoJSON(featureCollection, {
+      pointToLayer: function (feature, latlng) {
+        return window.L.circleMarker(latlng, {
+          color: "#1f6feb",
+          fillColor: "#58a6ff",
+          fillOpacity: 0.8,
+          opacity: 1,
+          radius: 6,
+          weight: 2,
+        });
+      },
+      style: function (feature) {
+        const geometryType = (
+          feature &&
+          feature.geometry &&
+          feature.geometry.type
+          ? feature.geometry.type
+          : ""
+        );
+        const hasFill = (
+          geometryType.indexOf("Polygon") !== -1 ||
+          geometryType.indexOf("MultiPolygon") !== -1
+        );
+
+        return {
+          color: "#1f6feb",
+          fillColor: "#58a6ff",
+          fillOpacity: (hasFill ? 0.22 : 0),
+          opacity: 0.9,
+          weight: 2,
+        };
+      },
+    }).addTo(map);
+
+    if (layer.getBounds && layer.getBounds().isValid()) {
+      map.fitBounds(layer.getBounds(), {padding: [24, 24]});
+    } else {
+      map.setView([20, 0], 1);
+    }
   }
 
-  function renderDiagrams() {
-    const isLight = getIsLightMode();
+  function renderMaps() {
+    saveOriginalData(mapQuery).then(() => {
+      document.querySelectorAll(mapQuery).forEach((element) => {
+        try {
+          renderMap(element);
+        } catch (error) {
+          console.error(error);
+        }
+      });
+    }).catch(console.error);
+  }
 
+  function initMermaid() {
     // Workaround issue with MermaidJS that doesn't allow changing theme on
     // re-initialization
     // https://github.com/mermaid-js/mermaid/issues/1945#issuecomment-1661264708
-    saveOriginalData(diagramQuery).then(() => {
-      loadMermaid(isLight);
-      renderMaps(isLight);
-    }).catch(console.error);
+    saveOriginalData(mermaidQuery).catch(console.error);
 
-    if (window.Param.mode === "auto") {
+    if (window.Param.mode === "dark") {
+      loadMermaid(false);
+    } else if (window.Param.mode === "light") {
+      loadMermaid(true);
+    } else {
       if (!diagramMediaQuery) {
         diagramMediaQuery = window.matchMedia("(prefers-color-scheme: light)");
       }
-
+      loadMermaid(diagramMediaQuery.matches);
       if (!diagramMediaQuery.codexListenerAdded) {
-        diagramMediaQuery.addEventListener("change", () => {
-          resetProcessed(diagramQuery).then(() => {
-            loadMermaid(getIsLightMode());
-            renderMaps(getIsLightMode());
+        diagramMediaQuery.addEventListener("change", (e) => {
+          resetProcessed(mermaidQuery).then(() => {
+            loadMermaid(e.matches);
           }).catch(console.error);
         });
         diagramMediaQuery.codexListenerAdded = true;
       }
     }
+  }
+
+  function renderDiagrams() {
+    initMermaid();
+    document.querySelectorAll(mapQuery).forEach((element) => {
+      element.removeAttribute("data-processed");
+    });
+    renderMaps();
   }
 
   async function loadMarkdown() {
