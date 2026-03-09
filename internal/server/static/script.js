@@ -5,12 +5,8 @@
   "use strict";
 
   const mermaidQuery = "code.language-mermaid";
-  const geoJSONQuery = "code.language-geojson";
-  const topoJSONQuery = "code.language-topojson";
-  const mapQuery = `${geoJSONQuery}, ${topoJSONQuery}`;
   const copyIcon = `<svg class="copy-icon" aria-hidden="true" fill="none" height="18" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="18" style="color:"currentColor";"><path d="M8 17.929H6c-1.105 0-2-.912-2-2.036V5.036C4 3.91 4.895 3 6 3h8c1.105 0 2 .911 2 2.036v1.866m-6 .17h8c1.105 0 2 .91 2 2.035v10.857C20 21.09 19.105 22 18 22h-8c-1.105 0-2-.911-2-2.036V9.107c0-1.124.895-2.036 2-2.036z"></path></svg>`;
   const tickIcon = `<svg class="tick-icon" aria-hidden="true" fill="none" height="18" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="18" style="color: "currentColor";"><path d="M5 13l4 4L19 7"></path></svg>`;
-  let diagramMediaQuery;
 
   function loadMermaid(isLight) {
     const theme = (
@@ -22,17 +18,12 @@
     window.mermaid.run({querySelector: mermaidQuery});
   }
 
-  function saveOriginalData(query) {
+  function saveOriginalData() {
     return new Promise((resolve, reject) => {
       try {
-        const els = document.querySelectorAll(query);
+        const els = document.querySelectorAll(mermaidQuery);
         els.forEach((element) => {
-          const pre = element.closest("pre");
-          const originalCode = element.textContent;
-          element.setAttribute("data-original-code", originalCode);
-          if (pre) {
-            pre.setAttribute("data-copy-content", originalCode);
-          }
+          element.setAttribute("data-original-code", element.innerHTML);
         });
         resolve();
       } catch (error) {
@@ -41,15 +32,14 @@
     });
   }
 
-  function resetProcessed(query) {
+  function resetProcessed() {
     return new Promise((resolve, reject) => {
       try {
-        const els = document.querySelectorAll(query);
+        const els = document.querySelectorAll(mermaidQuery);
         els.forEach((element) => {
           if (element.getAttribute("data-original-code") !== null) {
             element.removeAttribute("data-processed");
-            element.innerHTML = "";
-            element.textContent = element.getAttribute("data-original-code");
+            element.innerHTML = element.getAttribute("data-original-code");
           }
         });
         resolve();
@@ -57,182 +47,26 @@
         reject(error);
       }
     });
-  }
-
-  function getMapFeatures(code, isTopoJSON) {
-    const parsed = JSON.parse(code);
-    let featureCollection;
-
-    if (isTopoJSON) {
-      if (!parsed.objects || Object.keys(parsed.objects).length === 0) {
-        throw new Error("TopoJSON does not contain any objects");
-      }
-
-      featureCollection = {
-        features: [],
-        type: "FeatureCollection"
-      };
-
-      Object.values(parsed.objects).forEach((objectValue) => {
-        const converted = window.topojson.feature(parsed, objectValue);
-        if (converted.type === "FeatureCollection") {
-          featureCollection.features = featureCollection.features.concat(converted.features);
-        } else {
-          featureCollection.features.push(converted);
-        }
-      });
-    } else if (parsed.type === "FeatureCollection") {
-      featureCollection = parsed;
-    } else if (parsed.type === "Feature") {
-      featureCollection = {
-        features: [parsed],
-        type: "FeatureCollection"
-      };
-    } else {
-      featureCollection = {
-        features: [{
-          geometry: parsed,
-          properties: {},
-          type: "Feature"
-        }],
-        type: "FeatureCollection"
-      };
-    }
-
-    if (!featureCollection.features || featureCollection.features.length === 0) {
-      throw new Error("Geo data does not contain any features");
-    }
-
-    return featureCollection;
-  }
-
-  function renderMap(codeElement) {
-    const isTopoJSON = codeElement.matches(topoJSONQuery);
-    const pre = codeElement.closest("pre");
-    const featureCollection = getMapFeatures(
-      codeElement.getAttribute("data-original-code") || codeElement.textContent,
-      isTopoJSON
-    );
-    const mapContainer = document.createElement("div");
-
-    if (pre) {
-      pre.classList.add("diagram-map-pre");
-    }
-
-    codeElement.classList.add("diagram-map-code");
-    mapContainer.classList.add("leaflet-diagram-map");
-    codeElement.innerHTML = "";
-    codeElement.appendChild(mapContainer);
-    codeElement.setAttribute("data-processed", "true");
-
-    const map = window.L.map(mapContainer, {
-      attributionControl: true,
-      scrollWheelZoom: false,
-      zoomControl: true
-    });
-
-    window.L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "&copy; OpenStreetMap contributors",
-      maxZoom: 19
-    }).addTo(map);
-
-    const layer = window.L.geoJSON(featureCollection, {
-      pointToLayer: function (feature, latlng) {
-        let pointRadius = 6;
-
-        if (feature && feature.properties) {
-          pointRadius = 6;
-        }
-
-        return window.L.circleMarker(latlng, {
-          color: "#1f6feb",
-          fillColor: "#58a6ff",
-          fillOpacity: 0.8,
-          opacity: 1,
-          radius: pointRadius,
-          weight: 2
-        });
-      },
-      style: function (feature) {
-        const geometryType = (
-          (
-            feature &&
-            feature.geometry &&
-            feature.geometry.type
-          )
-          ? feature.geometry.type
-          : ""
-        );
-        const hasFill = (
-          geometryType.indexOf("Polygon") !== -1 ||
-          geometryType.indexOf("MultiPolygon") !== -1
-        );
-
-        return {
-          color: "#1f6feb",
-          fillColor: "#58a6ff",
-          fillOpacity: (
-            hasFill
-            ? 0.22
-            : 0
-          ),
-          opacity: 0.9,
-          weight: 2
-        };
-      }
-    }).addTo(map);
-
-    if (layer.getBounds && layer.getBounds().isValid()) {
-      map.fitBounds(layer.getBounds(), {padding: [24, 24]});
-    } else {
-      map.setView([20, 0], 1);
-    }
-  }
-
-  function renderMaps() {
-    saveOriginalData(mapQuery).then(() => {
-      document.querySelectorAll(mapQuery).forEach((element) => {
-        try {
-          renderMap(element);
-        } catch (error) {
-          console.error(error);
-        }
-      });
-    }).catch(console.error);
   }
 
   function initMermaid() {
     // Workaround issue with MermaidJS that doesn't allow changing theme on
     // re-initialization
     // https://github.com/mermaid-js/mermaid/issues/1945#issuecomment-1661264708
-    saveOriginalData(mermaidQuery).catch(console.error);
+    saveOriginalData().catch(console.error);
 
     if (window.Param.mode === "dark") {
-      loadMermaid(false);
-    } else if (window.Param.mode === "light") {
       loadMermaid(true);
+    } else if (window.Param.mode === "light") {
+      loadMermaid(false);
     } else {
-      if (!diagramMediaQuery) {
-        diagramMediaQuery = window.matchMedia("(prefers-color-scheme: light)");
-      }
-      loadMermaid(diagramMediaQuery.matches);
-      if (!diagramMediaQuery.codexListenerAdded) {
-        diagramMediaQuery.addEventListener("change", (e) => {
-          resetProcessed(mermaidQuery).then(() => {
-            loadMermaid(e.matches);
-          }).catch(console.error);
-        });
-        diagramMediaQuery.codexListenerAdded = true;
-      }
+      const prefersLightQuery = window.matchMedia("(prefers-color-scheme: light)");
+      loadMermaid(prefersLightQuery.matches);
+      // Change CSS when the theme changes
+      prefersLightQuery.addEventListener("change", (e) => {
+        resetProcessed().then(loadMermaid(e.matches)).catch(console.error);
+      });
     }
-  }
-
-  function renderDiagrams() {
-    initMermaid();
-    document.querySelectorAll(mapQuery).forEach((element) => {
-      element.removeAttribute("data-processed");
-    });
-    renderMaps();
   }
 
   async function loadMarkdown() {
@@ -247,7 +81,7 @@
 
     updateHeadingsList(result.headings_html, result.has_headings);
 
-    renderDiagrams();
+    initMermaid();
     await typesetMathJax();
     addCopyButtons();
   }
@@ -271,15 +105,7 @@
 
   function addCopyButtons() {
     document.querySelectorAll(".markdown-body pre").forEach((pre) => {
-      if (pre.querySelector(".copy-button")) {
-        return;
-      }
-
       const code = pre.querySelector("code");
-      if (!code) {
-        return;
-      }
-
       const button = document.createElement("button");
       button.classList.add("copy-button");
       button.setAttribute("aria-label", "Copy code to clipboard");
@@ -288,8 +114,7 @@
       pre.appendChild(button);
 
       button.addEventListener("click", () => {
-        const copyContent = pre.getAttribute("data-copy-content") || code.textContent;
-        navigator.clipboard.writeText(copyContent).then(() => {
+        navigator.clipboard.writeText(code.textContent).then(() => {
           button.innerHTML = tickIcon;
           setTimeout(() => {
             button.innerHTML = copyIcon;
