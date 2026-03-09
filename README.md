@@ -59,7 +59,7 @@ https://github.com/user-attachments/assets/0219ac01-71d3-4568-bff4-c9de092ca4e3
     GitHub where only a subset of HTML is allowed
 - [x] : [MathJax](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/writing-mathematical-expressions)
 - [x] : [Mermaid diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams)
-- [ ] : [GeoJSON/TopoJSON diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams)
+- [x] : [GeoJSON/TopoJSON diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams)
 - [ ] : [STL 3D diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams)
 - [ ] : Mentioning people/Referencing issues and Pull Requests/Other features
   that depends in GitHub access
