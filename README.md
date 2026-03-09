@@ -62,7 +62,7 @@ https://github.com/user-attachments/assets/0219ac01-71d3-4568-bff4-c9de092ca4e3
 - [x] : [GeoJSON/TopoJSON diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams)
   + rendered with Leaflet and online map tiles, so this feature does not work offline
   + the basemap will be OSM-style, not GitHub’s Azure/TomTom tiles, so it should be structurally similar rather than pixel-identical
-- [ ] : [STL 3D diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams)
+- [x] : [STL 3D diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams)
 - [ ] : Mentioning people/Referencing issues and Pull Requests/Other features
   that depends in GitHub access
 

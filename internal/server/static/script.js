@@ -233,6 +233,9 @@
       element.removeAttribute("data-processed");
     });
     renderMaps();
+    if (window.renderSTLDiagrams) {
+      window.renderSTLDiagrams();
+    }
   }
 
   async function loadMarkdown() {

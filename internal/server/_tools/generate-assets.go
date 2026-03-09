@@ -97,6 +97,21 @@ func main() {
 		"25cd02ae486cc5063e0215a4e4cfb15de83700c87ac48bac4d57dc6aaf3ebb89",
 	)
 	getAsset(
+		"https://unpkg.com/three@0.161.0/build/three.module.js",
+		assetsDir+"/three.module.js",
+		"e7348ab8c7bf7a41f7afc5fe503c20a0ed090d9536aacf1ee975d7aaee24d394",
+	)
+	getAsset(
+		"https://unpkg.com/three@0.161.0/examples/jsm/loaders/STLLoader.js",
+		assetsDir+"/stl/STLLoader.js",
+		"896d006a48b8f125385a485ccae154dadee801a953f0b45ceffe7ddd8a29ca93",
+	)
+	getAsset(
+		"https://unpkg.com/three@0.161.0/examples/jsm/controls/OrbitControls.js",
+		assetsDir+"/stl/OrbitControls.js",
+		"471672386f759e4348da366831215c1b96b4f2c5aa31269d29a0258b98f9995e",
+	)
+	getAsset(
 		"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js",
 		assetsDir+"/tex-mml-chtml.min.js",
 		"11d5c53772a9eb9b95a26d6df0cd8bc4b93d6e305dea4407e611f7e2a7c68657",

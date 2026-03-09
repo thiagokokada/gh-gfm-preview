@@ -93,6 +93,90 @@
       font-size: 11px;
     }
 
+    .markdown-body pre.diagram-stl-pre {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .markdown-body pre.diagram-stl-pre > code.diagram-stl-code {
+      display: block;
+      padding: 0;
+      background: transparent;
+      overflow: hidden;
+    }
+
+    .stl-diagram {
+      background: #010409;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .stl-diagram-toolbar {
+      align-items: center;
+      background: rgba(13, 17, 23, 0.92);
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+      padding: 8px 12px;
+    }
+
+    .stl-diagram-modes {
+      display: flex;
+      gap: 8px;
+    }
+
+    .stl-diagram-button {
+      background: #212830;
+      border: 1px solid #3d444d;
+      border-radius: 999px;
+      color: #c9d1d9;
+      cursor: pointer;
+      font-size: 12px;
+      line-height: 1;
+      padding: 6px 10px;
+    }
+
+    .stl-diagram-button.is-active {
+      background: #1f6feb;
+      border-color: #1f6feb;
+      color: #ffffff;
+    }
+
+    .stl-diagram-hint {
+      color: #8b949e;
+      font-size: 12px;
+    }
+
+    .stl-diagram-viewport {
+      aspect-ratio: 16 / 10;
+      min-height: 320px;
+      width: 100%;
+    }
+
+    @media (prefers-color-scheme: light) {
+      .stl-diagram {
+        background: #f6f8fa;
+        border-color: #d0d7de;
+      }
+
+      .stl-diagram-toolbar {
+        background: rgba(246, 248, 250, 0.96);
+        border-bottom-color: #d0d7de;
+      }
+
+      .stl-diagram-button {
+        background: #ffffff;
+        border-color: #d0d7de;
+        color: #1f2328;
+      }
+
+      .stl-diagram-hint {
+        color: #59636e;
+      }
+    }
+
     .copy-button svg.copy-icon {
       stroke: #9198a1;
     }
@@ -115,6 +199,15 @@
       .leaflet-diagram-map {
         height: 260px;
         min-height: 260px;
+      }
+
+      .stl-diagram-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .stl-diagram-viewport {
+        min-height: 240px;
       }
     }
     </style>
@@ -275,10 +368,18 @@
         },
       };
     </script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/static/generated/three.module.js"
+        }
+      }
+    </script>
     <script id="MathJax-script" type="text/javascript" src="/static/generated/tex-mml-chtml.min.js"></script>
     <script type="text/javascript" src="/static/generated/mermaid.min.js"></script>
     <script type="text/javascript" src="/static/generated/leaflet.js"></script>
     <script type="text/javascript" src="/static/generated/topojson-client.min.js"></script>
+    <script type="module" src="/static/stl.js"></script>
     <script type="text/javascript" src="/static/script.js"></script>
   </body>
 
