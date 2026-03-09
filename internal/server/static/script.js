@@ -69,8 +69,8 @@
       }
 
       featureCollection = {
-        type: "FeatureCollection",
         features: [],
+        type: "FeatureCollection"
       };
 
       Object.values(parsed.objects).forEach((objectValue) => {
@@ -85,17 +85,17 @@
       featureCollection = parsed;
     } else if (parsed.type === "Feature") {
       featureCollection = {
-        type: "FeatureCollection",
         features: [parsed],
+        type: "FeatureCollection"
       };
     } else {
       featureCollection = {
-        type: "FeatureCollection",
         features: [{
-          type: "Feature",
-          properties: {},
           geometry: parsed,
+          properties: {},
+          type: "Feature"
         }],
+        type: "FeatureCollection"
       };
     }
 
@@ -111,7 +111,7 @@
     const pre = codeElement.closest("pre");
     const featureCollection = getMapFeatures(
       codeElement.getAttribute("data-original-code") || codeElement.textContent,
-      isTopoJSON,
+      isTopoJSON
     );
     const mapContainer = document.createElement("div");
 
@@ -128,30 +128,38 @@
     const map = window.L.map(mapContainer, {
       attributionControl: true,
       scrollWheelZoom: false,
-      zoomControl: true,
+      zoomControl: true
     });
 
     window.L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "&copy; OpenStreetMap contributors",
-      maxZoom: 19,
+      maxZoom: 19
     }).addTo(map);
 
     const layer = window.L.geoJSON(featureCollection, {
       pointToLayer: function (feature, latlng) {
+        let pointRadius = 6;
+
+        if (feature && feature.properties) {
+          pointRadius = 6;
+        }
+
         return window.L.circleMarker(latlng, {
           color: "#1f6feb",
           fillColor: "#58a6ff",
           fillOpacity: 0.8,
           opacity: 1,
-          radius: 6,
-          weight: 2,
+          radius: pointRadius,
+          weight: 2
         });
       },
       style: function (feature) {
         const geometryType = (
-          feature &&
-          feature.geometry &&
-          feature.geometry.type
+          (
+            feature &&
+            feature.geometry &&
+            feature.geometry.type
+          )
           ? feature.geometry.type
           : ""
         );
@@ -163,11 +171,15 @@
         return {
           color: "#1f6feb",
           fillColor: "#58a6ff",
-          fillOpacity: (hasFill ? 0.22 : 0),
+          fillOpacity: (
+            hasFill
+            ? 0.22
+            : 0
+          ),
           opacity: 0.9,
-          weight: 2,
+          weight: 2
         };
-      },
+      }
     }).addTo(map);
 
     if (layer.getBounds && layer.getBounds().isValid()) {
