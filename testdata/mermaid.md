@@ -20,3 +20,8 @@ stateDiagram
 stateDiagram
   s1-->s2
 ```
+
+```mermaid
+graph TD
+  A["A<br/>B"]
+```
