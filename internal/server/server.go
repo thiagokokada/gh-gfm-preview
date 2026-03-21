@@ -397,7 +397,7 @@ func resolveRootMarkdownTarget(root *os.Root, pathParam string) (string, string,
 	if err == nil && info.IsDir() {
 		readme, readmeErr := app.FindReadmeFS(root.FS(), rootRelativePath(pathParam))
 		if readmeErr == nil {
-			return readme, filepath.Base(readme), nil
+			return readme, path.Base(readme), nil
 		}
 	}
 
@@ -409,7 +409,7 @@ func resolveRootMarkdownTarget(root *os.Root, pathParam string) (string, string,
 		return "", "", fmt.Errorf("root stat error: %w", err)
 	}
 
-	return pathParam, filepath.Base(pathParam), nil
+	return pathParam, path.Base(pathParam), nil
 }
 
 func normalizeRootPath(pathParam string) (string, bool) {

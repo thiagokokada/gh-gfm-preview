@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 
@@ -137,7 +138,7 @@ func FindReadmeFS(fsys fs.FS, dir string) (string, error) {
 
 	for _, f := range files {
 		if readmePattern.MatchString(f.Name()) {
-			return filepath.Join(dir, f.Name()), nil
+			return path.Join(dir, f.Name()), nil
 		}
 	}
 
