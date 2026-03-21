@@ -56,6 +56,11 @@
       padding: 45px;
     }
 
+    /* FIX: line breaks not applying in mermaid caused by github-markdown-{dark,light}.css */
+    .markdown-body code.language-mermaid br {
+      display: inline;
+    }
+
     .copy-button {
       background-color: transparent;
       border: none;
