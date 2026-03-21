@@ -95,7 +95,6 @@ func renderFileTemplate(w http.ResponseWriter, r *http.Request, param *Param, cu
 	markdownView, title, err := mdResponseFromRoot(w, currentURLPath, param)
 	if err != nil {
 		slog.Error("Error while reading markdown", "error", err)
-		writeMarkdownError(w, err)
 
 		return
 	}
@@ -175,7 +174,6 @@ func renderReadmeTemplate(w http.ResponseWriter, r *http.Request, param *Param, 
 	markdownView, title, err := mdResponseFromRoot(w, readme, param)
 	if err != nil {
 		slog.Error("Error while reading markdown", "error", err)
-		writeMarkdownError(w, err)
 
 		return
 	}
