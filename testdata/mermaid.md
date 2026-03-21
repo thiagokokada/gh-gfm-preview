@@ -9,7 +9,7 @@ flowchart TD
     C -->|Three| F[fa:fa-car Car]
 ```
 
-# test
+## regression: should render more than one diagram
 
 ```mermaid
 stateDiagram
@@ -20,6 +20,8 @@ stateDiagram
 stateDiagram
   s1-->s2
 ```
+
+## regression: should have a line break between A and B
 
 ```mermaid
 graph TD
