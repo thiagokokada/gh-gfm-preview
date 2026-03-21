@@ -288,24 +288,32 @@ func mdHandler(filename string, param *Param) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		pathParam := r.URL.Query().Get("path")
 
-		if param.IsDirectoryMode && pathParam != "" {
+		if pathParam != "" && param.IsDirectoryMode {
 			markdownView, title, err := mdResponseFromRoot(w, pathParam, param)
 			if err != nil {
 				return
 			}
 
-			body, err := json.Marshal(mdResponseJSON{
-				HTML:         markdownView.HTML,
-				Title:        title,
-				HeadingsHTML: markdownView.HeadingsHTML,
-				HasHeadings:  markdownView.HasHeadings,
-			})
+			writeMarkdownJSONResponse(w, markdownView, title)
+
+			return
+		}
+
+		if pathParam != "" {
+			root, err := os.OpenRoot(filepath.Dir(filename))
 			if err != nil {
-				slog.Error("Error while JSON marshal", "error", err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				_ = writeMarkdownReadError(w, fmt.Errorf("directory root open error: %w", err))
+
+				return
+			}
+			defer root.Close()
+
+			markdownView, title, err := mdResponseFromOpenedRoot(w, pathParam, root, param)
+			if err != nil {
+				return
 			}
 
-			fmt.Fprintf(w, "%s", body)
+			writeMarkdownJSONResponse(w, markdownView, title)
 
 			return
 		}
@@ -323,23 +331,20 @@ func mdHandler(filename string, param *Param) http.Handler {
 		markdownView := mdResponse(w, file, param)
 		title := getTitle(file)
 
-		body, err := json.Marshal(mdResponseJSON{
-			HTML:         markdownView.HTML,
-			Title:        title,
-			HeadingsHTML: markdownView.HeadingsHTML,
-			HasHeadings:  markdownView.HasHeadings,
-		})
-		if err != nil {
-			slog.Error("Error while JSON marshal", "error", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
-		fmt.Fprintf(w, "%s", body)
+		writeMarkdownJSONResponse(w, markdownView, title)
 	})
 }
 
 func mdResponseFromRoot(w http.ResponseWriter, pathParam string, param *Param) (markdownView, string, error) {
 	if param.DirectoryRoot == nil {
+		return writeMarkdownReadError(w, errNoDirectoryRoot), "", errNoDirectoryRoot
+	}
+
+	return mdResponseFromOpenedRoot(w, pathParam, param.DirectoryRoot, param)
+}
+
+func mdResponseFromOpenedRoot(w http.ResponseWriter, pathParam string, root *os.Root, param *Param) (markdownView, string, error) {
+	if root == nil {
 		return writeMarkdownReadError(w, errNoDirectoryRoot), "", errNoDirectoryRoot
 	}
 
@@ -350,12 +355,12 @@ func mdResponseFromRoot(w http.ResponseWriter, pathParam string, param *Param) (
 		return writeMarkdownReadError(w, err), "", err
 	}
 
-	file, title, err := resolveRootMarkdownTarget(param.DirectoryRoot, normalizedPath)
+	file, title, err := resolveRootMarkdownTarget(root, normalizedPath)
 	if err != nil {
 		return writeMarkdownReadError(w, err), "", err
 	}
 
-	markdown, err := readRootMarkdown(param.DirectoryRoot, file)
+	markdown, err := readRootMarkdown(root, file)
 	if err != nil {
 		return writeMarkdownReadError(w, err), "", err
 	}
@@ -368,6 +373,23 @@ func mdResponseFromRoot(w http.ResponseWriter, pathParam string, param *Param) (
 	}
 
 	return markdownView, title, nil
+}
+
+func writeMarkdownJSONResponse(w http.ResponseWriter, markdownView markdownView, title string) {
+	body, err := json.Marshal(mdResponseJSON{
+		HTML:         markdownView.HTML,
+		Title:        title,
+		HeadingsHTML: markdownView.HeadingsHTML,
+		HasHeadings:  markdownView.HasHeadings,
+	})
+	if err != nil {
+		slog.Error("Error while JSON marshal", "error", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		return
+	}
+
+	fmt.Fprintf(w, "%s", body)
 }
 
 func resolveRootMarkdownTarget(root *os.Root, pathParam string) (string, string, error) {

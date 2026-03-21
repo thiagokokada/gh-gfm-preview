@@ -103,6 +103,29 @@ func TestMdHandlerWithoutHeadings(t *testing.T) {
 	assert.Equal(t, payload.HeadingsHTML, "")
 }
 
+func TestMdHandlerUsesPathQueryInSingleFileMode(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/__/md?path=subdir/README.md", nil)
+	rec := httptest.NewRecorder()
+
+	mdHandler("../../testdata/markdown-demo.md", &Param{}).ServeHTTP(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+
+	assert.Equal(t, res.StatusCode, http.StatusOK)
+
+	body, err := io.ReadAll(res.Body)
+	assert.Nil(t, err)
+
+	var payload mdResponseJSON
+
+	err = json.Unmarshal(body, &payload)
+	assert.Nil(t, err)
+
+	assert.Equal(t, payload.Title, "README.md")
+	assert.True(t, strings.Contains(payload.HTML, "Subdirectory README"))
+}
+
 func TestMdHandlerDirectoryModeUsesReadmeForTrailingSlashPath(t *testing.T) {
 	root, err := os.OpenRoot("../../testdata")
 	assert.Nil(t, err)
