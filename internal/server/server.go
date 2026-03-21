@@ -227,31 +227,29 @@ func getMarkdown(filename string, param *Param) (string, error) {
 }
 
 func mdResponse(w http.ResponseWriter, filename string, param *Param) markdownView {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
 	markdown, err := getMarkdown(filename, param)
 	if err != nil {
-		slog.Error("Error while reading markdown", "error", err)
-
-		if errors.Is(err, app.ErrFileNotFound) {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
-		return markdownView{}
+		return writeMarkdownReadError(w, err)
 	}
 
+	return writeMarkdownViewResponse(w, markdown, param)
+}
+
+func writeMarkdownViewResponse(w http.ResponseWriter, markdown string, param *Param) markdownView {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	markdownView, err := renderMarkdownView(markdown, param)
+	if err != nil {
+		return writeMarkdownRenderError(w, err, param)
+	}
+
+	return markdownView
+}
+
+func renderMarkdownView(markdown string, param *Param) (markdownView, error) {
 	html, err := app.ToHTML(markdown, param.MarkdownMode)
 	if err != nil {
-		slog.Error(
-			"Error while converting markdown to HTML",
-			"mode", param.MarkdownMode,
-			"error", err,
-		)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-
-		return markdownView{}
+		return markdownView{}, fmt.Errorf("markdown convert error: %w", err)
 	}
 
 	headingsHTML, hasHeadings := renderHeadingsHTML(html)
@@ -260,7 +258,29 @@ func mdResponse(w http.ResponseWriter, filename string, param *Param) markdownVi
 		HTML:         html,
 		HeadingsHTML: headingsHTML,
 		HasHeadings:  hasHeadings,
-	}
+	}, nil
+}
+
+func writeMarkdownReadError(w http.ResponseWriter, err error) markdownView {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	slog.Error("Error while reading markdown", "error", err)
+	writeMarkdownError(w, err)
+
+	return markdownView{}
+}
+
+func writeMarkdownRenderError(w http.ResponseWriter, err error, param *Param) markdownView {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	slog.Error(
+		"Error while converting markdown to HTML",
+		"mode", param.MarkdownMode,
+		"error", err,
+	)
+	http.Error(w, err.Error(), http.StatusInternalServerError)
+
+	return markdownView{}
 }
 
 func mdHandler(filename string, param *Param) http.Handler {
@@ -268,11 +288,8 @@ func mdHandler(filename string, param *Param) http.Handler {
 		pathParam := r.URL.Query().Get("path")
 
 		if param.IsDirectoryMode && pathParam != "" {
-			markdownView, title, err := mdResponseFromRoot(pathParam, param)
+			markdownView, title, err := mdResponseFromRoot(w, pathParam, param)
 			if err != nil {
-				slog.Error("Error while reading markdown", "error", err)
-				writeMarkdownError(w, err)
-
 				return
 			}
 
@@ -320,33 +337,29 @@ func mdHandler(filename string, param *Param) http.Handler {
 	})
 }
 
-func mdResponseFromRoot(pathParam string, param *Param) (markdownView, string, error) {
+func mdResponseFromRoot(w http.ResponseWriter, pathParam string, param *Param) (markdownView, string, error) {
 	if param.DirectoryRoot == nil {
-		return markdownView{}, "", errNoDirectoryRoot
+		return writeMarkdownReadError(w, errNoDirectoryRoot), "", errNoDirectoryRoot
 	}
 
 	file, title, err := resolveRootMarkdownTarget(param.DirectoryRoot, pathParam)
 	if err != nil {
-		return markdownView{}, "", err
+		return writeMarkdownReadError(w, err), "", err
 	}
 
 	markdown, err := readRootMarkdown(param.DirectoryRoot, file)
 	if err != nil {
-		return markdownView{}, "", err
+		return writeMarkdownReadError(w, err), "", err
 	}
 
-	html, err := app.ToHTML(markdown, param.MarkdownMode)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	markdownView, err := renderMarkdownView(markdown, param)
 	if err != nil {
-		return markdownView{}, "", fmt.Errorf("markdown convert error: %w", err)
+		return writeMarkdownRenderError(w, err, param), "", err
 	}
 
-	headingsHTML, hasHeadings := renderHeadingsHTML(html)
-
-	return markdownView{
-		HTML:         html,
-		HeadingsHTML: headingsHTML,
-		HasHeadings:  hasHeadings,
-	}, title, nil
+	return markdownView, title, nil
 }
 
 func resolveRootMarkdownTarget(root *os.Root, pathParam string) (string, string, error) {

@@ -91,7 +91,7 @@ func handleFileRequest(
 }
 
 func renderFileTemplate(w http.ResponseWriter, r *http.Request, param *Param, currentURLPath, fileDirURLPath string, extensions []string) {
-	markdownView, title, err := mdResponseFromRoot(currentURLPath, param)
+	markdownView, title, err := mdResponseFromRoot(w, currentURLPath, param)
 	if err != nil {
 		slog.Error("Error while reading markdown", "error", err)
 		writeMarkdownError(w, err)
@@ -171,7 +171,7 @@ func renderDirectoryListing(w http.ResponseWriter, r *http.Request, param *Param
 }
 
 func renderReadmeTemplate(w http.ResponseWriter, r *http.Request, param *Param, currentURLPath, readme string, extensions []string) {
-	markdownView, title, err := mdResponseFromRoot(readme, param)
+	markdownView, title, err := mdResponseFromRoot(w, readme, param)
 	if err != nil {
 		slog.Error("Error while reading markdown", "error", err)
 		writeMarkdownError(w, err)
