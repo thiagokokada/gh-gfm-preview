@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -112,7 +113,7 @@ func renderFileTemplate(w http.ResponseWriter, r *http.Request, param *Param, cu
 		HasReadme:        false,
 		CurrentPath:      currentURLPath,
 		ParentPath:       getParentPath(currentURLPath),
-		BreadcrumbItems:  generateBreadcrumbItems(getParentPath(currentURLPath), filepath.Base(currentURLPath), false),
+		BreadcrumbItems:  generateBreadcrumbItems(getParentPath(currentURLPath), path.Base(currentURLPath), false),
 	}
 
 	files, dirs, err := app.ListDirectoryContentsFS(param.DirectoryRoot.FS(), rootRelativePath(fileDirURLPath), extensions)
@@ -146,7 +147,7 @@ func renderDirectoryListing(w http.ResponseWriter, r *http.Request, param *Param
 		return
 	}
 
-	dirTitle := filepath.Base(currentURLPath)
+	dirTitle := path.Base(currentURLPath)
 	if currentURLPath == "" || dirTitle == "." {
 		dirTitle = "Home"
 	}
@@ -192,7 +193,7 @@ func renderReadmeTemplate(w http.ResponseWriter, r *http.Request, param *Param, 
 		HasReadme:        true,
 		CurrentPath:      currentURLPath,
 		ParentPath:       getParentPath(currentURLPath),
-		BreadcrumbItems:  generateBreadcrumbItems(currentURLPath, filepath.Base(readme), false),
+		BreadcrumbItems:  generateBreadcrumbItems(currentURLPath, path.Base(readme), false),
 	}
 
 	files, dirs, err := app.ListDirectoryContentsFS(param.DirectoryRoot.FS(), rootRelativePath(currentURLPath), extensions)
@@ -221,7 +222,7 @@ func generateFileTree(files []string, dirs []string, currentPath string) []FileT
 
 	// Add directories first
 	for _, dir := range dirs {
-		dirPath := filepath.Join(currentPath, dir)
+		dirPath := path.Join(currentPath, dir)
 		if currentPath == "" || currentPath == "." {
 			dirPath = dir
 		}
@@ -237,7 +238,7 @@ func generateFileTree(files []string, dirs []string, currentPath string) []FileT
 
 	// Add files
 	for _, file := range files {
-		filePath := filepath.Join(currentPath, file)
+		filePath := path.Join(currentPath, file)
 		if currentPath == "" || currentPath == "." {
 			filePath = file
 		}
@@ -259,7 +260,7 @@ func getParentPath(currentPath string) string {
 		return ""
 	}
 
-	parent := filepath.Dir(currentPath)
+	parent := path.Dir(currentPath)
 	if parent == "." {
 		return ""
 	}
@@ -285,7 +286,7 @@ func buildPathBreadcrumbs(currentPath string) []BreadcrumbItem {
 		return []BreadcrumbItem{}
 	}
 
-	parts := strings.Split(currentPath, string(filepath.Separator))
+	parts := strings.Split(currentPath, "/")
 	items := make([]BreadcrumbItem, 0, len(parts))
 	currentBuildPath := ""
 
@@ -310,7 +311,7 @@ func buildPath(base, part string) string {
 		return part
 	}
 
-	return filepath.Join(base, part)
+	return path.Join(base, part)
 }
 
 func appendCurrentItem(items []BreadcrumbItem, currentPath, currentName string) []BreadcrumbItem {
@@ -318,14 +319,14 @@ func appendCurrentItem(items []BreadcrumbItem, currentPath, currentName string) 
 		return items
 	}
 
-	path := currentName
+	itemPath := currentName
 	if currentPath != "" && currentPath != "." {
-		path = filepath.Join(currentPath, currentName)
+		itemPath = path.Join(currentPath, currentName)
 	}
 
 	return append(items, BreadcrumbItem{
 		Name:      currentName,
-		Path:      path,
+		Path:      itemPath,
 		IsCurrent: true,
 	})
 }
@@ -345,7 +346,7 @@ func render404Error(w http.ResponseWriter, r *http.Request, param *Param, curren
 		Reload:           param.Reload,
 		Mode:             param.getMode().String(),
 		ShowBrowseButton: true,
-		BreadcrumbItems:  generateBreadcrumbItems(parentPath, filepath.Base(currentURLPath), false),
+		BreadcrumbItems:  generateBreadcrumbItems(parentPath, path.Base(currentURLPath), false),
 	}
 
 	files, dirs, err := app.ListDirectoryContentsFS(param.DirectoryRoot.FS(), rootRelativePath(parentPath), extensions)
@@ -382,5 +383,5 @@ func serveRootFile(w http.ResponseWriter, r *http.Request, param *Param, current
 	}
 	defer file.Close()
 
-	http.ServeContent(w, r, filepath.Base(currentURLPath), info.ModTime(), file)
+	http.ServeContent(w, r, path.Base(currentURLPath), info.ModTime(), file)
 }
