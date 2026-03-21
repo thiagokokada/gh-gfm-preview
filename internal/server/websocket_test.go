@@ -89,18 +89,14 @@ func startConcurrentWrites(t *testing.T, testFile *os.File, numWrites int) <-cha
 	errorChan := make(chan error, 20)
 
 	for range numWrites {
-		wg.Add(1)
-
-		go func() {
-			defer wg.Done()
-
+		wg.Go(func() {
 			_, err := testFile.WriteString("WRITE.\n")
 			if err != nil {
 				errorChan <- err
 			}
 
 			time.Sleep(10 * time.Millisecond)
-		}()
+		})
 	}
 
 	go func() {
@@ -191,13 +187,9 @@ func TestConcurrentWritesStress(t *testing.T) {
 	var wg sync.WaitGroup
 
 	for range 100 {
-		wg.Add(1)
-
-		go func() {
-			defer wg.Done()
-
+		wg.Go(func() {
 			_, _ = testFile.WriteString("X")
-		}()
+		})
 	}
 
 	done := make(chan bool)
