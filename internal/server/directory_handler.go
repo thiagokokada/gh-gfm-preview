@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -19,85 +20,48 @@ func handleDirectoryMode(w http.ResponseWriter, r *http.Request, param *Param, w
 	extensions := app.ParseExtensions(param.DirectoryListingShowExtensions)
 	textExtensions := app.ParseExtensions(param.DirectoryListingTextExtensions)
 
-	currentDir, currentURLPath := resolveDirectoryPath(param.DirectoryPath, urlPath)
+	currentURLPath := resolveDirectoryPath(urlPath)
 
-	err := watcher.AddDirectory(currentDir)
-	if err != nil {
-		slog.Debug("Add directory to watcher error", "error", err)
-	}
-
-	if !validateDirectoryAccess(w, param.DirectoryPath, currentDir) {
-		return
-	}
-
-	info, err := os.Stat(currentDir)
-	isFile := err == nil && !info.IsDir()
-
-	if isFile {
-		handleFileRequest(w, r, param, watcher, currentDir, currentURLPath, extensions, textExtensions)
-
-		return
-	}
-
+	info, err := statDirectoryTarget(param, currentURLPath)
 	if err != nil {
 		render404Error(w, r, param, currentURLPath)
 
 		return
 	}
 
-	handleDirectoryRequest(w, r, param, currentDir, currentURLPath, extensions)
+	currentHostPath := directoryHostPath(param.DirectoryPath, currentURLPath)
+
+	err = watcher.AddDirectory(currentHostPath)
+	if err != nil {
+		slog.Debug("Add directory to watcher error", "error", err)
+	}
+
+	isFile := !info.IsDir()
+
+	if isFile {
+		handleFileRequest(w, r, param, watcher, currentURLPath, extensions, textExtensions, info)
+
+		return
+	}
+
+	handleDirectoryRequest(w, r, param, currentURLPath, extensions)
 }
 
-func resolveDirectoryPath(basePath, urlPath string) (string, string) {
-	if urlPath == "" {
-		return basePath, ""
+func statDirectoryTarget(param *Param, currentURLPath string) (os.FileInfo, error) {
+	if param.DirectoryRoot == nil {
+		return nil, errNoDirectoryRoot
 	}
 
-	return filepath.Join(basePath, urlPath), urlPath
+	info, err := param.DirectoryRoot.Stat(rootRelativePath(currentURLPath))
+	if err != nil {
+		return nil, fmt.Errorf("directory target root stat error: %w", err)
+	}
+
+	return info, nil
 }
 
-func validateDirectoryAccess(w http.ResponseWriter, basePath, currentPath string) bool {
-	absBase, err := filepath.Abs(basePath)
-	if err != nil {
-		slog.Error(
-			"Error while converting base path to absolute",
-			"path", basePath,
-			"error", err,
-		)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-
-		return false
-	}
-
-	absCurrent, err := filepath.Abs(currentPath)
-	if err != nil {
-		slog.Error(
-			"Error while converting current path to absolute",
-			"path", currentPath,
-			"error", err,
-		)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-
-		return false
-	}
-
-	if !strings.HasSuffix(absBase, string(filepath.Separator)) {
-		absBase += string(filepath.Separator)
-	}
-
-	isValid := absCurrent == strings.TrimSuffix(absBase, string(filepath.Separator)) ||
-		strings.HasPrefix(absCurrent+string(filepath.Separator), absBase)
-
-	if !isValid {
-		slog.Error(
-			"Path transversal attempt",
-			"base", absBase,
-			"current", absCurrent,
-		)
-		http.Error(w, "Forbidden", http.StatusForbidden)
-	}
-
-	return isValid
+func resolveDirectoryPath(urlPath string) string {
+	return urlPath
 }
 
 func handleFileRequest(
@@ -105,32 +69,38 @@ func handleFileRequest(
 	r *http.Request,
 	param *Param,
 	watcher *watcher.Watcher,
-	currentDir string,
 	currentURLPath string,
 	extensions []string,
 	textExtensions []string,
+	info os.FileInfo,
 ) {
-	fileDir := filepath.Dir(currentDir)
+	fileDirURLPath := getParentPath(currentURLPath)
 
-	err := watcher.AddDirectory(fileDir)
+	err := watcher.AddDirectory(directoryHostPath(param.DirectoryPath, fileDirURLPath))
 	if err != nil {
 		slog.Debug("Add directory to watcher error", "error", err)
 	}
 
-	if !app.IsTextFile(currentDir, textExtensions) {
-		http.ServeFile(w, r, currentDir)
+	if !app.IsTextFile(currentURLPath, textExtensions) {
+		serveRootFile(w, r, param, currentURLPath, info)
 
 		return
 	}
 
-	renderFileTemplate(w, r, param, currentDir, currentURLPath, fileDir, extensions)
+	renderFileTemplate(w, r, param, currentURLPath, fileDirURLPath, extensions)
 }
 
-func renderFileTemplate(w http.ResponseWriter, r *http.Request, param *Param, currentDir, currentURLPath, fileDir string, extensions []string) {
-	markdownView := mdResponse(w, currentDir, param)
+func renderFileTemplate(w http.ResponseWriter, r *http.Request, param *Param, currentURLPath, fileDirURLPath string, extensions []string) {
+	markdownView, title, err := mdResponseFromRoot(currentURLPath, param)
+	if err != nil {
+		slog.Error("Error while reading markdown", "error", err)
+		writeMarkdownError(w, err)
+
+		return
+	}
 
 	templateParam := TemplateParam{
-		Title:            getTitle(currentDir),
+		Title:            title,
 		Body:             markdownView.HTML,
 		HeadingsHTML:     markdownView.HeadingsHTML,
 		HasHeadings:      markdownView.HasHeadings,
@@ -142,10 +112,10 @@ func renderFileTemplate(w http.ResponseWriter, r *http.Request, param *Param, cu
 		HasReadme:        false,
 		CurrentPath:      currentURLPath,
 		ParentPath:       getParentPath(currentURLPath),
-		BreadcrumbItems:  generateBreadcrumbItems(getParentPath(currentURLPath), filepath.Base(currentDir), false),
+		BreadcrumbItems:  generateBreadcrumbItems(getParentPath(currentURLPath), filepath.Base(currentURLPath), false),
 	}
 
-	files, dirs, err := app.ListDirectoryContents(fileDir, extensions)
+	files, dirs, err := app.ListDirectoryContentsFS(param.DirectoryRoot.FS(), rootRelativePath(fileDirURLPath), extensions)
 	if err == nil {
 		dirURLPath := getParentPath(currentURLPath)
 		templateParam.FileTree = generateFileTree(files, dirs, dirURLPath)
@@ -154,21 +124,21 @@ func renderFileTemplate(w http.ResponseWriter, r *http.Request, param *Param, cu
 	renderTemplate(w, templateParam)
 }
 
-func handleDirectoryRequest(w http.ResponseWriter, r *http.Request, param *Param, currentDir, currentURLPath string, extensions []string) {
-	readme, readmeErr := app.FindReadme(currentDir)
+func handleDirectoryRequest(w http.ResponseWriter, r *http.Request, param *Param, currentURLPath string, extensions []string) {
+	readme, readmeErr := app.FindReadmeFS(param.DirectoryRoot.FS(), rootRelativePath(currentURLPath))
 	viewMode := r.URL.Query().Get("view")
 
 	if viewMode == "index" || readmeErr != nil {
-		renderDirectoryListing(w, r, param, currentDir, currentURLPath, extensions, readmeErr == nil)
+		renderDirectoryListing(w, r, param, currentURLPath, extensions, readmeErr == nil)
 
 		return
 	}
 
-	renderReadmeTemplate(w, r, param, currentDir, currentURLPath, readme, extensions)
+	renderReadmeTemplate(w, r, param, currentURLPath, readme, extensions)
 }
 
-func renderDirectoryListing(w http.ResponseWriter, r *http.Request, param *Param, currentDir, currentURLPath string, extensions []string, hasReadme bool) {
-	files, dirs, err := app.ListDirectoryContents(currentDir, extensions)
+func renderDirectoryListing(w http.ResponseWriter, r *http.Request, param *Param, currentURLPath string, extensions []string, hasReadme bool) {
+	files, dirs, err := app.ListDirectoryContentsFS(param.DirectoryRoot.FS(), rootRelativePath(currentURLPath), extensions)
 	if err != nil {
 		slog.Error("Error listing directory", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -200,11 +170,17 @@ func renderDirectoryListing(w http.ResponseWriter, r *http.Request, param *Param
 	renderTemplate(w, templateParam)
 }
 
-func renderReadmeTemplate(w http.ResponseWriter, r *http.Request, param *Param, currentDir, currentURLPath, readme string, extensions []string) {
-	markdownView := mdResponse(w, readme, param)
+func renderReadmeTemplate(w http.ResponseWriter, r *http.Request, param *Param, currentURLPath, readme string, extensions []string) {
+	markdownView, title, err := mdResponseFromRoot(readme, param)
+	if err != nil {
+		slog.Error("Error while reading markdown", "error", err)
+		writeMarkdownError(w, err)
+
+		return
+	}
 
 	templateParam := TemplateParam{
-		Title:            getTitle(readme),
+		Title:            title,
 		Body:             markdownView.HTML,
 		HeadingsHTML:     markdownView.HeadingsHTML,
 		HasHeadings:      markdownView.HasHeadings,
@@ -219,7 +195,7 @@ func renderReadmeTemplate(w http.ResponseWriter, r *http.Request, param *Param, 
 		BreadcrumbItems:  generateBreadcrumbItems(currentURLPath, filepath.Base(readme), false),
 	}
 
-	files, dirs, err := app.ListDirectoryContents(currentDir, extensions)
+	files, dirs, err := app.ListDirectoryContentsFS(param.DirectoryRoot.FS(), rootRelativePath(currentURLPath), extensions)
 	if err == nil {
 		templateParam.FileTree = generateFileTree(files, dirs, currentURLPath)
 	}
@@ -361,7 +337,6 @@ func render404Error(w http.ResponseWriter, r *http.Request, param *Param, curren
 
 	extensions := app.ParseExtensions(param.DirectoryListingShowExtensions)
 	parentPath := getParentPath(currentURLPath)
-	parentDir := filepath.Join(param.DirectoryPath, parentPath)
 
 	templateParam := TemplateParam{
 		Title:            "404 - Not Found",
@@ -373,10 +348,39 @@ func render404Error(w http.ResponseWriter, r *http.Request, param *Param, curren
 		BreadcrumbItems:  generateBreadcrumbItems(parentPath, filepath.Base(currentURLPath), false),
 	}
 
-	files, dirs, err := app.ListDirectoryContents(parentDir, extensions)
+	files, dirs, err := app.ListDirectoryContentsFS(param.DirectoryRoot.FS(), rootRelativePath(parentPath), extensions)
 	if err == nil {
 		templateParam.FileTree = generateFileTree(files, dirs, parentPath)
 	}
 
 	renderTemplate(w, templateParam)
+}
+
+func rootRelativePath(path string) string {
+	if path == "" {
+		return "."
+	}
+
+	return path
+}
+
+func directoryHostPath(basePath, relPath string) string {
+	if relPath == "" {
+		return basePath
+	}
+
+	return filepath.Join(basePath, relPath)
+}
+
+func serveRootFile(w http.ResponseWriter, r *http.Request, param *Param, currentURLPath string, info os.FileInfo) {
+	file, err := param.DirectoryRoot.Open(currentURLPath)
+	if err != nil {
+		slog.Error("Error opening file from root", "error", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		return
+	}
+	defer file.Close()
+
+	http.ServeContent(w, r, filepath.Base(currentURLPath), info.ModTime(), file)
 }

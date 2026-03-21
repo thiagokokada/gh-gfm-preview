@@ -1,6 +1,9 @@
 package server
 
-import "net/http"
+import (
+	"net/http"
+	"os"
+)
 
 type TemplateParam struct {
 	Title            string
@@ -35,6 +38,7 @@ type Param struct {
 	DirectoryListingTextExtensions string
 	IsDirectoryMode                bool
 	DirectoryPath                  string
+	DirectoryRoot                  *os.Root
 	ReadmeFile                     string
 }
 
