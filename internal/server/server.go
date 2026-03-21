@@ -10,14 +10,17 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"text/template"
 	"time"
 
+	"github.com/andybalholm/crlf"
 	"github.com/thiagokokada/gh-gfm-preview/internal/app"
 	"github.com/thiagokokada/gh-gfm-preview/internal/browser"
 	"github.com/thiagokokada/gh-gfm-preview/internal/watcher"
+	"golang.org/x/text/transform"
 )
 
 //go:generate go run _tools/generate-assets.go
@@ -30,6 +33,11 @@ var staticDir embed.FS
 var tmpl = template.Must(template.New("HTML Template").Parse(htmlTemplate))
 
 const defaultPort = 3333
+
+var (
+	rootNormalizer     = new(crlf.Normalize)
+	errNoDirectoryRoot = errors.New("directory root is not initialized")
+)
 
 func (server *Server) resolvePort() int {
 	if server.Port > 0 {
@@ -67,11 +75,11 @@ func setupDirectoryMode(param *Param, inputPath string) (string, string, error) 
 	param.IsDirectoryMode = true
 	param.DirectoryPath = inputPath
 
-	readme, readmeErr := app.FindReadme(inputPath)
+	readme, readmeErr := app.FindReadmeFS(os.DirFS(inputPath), ".")
 	if readmeErr == nil {
-		param.ReadmeFile = readme
+		param.ReadmeFile = filepath.Join(inputPath, readme)
 
-		return readme, inputPath, nil
+		return param.ReadmeFile, inputPath, nil
 	}
 
 	return "", inputPath, nil
@@ -100,6 +108,16 @@ func (server *Server) Serve(param *Param) error {
 	filename, dir, err := resolveFileAndDir(param)
 	if err != nil {
 		return err
+	}
+
+	if param.IsDirectoryMode {
+		root, rootErr := os.OpenRoot(param.DirectoryPath)
+		if rootErr != nil {
+			return fmt.Errorf("directory root open error: %w", rootErr)
+		}
+		defer root.Close()
+
+		param.DirectoryRoot = root
 	}
 
 	// Get the static subdirectory from embed.FS
@@ -210,31 +228,29 @@ func getMarkdown(filename string, param *Param) (string, error) {
 }
 
 func mdResponse(w http.ResponseWriter, filename string, param *Param) markdownView {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
 	markdown, err := getMarkdown(filename, param)
 	if err != nil {
-		slog.Error("Error while reading markdown", "error", err)
-
-		if errors.Is(err, app.ErrFileNotFound) {
-			http.Error(w, err.Error(), http.StatusNotFound)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
-		return markdownView{}
+		return writeMarkdownReadError(w, err)
 	}
 
+	return writeMarkdownViewResponse(w, markdown, param)
+}
+
+func writeMarkdownViewResponse(w http.ResponseWriter, markdown string, param *Param) markdownView {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	markdownView, err := renderMarkdownView(markdown, param)
+	if err != nil {
+		return writeMarkdownRenderError(w, err, param)
+	}
+
+	return markdownView
+}
+
+func renderMarkdownView(markdown string, param *Param) (markdownView, error) {
 	html, err := app.ToHTML(markdown, param.MarkdownMode)
 	if err != nil {
-		slog.Error(
-			"Error while converting markdown to HTML",
-			"mode", param.MarkdownMode,
-			"error", err,
-		)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-
-		return markdownView{}
+		return markdownView{}, fmt.Errorf("markdown convert error: %w", err)
 	}
 
 	headingsHTML, hasHeadings := renderHeadingsHTML(html)
@@ -243,50 +259,200 @@ func mdResponse(w http.ResponseWriter, filename string, param *Param) markdownVi
 		HTML:         html,
 		HeadingsHTML: headingsHTML,
 		HasHeadings:  hasHeadings,
-	}
+	}, nil
+}
+
+func writeMarkdownReadError(w http.ResponseWriter, err error) markdownView {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	slog.Error("Error while reading markdown", "error", err)
+	writeMarkdownError(w, err)
+
+	return markdownView{}
+}
+
+func writeMarkdownRenderError(w http.ResponseWriter, err error, param *Param) markdownView {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	slog.Error(
+		"Error while converting markdown to HTML",
+		"mode", param.MarkdownMode,
+		"error", err,
+	)
+	http.Error(w, err.Error(), http.StatusInternalServerError)
+
+	return markdownView{}
 }
 
 func mdHandler(filename string, param *Param) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		pathParam := r.URL.Query().Get("path")
 
-		var file string
+		if pathParam != "" && param.IsDirectoryMode {
+			markdownView, title, err := mdResponseFromRoot(w, pathParam, param)
+			if err != nil {
+				return
+			}
+
+			writeMarkdownJSONResponse(w, markdownView, title)
+
+			return
+		}
 
 		if pathParam != "" {
-			// In directory mode, convert relative path to absolute path
-			if param.IsDirectoryMode {
-				file = filepath.Join(param.DirectoryPath, pathParam)
-			} else {
-				file = pathParam
+			root, err := os.OpenRoot(filepath.Dir(filename))
+			if err != nil {
+				_ = writeMarkdownReadError(w, fmt.Errorf("directory root open error: %w", err))
+
+				return
 			}
-		} else {
-			file = filename
+			defer root.Close()
+
+			markdownView, title, err := mdResponseFromOpenedRoot(w, pathParam, root, param)
+			if err != nil {
+				return
+			}
+
+			writeMarkdownJSONResponse(w, markdownView, title)
+
+			return
 		}
+
+		file := filename
 
 		// If the file is a directory, try to find a README file
 		if info, err := os.Stat(file); err == nil && info.IsDir() {
-			readme, err := app.FindReadme(file)
+			readme, err := app.FindReadmeFS(os.DirFS(file), ".")
 			if err == nil {
-				file = readme
+				file = filepath.Join(file, readme)
 			}
 		}
 
 		markdownView := mdResponse(w, file, param)
 		title := getTitle(file)
 
-		body, err := json.Marshal(mdResponseJSON{
-			HTML:         markdownView.HTML,
-			Title:        title,
-			HeadingsHTML: markdownView.HeadingsHTML,
-			HasHeadings:  markdownView.HasHeadings,
-		})
-		if err != nil {
-			slog.Error("Error while JSON marshal", "error", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeMarkdownJSONResponse(w, markdownView, title)
+	})
+}
+
+func mdResponseFromRoot(w http.ResponseWriter, pathParam string, param *Param) (markdownView, string, error) {
+	if param.DirectoryRoot == nil {
+		return writeMarkdownReadError(w, errNoDirectoryRoot), "", errNoDirectoryRoot
+	}
+
+	return mdResponseFromOpenedRoot(w, pathParam, param.DirectoryRoot, param)
+}
+
+func mdResponseFromOpenedRoot(w http.ResponseWriter, pathParam string, root *os.Root, param *Param) (markdownView, string, error) {
+	if root == nil {
+		return writeMarkdownReadError(w, errNoDirectoryRoot), "", errNoDirectoryRoot
+	}
+
+	normalizedPath, ok := normalizeRootPath(pathParam)
+	if !ok {
+		err := fmt.Errorf("%w: %s", app.ErrFileNotFound, pathParam)
+
+		return writeMarkdownReadError(w, err), "", err
+	}
+
+	file, title, err := resolveRootMarkdownTarget(root, normalizedPath)
+	if err != nil {
+		return writeMarkdownReadError(w, err), "", err
+	}
+
+	markdown, err := readRootMarkdown(root, file)
+	if err != nil {
+		return writeMarkdownReadError(w, err), "", err
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	markdownView, err := renderMarkdownView(markdown, param)
+	if err != nil {
+		return writeMarkdownRenderError(w, err, param), "", err
+	}
+
+	return markdownView, title, nil
+}
+
+func writeMarkdownJSONResponse(w http.ResponseWriter, markdownView markdownView, title string) {
+	body, err := json.Marshal(mdResponseJSON{
+		HTML:         markdownView.HTML,
+		Title:        title,
+		HeadingsHTML: markdownView.HeadingsHTML,
+		HasHeadings:  markdownView.HasHeadings,
+	})
+	if err != nil {
+		slog.Error("Error while JSON marshal", "error", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		return
+	}
+
+	fmt.Fprintf(w, "%s", body)
+}
+
+func resolveRootMarkdownTarget(root *os.Root, pathParam string) (string, string, error) {
+	info, err := root.Stat(pathParam)
+	if err == nil && info.IsDir() {
+		readme, readmeErr := app.FindReadmeFS(root.FS(), rootRelativePath(pathParam))
+		if readmeErr == nil {
+			return readme, path.Base(readme), nil
+		}
+	}
+
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return "", "", fmt.Errorf("%w: %s", app.ErrFileNotFound, pathParam)
 		}
 
-		fmt.Fprintf(w, "%s", body)
-	})
+		return "", "", fmt.Errorf("root stat error: %w", err)
+	}
+
+	return pathParam, path.Base(pathParam), nil
+}
+
+func normalizeRootPath(pathParam string) (string, bool) {
+	if strings.HasPrefix(pathParam, "/") {
+		return "", false
+	}
+
+	cleaned := path.Clean(pathParam)
+	if cleaned == ".." || strings.HasPrefix(cleaned, "../") {
+		return "", false
+	}
+
+	if cleaned == "." {
+		return ".", true
+	}
+
+	return cleaned, true
+}
+
+func readRootMarkdown(root *os.Root, path string) (string, error) {
+	b, err := root.ReadFile(path)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return "", fmt.Errorf("%w: %s", app.ErrFileNotFound, path)
+		}
+
+		return "", fmt.Errorf("root read error: %w", err)
+	}
+
+	t, _, err := transform.Bytes(rootNormalizer, b)
+	if err != nil {
+		return "", fmt.Errorf("CRLF normalization error: %w", err)
+	}
+
+	return string(t), nil
+}
+
+func writeMarkdownError(w http.ResponseWriter, err error) {
+	if errors.Is(err, app.ErrFileNotFound) {
+		http.Error(w, err.Error(), http.StatusNotFound)
+	} else {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func newLoggingResponseWriter(w http.ResponseWriter) *loggingResponseWriter {
@@ -309,6 +475,7 @@ func wrapHandler(wrappedHandler http.Handler) http.Handler {
 		wrappedHandler.ServeHTTP(lrw, r)
 
 		statusCode := lrw.statusCode
+		//nolint:gosec // Structured slog fields avoid string-built log injection here.
 		slog.Debug("HTTP request", "method", r.Method, "code", statusCode, "url", r.URL)
 	})
 }

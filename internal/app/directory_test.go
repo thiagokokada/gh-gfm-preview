@@ -104,7 +104,7 @@ func TestListDirectoryContents(t *testing.T) {
 	assert.Nil(t, err)
 
 	t.Run("only .md", func(t *testing.T) {
-		files, dirs, err := ListDirectoryContents(tmp, []string{".md"})
+		files, dirs, err := ListDirectoryContentsFS(os.DirFS(tmp), ".", []string{".md"})
 		assert.Nil(t, err)
 
 		wantFiles := []string{"a.md"}
@@ -115,7 +115,7 @@ func TestListDirectoryContents(t *testing.T) {
 	})
 
 	t.Run("multiple extensions", func(t *testing.T) {
-		files, _, err := ListDirectoryContents(tmp, []string{".md", ".txt"})
+		files, _, err := ListDirectoryContentsFS(os.DirFS(tmp), ".", []string{".md", ".txt"})
 		assert.Nil(t, err)
 
 		want := []string{"a.md", "b.txt"}
@@ -123,7 +123,7 @@ func TestListDirectoryContents(t *testing.T) {
 	})
 
 	t.Run("wildcard", func(t *testing.T) {
-		files, dirs, err := ListDirectoryContents(tmp, []string{"*"})
+		files, dirs, err := ListDirectoryContentsFS(os.DirFS(tmp), ".", []string{"*"})
 		assert.Nil(t, err)
 
 		wantFiles := []string{"a.md", "b.txt", "c.html"}

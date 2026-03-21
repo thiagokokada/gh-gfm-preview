@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"slices"
@@ -107,9 +108,9 @@ func ListMarkdownFiles(dir string, extensions []string) ([]string, error) {
 	return files, nil
 }
 
-// ListDirectoryContents lists only the immediate contents (files and directories) of a directory.
-func ListDirectoryContents(dir string, extensions []string) ([]string, []string, error) {
-	entries, err := os.ReadDir(dir)
+// ListDirectoryContentsFS lists only the immediate contents of a directory in fsys.
+func ListDirectoryContentsFS(fsys fs.FS, dir string, extensions []string) ([]string, []string, error) {
+	entries, err := fs.ReadDir(fsys, dir)
 	if err != nil {
 		return nil, nil, fmt.Errorf("error reading directory: %w", err)
 	}

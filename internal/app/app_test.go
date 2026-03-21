@@ -36,19 +36,19 @@ func TestTargetFile(t *testing.T) {
 }
 
 func TestFindReadme(t *testing.T) {
-	actual, err := FindReadme("../../testdata/subdir")
+	actual, err := FindReadmeFS(os.DirFS("../../testdata/subdir"), ".")
 	assert.Nil(t, err)
 
-	expected := "../../testdata/subdir/README.md"
+	expected := "README.md"
 
 	assert.Equal(t, actual, expected)
 
-	actual, _ = FindReadme("../../testdata")
-	expected = "../../testdata/README"
+	actual, _ = FindReadmeFS(os.DirFS("../../testdata"), ".")
+	expected = "README"
 
 	assert.Equal(t, actual, expected)
 
-	_, err = FindReadme("../../cmd")
+	_, err = FindReadmeFS(os.DirFS("../../cmd"), ".")
 	assert.NotNil(t, err)
 }
 

@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -14,17 +15,31 @@ import (
 
 const testDataDir = "../../testdata"
 
-func TestDirectoryBrowsingMode(t *testing.T) {
-	testDir := testDataDir
-	param := &Param{
+func newDirectoryModeParam(t *testing.T) *Param {
+	t.Helper()
+
+	root, err := os.OpenRoot(testDataDir)
+	assert.Nil(t, err)
+
+	t.Cleanup(func() {
+		assert.Nil(t, root.Close())
+	})
+
+	return &Param{
 		DirectoryListing:               true,
 		DirectoryListingShowExtensions: ".md",
 		DirectoryListingTextExtensions: ".md,.txt",
 		IsDirectoryMode:                true,
-		DirectoryPath:                  testDir,
-		ReadmeFile:                     filepath.Join(testDir, "README"),
+		DirectoryPath:                  testDataDir,
+		DirectoryRoot:                  root,
+		ReadmeFile:                     filepath.Join(testDataDir, "README"),
 		Reload:                         false,
 	}
+}
+
+func TestDirectoryBrowsingMode(t *testing.T) {
+	testDir := testDataDir
+	param := newDirectoryModeParam(t)
 
 	watcher, err := watcher.Init(testDir)
 	assert.Nil(t, err)
@@ -62,15 +77,7 @@ func TestDirectoryBrowsingMode(t *testing.T) {
 
 func TestSubdirectoryReadmeAccess(t *testing.T) {
 	testDir := testDataDir
-	param := &Param{
-		DirectoryListing:               true,
-		DirectoryListingShowExtensions: ".md",
-		DirectoryListingTextExtensions: ".md,.txt",
-		IsDirectoryMode:                true,
-		DirectoryPath:                  testDir,
-		ReadmeFile:                     filepath.Join(testDir, "README"),
-		Reload:                         false,
-	}
+	param := newDirectoryModeParam(t)
 
 	watcher, err := watcher.Init(testDir)
 	assert.Nil(t, err)
@@ -137,15 +144,7 @@ func TestSubdirectoryReadmeAccess(t *testing.T) {
 
 func Test404ErrorRendering(t *testing.T) {
 	testDir := testDataDir
-	param := &Param{
-		DirectoryListing:               true,
-		DirectoryListingShowExtensions: ".md",
-		DirectoryListingTextExtensions: ".md,.txt",
-		IsDirectoryMode:                true,
-		DirectoryPath:                  testDir,
-		ReadmeFile:                     filepath.Join(testDir, "README"),
-		Reload:                         false,
-	}
+	param := newDirectoryModeParam(t)
 
 	watcher, _ := watcher.Init(testDir)
 	defer watcher.Close()
@@ -290,15 +289,7 @@ func TestGenerateFileTree(t *testing.T) {
 
 func TestServerRenderedHeadingsList(t *testing.T) {
 	testDir := testDataDir
-	param := &Param{
-		DirectoryListing:               true,
-		DirectoryListingShowExtensions: ".md",
-		DirectoryListingTextExtensions: ".md,.txt",
-		IsDirectoryMode:                true,
-		DirectoryPath:                  testDir,
-		ReadmeFile:                     filepath.Join(testDir, "README"),
-		Reload:                         false,
-	}
+	param := newDirectoryModeParam(t)
 
 	watcher, err := watcher.Init(testDir)
 	assert.Nil(t, err)
@@ -325,15 +316,7 @@ func TestServerRenderedHeadingsList(t *testing.T) {
 
 func TestFileBrowserButtonDisabledState(t *testing.T) {
 	testDir := testDataDir
-	param := &Param{
-		DirectoryListing:               true,
-		DirectoryListingShowExtensions: ".md",
-		DirectoryListingTextExtensions: ".md,.txt",
-		IsDirectoryMode:                true,
-		DirectoryPath:                  testDir,
-		ReadmeFile:                     filepath.Join(testDir, "README"),
-		Reload:                         false,
-	}
+	param := newDirectoryModeParam(t)
 
 	watcher, err := watcher.Init(testDir)
 	assert.Nil(t, err)
