@@ -103,6 +103,77 @@ func TestMdHandlerWithoutHeadings(t *testing.T) {
 	assert.Equal(t, payload.HeadingsHTML, "")
 }
 
+func TestMdHandlerDirectoryModeUsesReadmeForTrailingSlashPath(t *testing.T) {
+	root, err := os.OpenRoot("../../testdata")
+	assert.Nil(t, err)
+
+	defer root.Close()
+
+	param := &Param{
+		DirectoryListing:               true,
+		DirectoryListingShowExtensions: ".md",
+		DirectoryListingTextExtensions: ".md,.txt",
+		IsDirectoryMode:                true,
+		DirectoryPath:                  "../../testdata",
+		DirectoryRoot:                  root,
+		Reload:                         false,
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/__/md?path=subdir/", nil)
+	rec := httptest.NewRecorder()
+
+	mdHandler("", param).ServeHTTP(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+
+	assert.Equal(t, res.StatusCode, http.StatusOK)
+	assert.Equal(t, res.Header.Get("Content-Type"), "text/html; charset=utf-8")
+
+	body, err := io.ReadAll(res.Body)
+	assert.Nil(t, err)
+
+	var payload mdResponseJSON
+
+	err = json.Unmarshal(body, &payload)
+	assert.Nil(t, err)
+
+	assert.Equal(t, payload.Title, "README.md")
+	assert.True(t, strings.Contains(payload.HTML, "Subdirectory README"))
+}
+
+func TestMdHandlerDirectoryModeRejectsEscapingPaths(t *testing.T) {
+	root, err := os.OpenRoot("../../testdata")
+	assert.Nil(t, err)
+
+	defer root.Close()
+
+	param := &Param{
+		DirectoryListing:               true,
+		DirectoryListingShowExtensions: ".md",
+		DirectoryListingTextExtensions: ".md,.txt",
+		IsDirectoryMode:                true,
+		DirectoryPath:                  "../../testdata",
+		DirectoryRoot:                  root,
+		Reload:                         false,
+	}
+
+	for _, path := range []string{"../README.md", "/README.md"} {
+		t.Run(path, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, "/__/md?path="+path, nil)
+			rec := httptest.NewRecorder()
+
+			mdHandler("", param).ServeHTTP(rec, req)
+
+			res := rec.Result()
+			defer res.Body.Close()
+
+			assert.Equal(t, res.StatusCode, http.StatusNotFound)
+			assert.Equal(t, res.Header.Get("Content-Type"), "text/plain; charset=utf-8")
+		})
+	}
+}
+
 func TestWrapHandler(t *testing.T) {
 	wrappedHandler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		fmt.Fprintln(w, "Hello")

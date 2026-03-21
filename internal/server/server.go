@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -342,7 +343,14 @@ func mdResponseFromRoot(w http.ResponseWriter, pathParam string, param *Param) (
 		return writeMarkdownReadError(w, errNoDirectoryRoot), "", errNoDirectoryRoot
 	}
 
-	file, title, err := resolveRootMarkdownTarget(param.DirectoryRoot, pathParam)
+	normalizedPath, ok := normalizeRootPath(pathParam)
+	if !ok {
+		err := fmt.Errorf("%w: %s", app.ErrFileNotFound, pathParam)
+
+		return writeMarkdownReadError(w, err), "", err
+	}
+
+	file, title, err := resolveRootMarkdownTarget(param.DirectoryRoot, normalizedPath)
 	if err != nil {
 		return writeMarkdownReadError(w, err), "", err
 	}
@@ -380,6 +388,23 @@ func resolveRootMarkdownTarget(root *os.Root, pathParam string) (string, string,
 	}
 
 	return pathParam, filepath.Base(pathParam), nil
+}
+
+func normalizeRootPath(pathParam string) (string, bool) {
+	if strings.HasPrefix(pathParam, "/") {
+		return "", false
+	}
+
+	cleaned := path.Clean(pathParam)
+	if cleaned == ".." || strings.HasPrefix(cleaned, "../") {
+		return "", false
+	}
+
+	if cleaned == "." {
+		return ".", true
+	}
+
+	return cleaned, true
 }
 
 func readRootMarkdown(root *os.Root, path string) (string, error) {
