@@ -6,6 +6,7 @@
     <title id="markdown-title">{{ .Title }}</title>
     <link rel="icon" type="image/svg+xml" href="/static/generated/favicon.svg" />
     <link rel="stylesheet" href="/static/directory-listing.css" />
+    <link rel="stylesheet" href="/static/generated/leaflet.css" />
     {{ if eq .Mode "dark" }}
     <link rel="stylesheet" href="/static/generated/chroma-github-dark.css" />
     <link rel="stylesheet" href="/static/generated/github-markdown-dark.css" />
@@ -67,10 +68,34 @@
       position: absolute;
       top: 8px;
       right: 8px;
+      z-index: 1000;
       border-radius: 5px;
       padding: 5px;
       transition: border-width 0.2s ease;
       cursor: pointer;
+    }
+
+    .markdown-body pre.diagram-map-pre {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .markdown-body pre.diagram-map-pre > code.diagram-map-code {
+      display: block;
+      padding: 0;
+      background: transparent;
+      overflow: hidden;
+    }
+
+    .leaflet-diagram-map {
+      height: 310px;
+      min-height: 310px;
+      width: 100%;
+    }
+
+    .leaflet-diagram-map .leaflet-control-attribution,
+    .leaflet-diagram-map .leaflet-control-zoom a {
+      font-size: 11px;
     }
 
     .copy-button svg.copy-icon {
@@ -90,6 +115,11 @@
     @media (max-width: 767px) {
       .markdown-body {
         padding: 15px;
+      }
+
+      .leaflet-diagram-map {
+        height: 260px;
+        min-height: 260px;
       }
     }
     </style>
@@ -252,6 +282,8 @@
     </script>
     <script id="MathJax-script" type="text/javascript" src="/static/generated/tex-mml-chtml.min.js"></script>
     <script type="text/javascript" src="/static/generated/mermaid.min.js"></script>
+    <script type="text/javascript" src="/static/generated/leaflet.js"></script>
+    <script type="text/javascript" src="/static/generated/topojson-client.min.js"></script>
     <script type="text/javascript" src="/static/script.js"></script>
   </body>
 
