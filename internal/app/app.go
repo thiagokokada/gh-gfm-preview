@@ -79,6 +79,7 @@ func ToHTML(markdown string, isMarkdownMode bool) (string, error) {
 			},
 			emoji.Emoji,
 			extension.Footnote,
+			newFootnoteExtender(),
 			extension.GFM,
 			highlighting.NewHighlighting(
 				highlighting.WithFormatOptions(
