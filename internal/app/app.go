@@ -78,6 +78,7 @@ func ToHTML(markdown string, isMarkdownMode bool) (string, error) {
 				Unsafe: true, // anchorIcon is a <svg> and needs to be added unescaped
 			},
 			emoji.Emoji,
+			extension.Footnote,
 			extension.GFM,
 			highlighting.NewHighlighting(
 				highlighting.WithFormatOptions(
