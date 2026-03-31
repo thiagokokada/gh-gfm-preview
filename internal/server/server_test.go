@@ -103,6 +103,66 @@ func TestMdHandlerWithoutHeadings(t *testing.T) {
 	assert.Equal(t, payload.HeadingsHTML, "")
 }
 
+func TestMdHandlerRendersFootnotesInGFMMode(t *testing.T) {
+	filename := "../../testdata/footnotes.md"
+
+	req := httptest.NewRequest(http.MethodGet, "/__/md", nil)
+	rec := httptest.NewRecorder()
+
+	mdHandler(filename, &Param{}).ServeHTTP(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+
+	assert.Equal(t, res.StatusCode, http.StatusOK)
+	assert.Equal(t, res.Header.Get("Content-Type"), "text/html; charset=utf-8")
+
+	body, err := io.ReadAll(res.Body)
+	assert.Nil(t, err)
+
+	var payload mdResponseJSON
+
+	err = json.Unmarshal(body, &payload)
+	assert.Nil(t, err)
+
+	assert.True(t, strings.Contains(payload.HTML, `<sup id="fnref:1"><a href="#fn:1"`))
+	assert.True(t, strings.Contains(payload.HTML, `<sup id="fnref1:1"><a href="#fn:1"`))
+	assert.True(t, strings.Contains(payload.HTML, `<div class="footnotes" role="doc-endnotes">`))
+	assert.True(t, strings.Contains(payload.HTML, `<li id="fn:1">`))
+	assert.True(t, strings.Contains(payload.HTML, `role="doc-backlink">&#x21a9;&#xfe0e;</a>`))
+	assert.True(t, strings.Contains(payload.HTML, `role="doc-backlink">&#x21a9;&#xfe0e;<sup>2</sup></a>`))
+	assert.True(t, strings.Contains(payload.HTML, `role="doc-backlink">&#x21a9;&#xfe0e;<sup>3</sup></a>`))
+	assert.True(t, strings.Contains(payload.HTML, `role="doc-backlink">&#x21a9;&#xfe0e;<sup>4</sup></a>`))
+	assert.True(t, strings.Contains(payload.HTML, `Footnotes are part of GitHub flavored markdown.`))
+	assert.True(t, strings.Contains(payload.HTML, `<em>emphasis</em>`))
+	assert.True(t, strings.Contains(payload.HTML, `<code>code</code>`))
+}
+
+func TestMdHandlerDoesNotRenderFootnotesInMarkdownMode(t *testing.T) {
+	filename := "../../testdata/footnotes.md"
+
+	req := httptest.NewRequest(http.MethodGet, "/__/md", nil)
+	rec := httptest.NewRecorder()
+
+	mdHandler(filename, &Param{MarkdownMode: true}).ServeHTTP(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+
+	assert.Equal(t, res.StatusCode, http.StatusOK)
+
+	body, err := io.ReadAll(res.Body)
+	assert.Nil(t, err)
+
+	var payload mdResponseJSON
+
+	err = json.Unmarshal(body, &payload)
+	assert.Nil(t, err)
+
+	assert.False(t, strings.Contains(payload.HTML, `<div class="footnotes"`))
+	assert.True(t, strings.Contains(payload.HTML, `[^gfm]`))
+}
+
 func TestMdHandlerUsesPathQueryInSingleFileMode(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/__/md?path=subdir/README.md", nil)
 	rec := httptest.NewRecorder()
