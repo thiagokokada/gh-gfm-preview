@@ -14,7 +14,7 @@ const footnoteBacklinkHTML = "&#x21a9;&#xfe0e;"
 
 type footnoteBacklinkExtender struct{}
 
-func newFootnoteExtender() goldmark.Extender {
+func newFootnoteExtender() *footnoteBacklinkExtender {
 	return &footnoteBacklinkExtender{}
 }
 
@@ -31,25 +31,33 @@ func (r *footnoteBacklinkHTMLRenderer) RegisterFuncs(reg renderer.NodeRendererFu
 }
 
 func (r *footnoteBacklinkHTMLRenderer) renderFootnoteBacklink(
-	w util.BufWriter, source []byte, node ast.Node, entering bool,
+	w util.BufWriter, _ []byte, node ast.Node, entering bool,
 ) (ast.WalkStatus, error) {
 	if entering {
-		n := node.(*extast.FootnoteBacklink)
+		n, ok := node.(*extast.FootnoteBacklink)
+		if !ok {
+			return ast.WalkStop, nil
+		}
+
 		is := strconv.Itoa(n.Index)
 
 		_, _ = w.WriteString(`&#160;<a href="#fnref`)
 		if n.RefIndex > 0 {
 			_, _ = w.WriteString(strconv.Itoa(n.RefIndex))
 		}
+
 		_, _ = w.WriteString(`:`)
 		_, _ = w.WriteString(is)
 		_, _ = w.WriteString(`" role="doc-backlink">`)
+
 		_, _ = w.WriteString(footnoteBacklinkHTML)
+
 		if n.RefIndex > 0 {
 			_, _ = w.WriteString(`<sup>`)
 			_, _ = w.WriteString(strconv.Itoa(n.RefIndex + 1))
 			_, _ = w.WriteString(`</sup>`)
 		}
+
 		_, _ = w.WriteString(`</a>`)
 	}
 
