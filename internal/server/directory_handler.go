@@ -30,7 +30,12 @@ func handleDirectoryMode(w http.ResponseWriter, r *http.Request, param *Param, w
 		return
 	}
 
-	currentHostPath := directoryHostPath(param.DirectoryPath, currentURLPath)
+	var currentHostPath string
+	if info.IsDir() {
+		currentHostPath = directoryHostPath(param.DirectoryPath, currentURLPath)
+	} else {
+		currentHostPath = directoryHostPath(param.DirectoryPath, getParentPath(currentURLPath))
+	}
 
 	err = watcher.AddDirectory(currentHostPath)
 	if err != nil {

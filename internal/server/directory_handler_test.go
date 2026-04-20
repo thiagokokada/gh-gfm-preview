@@ -219,6 +219,32 @@ func Test404ErrorRendering(t *testing.T) {
 	}
 }
 
+func TestDirectoryHostPathUsesParentDirectoryForFileWatches(t *testing.T) {
+	filePath := filepath.Join(testDataDir, "images", "dinotocat.png")
+	info, err := os.Stat(filePath)
+	assert.Nil(t, err)
+
+	got := directoryHostPath(testDataDir, "images/dinotocat.png")
+	if !info.IsDir() {
+		got = directoryHostPath(testDataDir, getParentPath("images/dinotocat.png"))
+	}
+
+	assert.Equal(t, got, filepath.Join(testDataDir, "images"))
+}
+
+func TestDirectoryHostPathUsesCurrentDirectoryForDirectoryWatches(t *testing.T) {
+	dirPath := filepath.Join(testDataDir, "subdir")
+	info, err := os.Stat(dirPath)
+	assert.Nil(t, err)
+
+	got := directoryHostPath(testDataDir, "subdir")
+	if !info.IsDir() {
+		got = directoryHostPath(testDataDir, getParentPath("subdir"))
+	}
+
+	assert.Equal(t, got, filepath.Join(testDataDir, "subdir"))
+}
+
 func TestGenerateFileTree(t *testing.T) {
 	tests := []struct {
 		name        string
