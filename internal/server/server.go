@@ -132,10 +132,7 @@ func (server *Server) Serve(param *Param) error {
 
 	watchTarget := watcherTarget(filename, dir, param)
 
-	watcher, err := initWatcher(watchTarget, param)
-	if err != nil {
-		return fmt.Errorf("error while file watcher init for %s: %w", watchTarget, err)
-	}
+	watcher := initWatcher(watchTarget, param)
 	defer watcher.Close()
 
 	serveMux := http.NewServeMux()
@@ -188,16 +185,17 @@ func watcherTarget(filename, dir string, param *Param) string {
 	return dir
 }
 
-func initWatcher(watchTarget string, param *Param) (*watcher.Watcher, error) {
+func initWatcher(watchTarget string, param *Param) *watcher.Watcher {
 	w, err := watcher.Init(watchTarget)
 	if err == nil {
-		return w, nil
+		return w
 	}
 
 	slog.Warn("File watcher unavailable, live reload disabled", "path", watchTarget, "error", err)
+
 	param.Reload = false
 
-	return watcher.NewDisabled(), nil
+	return watcher.NewDisabled()
 }
 
 func handler(filename string, param *Param, handler http.Handler, watcher *watcher.Watcher) http.Handler {

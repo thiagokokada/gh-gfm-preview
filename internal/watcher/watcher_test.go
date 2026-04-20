@@ -149,6 +149,7 @@ func TestInit_FileWatchIgnoresBrokenSiblingSymlink(t *testing.T) {
 
 	w, err := Init(filePath)
 	assert.Nil(t, err)
+
 	defer w.Close()
 
 	go w.Watch()

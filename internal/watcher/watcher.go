@@ -115,35 +115,7 @@ func (w *Watcher) Watch() {
 				continue
 			}
 
-			path := event.Name
-			op := event.Op
-			base := filepath.Base(path)
-
-			if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
-				if re.MatchString(base) {
-					slog.Debug("FS event from ignored pattern", "op", op, "path", path)
-
-					continue
-				}
-
-				if !mu.TryLock() {
-					slog.Debug("FS event debounced", "op", op, "path", path)
-
-					continue
-				}
-
-				slog.Debug("FS event", "op", op, "path", path)
-
-				go func() {
-					defer mu.Unlock()
-
-					slog.Info("Change detected, refreshing", "path", event.Name)
-
-					w.MessageCh <- ReloadMessage
-
-					time.Sleep(lockTime)
-				}()
-			}
+			w.handleEvent(event, re, &mu)
 		case err := <-w.watcher.Errors:
 			slog.Error("FS watcher error", "error", err)
 
@@ -152,4 +124,38 @@ func (w *Watcher) Watch() {
 			return
 		}
 	}
+}
+
+func (w *Watcher) handleEvent(event fsnotify.Event, re *regexp.Regexp, mu *sync.Mutex) {
+	if !event.Has(fsnotify.Write) && !event.Has(fsnotify.Create) {
+		return
+	}
+
+	path := event.Name
+	op := event.Op
+	base := filepath.Base(path)
+
+	if re.MatchString(base) {
+		slog.Debug("FS event from ignored pattern", "op", op, "path", path)
+
+		return
+	}
+
+	if !mu.TryLock() {
+		slog.Debug("FS event debounced", "op", op, "path", path)
+
+		return
+	}
+
+	slog.Debug("FS event", "op", op, "path", path)
+
+	go func() {
+		defer mu.Unlock()
+
+		slog.Info("Change detected, refreshing", "path", event.Name)
+
+		w.MessageCh <- ReloadMessage
+
+		time.Sleep(lockTime)
+	}()
 }

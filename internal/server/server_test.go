@@ -322,12 +322,11 @@ func TestInitWatcherDisablesReloadOnInitError(t *testing.T) {
 		Reload: true,
 	}
 
-	w, err := initWatcher(filepath.Join(t.TempDir(), "missing"), param)
-	assert.Nil(t, err)
+	w := initWatcher(filepath.Join(t.TempDir(), "missing"), param)
 	assert.NotNil(t, w)
 	assert.False(t, param.Reload)
 
-	err = w.AddDirectory("anywhere")
+	err := w.AddDirectory("anywhere")
 	assert.Nil(t, err)
 
 	err = w.Close()
