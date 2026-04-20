@@ -64,8 +64,12 @@ func resolveFileMode(param *Param) (string, string, error) {
 	info, statErr := os.Stat(inputPath)
 	isDir := statErr == nil && info.IsDir()
 
-	if isDir && param.DirectoryListing {
-		return setupDirectoryMode(param, inputPath)
+	if param.DirectoryListing {
+		if isDir {
+			return setupDirectoryMode(param, inputPath)
+		}
+
+		return setupDirectoryMode(param, filepath.Dir(inputPath))
 	}
 
 	return setupFileMode(param, inputPath)
@@ -126,9 +130,11 @@ func (server *Server) Serve(param *Param) error {
 		return fmt.Errorf("failed to get static subdirectory: %w", err)
 	}
 
-	watcher, err := watcher.Init(dir)
+	watchTarget := watcherTarget(filename, dir, param)
+
+	watcher, err := watcher.Init(watchTarget)
 	if err != nil {
-		return fmt.Errorf("error while file watcher init: %w", err)
+		return fmt.Errorf("error while file watcher init for %s: %w", watchTarget, err)
 	}
 	defer watcher.Close()
 
@@ -172,6 +178,14 @@ func (server *Server) Serve(param *Param) error {
 	}
 
 	return nil
+}
+
+func watcherTarget(filename, dir string, param *Param) string {
+	if !param.IsDirectoryMode && filename != "" {
+		return filename
+	}
+
+	return dir
 }
 
 func handler(filename string, param *Param, handler http.Handler, watcher *watcher.Watcher) http.Handler {
