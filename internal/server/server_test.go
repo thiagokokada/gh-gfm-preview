@@ -280,3 +280,19 @@ func TestWrapHandler(t *testing.T) {
 
 	assert.Equal(t, res.StatusCode, http.StatusOK)
 }
+
+func TestInitWatcherDisablesReloadOnInitError(t *testing.T) {
+	param := &Param{
+		Reload: true,
+	}
+
+	w := initWatcher(filepath.Join(t.TempDir(), "missing"), param)
+	assert.NotNil(t, w)
+	assert.False(t, param.Reload)
+
+	err := w.AddDirectory("anywhere")
+	assert.Nil(t, err)
+
+	err = w.Close()
+	assert.Nil(t, err)
+}

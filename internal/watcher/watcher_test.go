@@ -135,3 +135,11 @@ func TestWatch_DebounceLogic(t *testing.T) {
 	assert.True(t, counter.Load() > 0)
 	assert.True(t, counter.Load() <= 5)
 }
+
+func TestInit_ReturnsErrorForMissingPath(t *testing.T) {
+	missingPath := filepath.Join(t.TempDir(), "missing")
+
+	w, err := Init(missingPath)
+	assert.Nil(t, w)
+	assert.True(t, err != nil)
+}

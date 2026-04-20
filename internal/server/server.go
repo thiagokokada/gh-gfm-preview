@@ -126,10 +126,9 @@ func (server *Server) Serve(param *Param) error {
 		return fmt.Errorf("failed to get static subdirectory: %w", err)
 	}
 
-	watcher, err := watcher.Init(dir)
-	if err != nil {
-		return fmt.Errorf("error while file watcher init: %w", err)
-	}
+	watchTarget := watcherTarget(dir)
+
+	watcher := initWatcher(watchTarget, param)
 	defer watcher.Close()
 
 	serveMux := http.NewServeMux()
@@ -172,6 +171,23 @@ func (server *Server) Serve(param *Param) error {
 	}
 
 	return nil
+}
+
+func watcherTarget(dir string) string {
+	return dir
+}
+
+func initWatcher(watchTarget string, param *Param) *watcher.Watcher {
+	w, err := watcher.Init(watchTarget)
+	if err == nil {
+		return w
+	}
+
+	slog.Warn("File watcher unavailable, live reload disabled", "path", watchTarget, "error", err)
+
+	param.Reload = false
+
+	return watcher.NewDisabled()
 }
 
 func handler(filename string, param *Param, handler http.Handler, watcher *watcher.Watcher) http.Handler {
