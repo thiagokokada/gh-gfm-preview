@@ -281,42 +281,6 @@ func TestWrapHandler(t *testing.T) {
 	assert.Equal(t, res.StatusCode, http.StatusOK)
 }
 
-func TestResolveFileModeDirectoryListingUsesParentDirectoryForFiles(t *testing.T) {
-	tmpDir := t.TempDir()
-	filePath := filepath.Join(tmpDir, "screenshot.png")
-	err := os.WriteFile(filePath, []byte("png"), 0o600)
-	assert.Nil(t, err)
-
-	param := &Param{
-		Filename:         filePath,
-		DirectoryListing: true,
-	}
-
-	filename, dir, err := resolveFileMode(param)
-	assert.Nil(t, err)
-
-	assert.Equal(t, filename, "")
-	assert.Equal(t, dir, tmpDir)
-	assert.True(t, param.IsDirectoryMode)
-	assert.Equal(t, param.DirectoryPath, tmpDir)
-}
-
-func TestWatcherTargetSingleFileModeUsesFilename(t *testing.T) {
-	param := &Param{}
-
-	target := watcherTarget("README.md", ".", param)
-
-	assert.Equal(t, target, "README.md")
-}
-
-func TestWatcherTargetDirectoryModeUsesDirectory(t *testing.T) {
-	param := &Param{IsDirectoryMode: true}
-
-	target := watcherTarget("README.md", ".", param)
-
-	assert.Equal(t, target, ".")
-}
-
 func TestInitWatcherDisablesReloadOnInitError(t *testing.T) {
 	param := &Param{
 		Reload: true,

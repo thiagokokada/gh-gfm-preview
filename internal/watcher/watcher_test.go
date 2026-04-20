@@ -135,33 +135,3 @@ func TestWatch_DebounceLogic(t *testing.T) {
 	assert.True(t, counter.Load() > 0)
 	assert.True(t, counter.Load() <= 5)
 }
-
-func TestInit_FileWatchIgnoresBrokenSiblingSymlink(t *testing.T) {
-	dir, cleanup := setupTestDir(t)
-	defer cleanup()
-
-	filePath := filepath.Join(dir, "test.md")
-	err := os.WriteFile(filePath, []byte("initial"), 0o600)
-	assert.Nil(t, err)
-
-	err = os.Symlink(filepath.Join(dir, "missing-target"), filepath.Join(dir, "broken-link"))
-	assert.Nil(t, err)
-
-	w, err := Init(filePath)
-	assert.Nil(t, err)
-
-	defer w.Close()
-
-	go w.Watch()
-
-	time.Sleep(50 * time.Millisecond)
-
-	err = os.WriteFile(filePath, []byte("updated"), 0o600)
-	assert.Nil(t, err)
-
-	select {
-	case <-w.MessageCh:
-	case <-time.After(1 * time.Second):
-		t.Fatal("timeout waiting for file write event with broken sibling symlink present")
-	}
-}
