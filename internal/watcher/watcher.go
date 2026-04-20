@@ -56,6 +56,14 @@ func Init(dir string) (*Watcher, error) {
 
 	err = watcher.AddDirectory(dir)
 	if err != nil {
+		closeErr := fsWatcher.Close()
+		if closeErr != nil {
+			return nil, fmt.Errorf(
+				"close watcher after init failure: %w",
+				errors.Join(closeErr, err),
+			)
+		}
+
 		return nil, err
 	}
 
