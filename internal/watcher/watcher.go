@@ -31,6 +31,14 @@ type Watcher struct {
 	watchedDirs sync.Map
 }
 
+func NewDisabled() *Watcher {
+	return &Watcher{
+		DoneCh:    make(chan struct{}),
+		ErrorCh:   make(chan error),
+		MessageCh: make(chan []byte, 1),
+	}
+}
+
 func Init(dir string) (*Watcher, error) {
 	fsWatcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -55,6 +63,10 @@ func Init(dir string) (*Watcher, error) {
 }
 
 func (w *Watcher) Close() error {
+	if w == nil || w.watcher == nil {
+		return nil
+	}
+
 	err := w.watcher.Close()
 	if err != nil {
 		return fmt.Errorf("error during watcher close call: %w", err)
@@ -66,6 +78,10 @@ func (w *Watcher) Close() error {
 func (w *Watcher) AddDirectory(dir string) error {
 	if w == nil {
 		return ErrWatcherNotInitialized
+	}
+
+	if w.watcher == nil {
+		return nil
 	}
 
 	if _, loaded := w.watchedDirs.LoadOrStore(dir, true); loaded {
@@ -85,6 +101,10 @@ func (w *Watcher) AddDirectory(dir string) error {
 }
 
 func (w *Watcher) Watch() {
+	if w == nil || w.watcher == nil {
+		return
+	}
+
 	re := regexp.MustCompile(ignorePattern)
 	mu := sync.Mutex{}
 

@@ -316,3 +316,20 @@ func TestWatcherTargetDirectoryModeUsesDirectory(t *testing.T) {
 
 	assert.Equal(t, target, ".")
 }
+
+func TestInitWatcherDisablesReloadOnInitError(t *testing.T) {
+	param := &Param{
+		Reload: true,
+	}
+
+	w, err := initWatcher(filepath.Join(t.TempDir(), "missing"), param)
+	assert.Nil(t, err)
+	assert.NotNil(t, w)
+	assert.False(t, param.Reload)
+
+	err = w.AddDirectory("anywhere")
+	assert.Nil(t, err)
+
+	err = w.Close()
+	assert.Nil(t, err)
+}
