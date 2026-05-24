@@ -27,7 +27,11 @@
       : "dark"
     );
     window.mermaid.initialize({startOnLoad: false, theme});
-    await window.mermaid.run({querySelector: mermaidQuery});
+    try {
+      await window.mermaid.run({querySelector: mermaidQuery});
+    } catch (error) {
+      console.error(error);
+    }
     setupMermaidPanZoom();
   }
 
