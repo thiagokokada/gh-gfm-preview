@@ -48,12 +48,13 @@ func Execute() {
 		logLevel.Set(slog.LevelDebug)
 	}
 
+	if !(*noColor) {
+		*noColor = getNoColorFromEnv()
+	}
+
 	h := slog.New(tint.NewHandler(
 		os.Stdout,
-		&tint.Options{
-			Level:   logLevel,
-			NoColor: *noColor || os.Getenv("NO_COLOR") == "1",
-		},
+		&tint.Options{Level: logLevel, NoColor: *noColor},
 	))
 	slog.SetDefault(h)
 
@@ -115,4 +116,14 @@ func getVersion() string {
 	}
 
 	return buildInfo.Main.Version
+}
+
+func getNoColorFromEnv() bool {
+	// https://no-color.org/
+	env, ok := os.LookupEnv("NO_COLOR")
+	if ok {
+		return env != ""
+	}
+
+	return false
 }
