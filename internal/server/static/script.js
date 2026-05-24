@@ -30,7 +30,7 @@
     try {
       await window.mermaid.run({querySelector: mermaidQuery});
     } catch (error) {
-      console.error(error);
+      console.error("Failed to render Mermaid diagrams:", error);
     }
     setupMermaidPanZoom();
   }
