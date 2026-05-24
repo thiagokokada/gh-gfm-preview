@@ -8,6 +8,7 @@ import (
 	"runtime/debug"
 
 	"github.com/lmittmann/tint"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/pflag"
 	"github.com/thiagokokada/gh-gfm-preview/internal/server"
 )
@@ -52,10 +53,11 @@ func Execute() {
 		*noColor = getNoColorFromEnv()
 	}
 
-	h := slog.New(tint.NewHandler(
-		os.Stdout,
-		&tint.Options{Level: logLevel, NoColor: *noColor},
-	))
+	w := os.Stdout
+	h := slog.New(tint.NewHandler(w, &tint.Options{
+		Level:   logLevel,
+		NoColor: *noColor || !isatty.IsTerminal(w.Fd()),
+	}))
 	slog.SetDefault(h)
 
 	// Detect stdin usage

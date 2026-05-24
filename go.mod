@@ -8,6 +8,7 @@ require (
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/lmittmann/tint v1.1.3
+	github.com/mattn/go-isatty v0.0.22
 	github.com/spf13/pflag v1.0.10
 	github.com/thiagokokada/goldmark-gh-alerts v0.0.0-20250302164040-cf407c0ddfaf
 	github.com/yuin/goldmark v1.8.2
