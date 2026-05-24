@@ -27,3 +27,10 @@ stateDiagram
 graph TD
   A["A<br/>B"]
 ```
+
+## regression: https://github.com/thiagokokada/gh-gfm-preview/issues/99
+
+```mermaid
+graph LR
+   Astral-->Bamboozle-->Catalyst-->Dapper-->Effervescent-->Fjord-->Gossamer-->Halcyon-->Ineffable-->Juxtapose-->Kerfuffle-->Luminous-->Mellifluous
+```
