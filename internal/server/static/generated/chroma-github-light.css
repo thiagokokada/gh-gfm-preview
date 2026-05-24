@@ -56,6 +56,7 @@
 /* LiteralNumberOct */ .chroma .mo { color: #0550ae }
 /* Operator */ .chroma .o { color: #0550ae }
 /* OperatorWord */ .chroma .ow { color: #0550ae }
+/* OperatorReserved */ .chroma .or { color: #0550ae }
 /* Punctuation */ .chroma .p { color: #1f2328 }
 /* Comment */ .chroma .c { color: #57606a }
 /* CommentHashbang */ .chroma .ch { color: #57606a }
