@@ -75,6 +75,144 @@
       cursor: pointer;
     }
 
+    .markdown-body pre.diagram-mermaid-pre {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .markdown-body pre.diagram-mermaid-pre > code.diagram-mermaid-code {
+      display: block;
+      padding: 0;
+      background: transparent;
+      overflow: hidden;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .mermaid-reset-btn {
+      background-color: transparent;
+      border: 1px solid #30363d;
+      bottom: 8px;
+      border-radius: 5px;
+      color: #9198a1;
+      cursor: pointer;
+      font-size: 12px;
+      line-height: 1.4;
+      padding: 3px 8px;
+      position: absolute;
+      right: 8px;
+      transition: border-color 0.2s ease, color 0.2s ease;
+      z-index: 1000;
+    }
+
+    .mermaid-reset-btn:hover {
+      border-color: #6e7681;
+      color: #c9d1d9;
+    }
+
+    .mermaid-expand-btn {
+      background-color: transparent;
+      border: none;
+      cursor: pointer;
+      left: 8px;
+      padding: 5px;
+      position: absolute;
+      top: 8px;
+      z-index: 1000;
+    }
+
+    .mermaid-expand-btn svg {
+      display: block;
+      fill: #9198a1;
+      transition: fill 0.2s ease;
+    }
+
+    .mermaid-expand-btn:hover svg {
+      fill: #c9d1d9;
+    }
+
+    .mermaid-overlay {
+      background-color: rgba(0, 0, 0, 0.85);
+      display: none;
+      inset: 0;
+      position: fixed;
+      z-index: 10000;
+    }
+
+    .mermaid-overlay.is-open {
+      display: block;
+    }
+
+    .mermaid-overlay-inner {
+      cursor: grab;
+      height: 100%;
+      overflow: hidden;
+      touch-action: none;
+      user-select: none;
+      width: 100%;
+    }
+
+    .mermaid-overlay-close {
+      background-color: transparent;
+      border: 1px solid #30363d;
+      border-radius: 5px;
+      color: #9198a1;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      padding: 4px 10px;
+      position: absolute;
+      right: 16px;
+      top: 16px;
+      transition: border-color 0.2s ease, color 0.2s ease;
+      z-index: 1;
+    }
+
+    .mermaid-overlay-close:hover {
+      border-color: #6e7681;
+      color: #c9d1d9;
+    }
+
+    .mermaid-overlay .mermaid-reset-btn {
+      bottom: 16px;
+      right: 16px;
+    }
+
+    @media (prefers-color-scheme: light) {
+      .mermaid-expand-btn svg {
+        fill: #59636e;
+      }
+
+      .mermaid-expand-btn:hover svg {
+        fill: #1f2328;
+      }
+
+      .mermaid-overlay {
+        background-color: rgba(0, 0, 0, 0.6);
+      }
+
+      .mermaid-overlay-close {
+        border-color: #d0d7de;
+        color: #59636e;
+      }
+
+      .mermaid-overlay-close:hover {
+        border-color: #8c959f;
+        color: #1f2328;
+      }
+
+      .mermaid-reset-btn {
+        border-color: #d0d7de;
+        color: #59636e;
+      }
+
+      .mermaid-reset-btn:hover {
+        border-color: #8c959f;
+        color: #1f2328;
+      }
+    }
+
     .markdown-body pre.diagram-map-pre {
       padding: 0;
       overflow: hidden;
