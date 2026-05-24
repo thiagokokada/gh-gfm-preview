@@ -257,6 +257,32 @@ func TestMdHandlerDirectoryModeRejectsEscapingPaths(t *testing.T) {
 	}
 }
 
+func TestMdHandlerRendersMermaid(t *testing.T) {
+	filename := "../../testdata/mermaid.md"
+
+	req := httptest.NewRequest(http.MethodGet, "/__/md", nil)
+	rec := httptest.NewRecorder()
+
+	mdHandler(filename, &Param{}).ServeHTTP(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+
+	assert.Equal(t, res.StatusCode, http.StatusOK)
+
+	body, err := io.ReadAll(res.Body)
+	assert.Nil(t, err)
+
+	var payload mdResponseJSON
+
+	err = json.Unmarshal(body, &payload)
+	assert.Nil(t, err)
+
+	// mermaid code blocks must carry class="language-mermaid" for the
+	// client-side pan/zoom setup (setupMermaidPanZoom) to activate
+	assert.True(t, strings.Contains(payload.HTML, `class="language-mermaid"`))
+}
+
 func TestWrapHandler(t *testing.T) {
 	wrappedHandler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		fmt.Fprintln(w, "Hello")
