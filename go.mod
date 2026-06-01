@@ -3,7 +3,7 @@ module github.com/thiagokokada/gh-gfm-preview
 go 1.25.0
 
 require (
-	github.com/alecthomas/chroma/v2 v2.24.1
+	github.com/alecthomas/chroma/v2 v2.26.1
 	github.com/andybalholm/crlf v0.0.0-20171020200849-670099aa064f
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/gorilla/websocket v1.5.3
@@ -19,6 +19,6 @@ require (
 )
 
 require (
-	github.com/dlclark/regexp2 v1.12.0 // indirect
+	github.com/dlclark/regexp2/v2 v2.1.1 // indirect
 	golang.org/x/sys v0.45.0 // indirect
 )
