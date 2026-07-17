@@ -54,7 +54,7 @@ func Execute() {
 	}
 
 	w := os.Stdout
-	h := slog.New(tint.NewHandler(w, &tint.Options{
+	h := slog.New(tint.NewTextHandler(w, &tint.Options{
 		Level:   logLevel,
 		NoColor: *noColor || !isatty.IsTerminal(w.Fd()),
 	}))
