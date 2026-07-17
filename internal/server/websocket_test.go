@@ -76,9 +76,8 @@ func TestConcurrentWrites(t *testing.T) {
 
 	errorChan := startConcurrentWrites(t, testFile, 100)
 
-	messageCount := readReloadMessages(t, ws, errorChan)
-
-	assert.True(t, messageCount >= 1)
+	waitForConcurrentWrites(t, errorChan)
+	assertReloadMessage(t, ws)
 }
 
 func startConcurrentWrites(t *testing.T, testFile *os.File, numWrites int) <-chan error {
@@ -107,54 +106,35 @@ func startConcurrentWrites(t *testing.T, testFile *os.File, numWrites int) <-cha
 	return errorChan
 }
 
-func readReloadMessages(t *testing.T, ws *websocket.Conn, errorChan <-chan error) int {
+func waitForConcurrentWrites(t *testing.T, errorChan <-chan error) {
 	t.Helper()
 
-	messageCount := 0
 	timeout := time.After(3 * time.Second)
 
 	for {
 		select {
-		case err := <-errorChan:
+		case err, ok := <-errorChan:
+			if !ok {
+				return
+			}
+
 			assert.Nil(t, err)
 		case <-timeout:
-			t.Logf("received %d messages before timeout", messageCount)
-
-			return messageCount
-		default:
-			if tryReadReloadMessage(t, ws, &messageCount) {
-				return messageCount
-			}
+			t.Fatal("timeout waiting for concurrent writes")
 		}
 	}
 }
 
-func tryReadReloadMessage(t *testing.T, ws *websocket.Conn, messageCount *int) bool {
+func assertReloadMessage(t *testing.T, ws *websocket.Conn) {
 	t.Helper()
 
-	err := ws.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
+	err := ws.SetReadDeadline(time.Now().Add(3 * time.Second))
 	assert.Nil(t, err)
 
 	msgType, msg, err := ws.ReadMessage()
-	if err != nil {
-		if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
-			return true
-		}
-
-		if !os.IsTimeout(err) {
-			t.Logf("read error (might be expected): %v", err)
-		}
-
-		time.Sleep(10 * time.Millisecond)
-
-		return false
-	}
-
-	if msgType == websocket.TextMessage && string(msg) == expectedReloadMsg {
-		*messageCount++
-	}
-
-	return *messageCount >= 5
+	assert.Nil(t, err)
+	assert.Equal(t, msgType, websocket.TextMessage)
+	assert.Equal(t, string(msg), expectedReloadMsg)
 }
 
 func TestConcurrentWritesStress(t *testing.T) {

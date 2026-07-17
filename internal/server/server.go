@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"io/fs"
 	"log/slog"
 	"net"
@@ -305,8 +306,10 @@ func mdHandler(filename string, param *Param) http.Handler {
 		pathParam := r.URL.Query().Get("path")
 
 		if pathParam != "" && param.IsDirectoryMode {
-			markdownView, title, err := mdResponseFromRoot(w, pathParam, param)
+			markdownView, title, err := renderMarkdownFromRoot(pathParam, param)
 			if err != nil {
+				writeMarkdownJSONErrorResponse(w, err, path.Base(pathParam))
+
 				return
 			}
 
@@ -334,64 +337,90 @@ func mdHandler(filename string, param *Param) http.Handler {
 			return
 		}
 
-		file := filename
-
-		// If the file is a directory, try to find a README file
-		if info, err := os.Stat(file); err == nil && info.IsDir() {
-			readme, err := app.FindReadmeFS(os.DirFS(file), ".")
-			if err == nil {
-				file = filepath.Join(file, readme)
-			}
-		}
-
-		markdownView := mdResponse(w, file, param)
-		title := getTitle(file)
-
-		writeMarkdownJSONResponse(w, markdownView, title)
+		handleSingleFileMarkdownRequest(w, filename, param)
 	})
 }
 
-func mdResponseFromRoot(w http.ResponseWriter, pathParam string, param *Param) (markdownView, string, error) {
-	if param.DirectoryRoot == nil {
-		return writeMarkdownReadError(w, errNoDirectoryRoot), "", errNoDirectoryRoot
+func handleSingleFileMarkdownRequest(w http.ResponseWriter, filename string, param *Param) {
+	// If the file is a directory, try to find a README file
+	if info, err := os.Stat(filename); err == nil && info.IsDir() {
+		readme, err := app.FindReadmeFS(os.DirFS(filename), ".")
+		if err == nil {
+			filename = filepath.Join(filename, readme)
+		}
 	}
 
+	title := getTitle(filename)
+
+	markdown, err := getMarkdown(filename, param)
+	if err != nil {
+		writeMarkdownJSONErrorResponse(w, err, title)
+
+		return
+	}
+
+	markdownView, err := renderMarkdownView(markdown, param)
+	if err != nil {
+		writeMarkdownJSONErrorResponse(w, err, title)
+
+		return
+	}
+
+	writeMarkdownJSONResponse(w, markdownView, title)
+}
+
+func mdResponseFromRoot(w http.ResponseWriter, pathParam string, param *Param) (markdownView, string, error) {
 	return mdResponseFromOpenedRoot(w, pathParam, param.DirectoryRoot, param)
 }
 
 func mdResponseFromOpenedRoot(w http.ResponseWriter, pathParam string, root *os.Root, param *Param) (markdownView, string, error) {
-	if root == nil {
-		return writeMarkdownReadError(w, errNoDirectoryRoot), "", errNoDirectoryRoot
-	}
-
-	normalizedPath, ok := normalizeRootPath(pathParam)
-	if !ok {
-		err := fmt.Errorf("%w: %s", app.ErrFileNotFound, pathParam)
-
-		return writeMarkdownReadError(w, err), "", err
-	}
-
-	file, title, err := resolveRootMarkdownTarget(root, normalizedPath)
-	if err != nil {
-		return writeMarkdownReadError(w, err), "", err
-	}
-
-	markdown, err := readRootMarkdown(root, file)
+	markdownView, title, err := renderMarkdownFromOpenedRoot(pathParam, root, param)
 	if err != nil {
 		return writeMarkdownReadError(w, err), "", err
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	markdownView, err := renderMarkdownView(markdown, param)
-	if err != nil {
-		return writeMarkdownRenderError(w, err, param), "", err
-	}
-
 	return markdownView, title, nil
 }
 
+func renderMarkdownFromRoot(pathParam string, param *Param) (markdownView, string, error) {
+	return renderMarkdownFromOpenedRoot(pathParam, param.DirectoryRoot, param)
+}
+
+func renderMarkdownFromOpenedRoot(pathParam string, root *os.Root, param *Param) (markdownView, string, error) {
+	if root == nil {
+		return markdownView{}, "", errNoDirectoryRoot
+	}
+
+	normalizedPath, ok := normalizeRootPath(pathParam)
+	if !ok {
+		err := fmt.Errorf("%w: %s", app.ErrFileNotFound, pathParam)
+
+		return markdownView{}, "", err
+	}
+
+	file, title, err := resolveRootMarkdownTarget(root, normalizedPath)
+	if err != nil {
+		return markdownView{}, "", err
+	}
+
+	markdown, err := readRootMarkdown(root, file)
+	if err != nil {
+		return markdownView{}, "", err
+	}
+
+	view, err := renderMarkdownView(markdown, param)
+	if err != nil {
+		return markdownView{}, "", err
+	}
+
+	return view, title, nil
+}
+
 func writeMarkdownJSONResponse(w http.ResponseWriter, markdownView markdownView, title string) {
+	w.Header().Set("Content-Type", "application/json")
+
 	body, err := json.Marshal(mdResponseJSON{
 		HTML:         markdownView.HTML,
 		Title:        title,
@@ -406,6 +435,16 @@ func writeMarkdownJSONResponse(w http.ResponseWriter, markdownView markdownView,
 	}
 
 	fmt.Fprintf(w, "%s", body)
+}
+
+func writeMarkdownJSONErrorResponse(w http.ResponseWriter, err error, title string) {
+	slog.Error("Error while reading markdown", "error", err)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusNotFound)
+	writeMarkdownJSONResponse(w, markdownView{
+		HTML: fmt.Sprintf("<pre>%s</pre>", html.EscapeString(err.Error())),
+	}, title)
 }
 
 func resolveRootMarkdownTarget(root *os.Root, pathParam string) (string, string, error) {

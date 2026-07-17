@@ -3,10 +3,12 @@ package watcher
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/thiagokokada/gh-gfm-preview/internal/assert"
 )
 
@@ -84,6 +86,164 @@ func TestWatch_DetectsFileWrite(t *testing.T) {
 	}
 }
 
+func TestHandleEvent_DetectsFileChmod(t *testing.T) {
+	w := &Watcher{MessageCh: make(chan []byte, 1)}
+	debouncer := newReloadDebouncer(func(string) {
+		w.MessageCh <- ReloadMessage
+	})
+
+	w.handleEvent(
+		fsnotify.Event{Name: "test.md", Op: fsnotify.Chmod},
+		regexp.MustCompile(ignorePattern),
+		debouncer,
+	)
+
+	select {
+	case <-w.MessageCh:
+		// Success
+	case <-time.After(1 * time.Second):
+		t.Fatal("timeout waiting for file chmod event")
+	}
+}
+
+func TestHandleEvent_WaitsForDebounceBeforeReload(t *testing.T) {
+	dir, cleanup := setupTestDir(t)
+	defer cleanup()
+
+	filePath := filepath.Join(dir, "test.md")
+	err := os.WriteFile(filePath, []byte("initial"), 0o600)
+	assert.Nil(t, err)
+
+	w := &Watcher{MessageCh: make(chan []byte, 1)}
+	re := regexp.MustCompile(ignorePattern)
+	debouncer := newReloadDebouncer(func(string) {
+		w.MessageCh <- ReloadMessage
+	})
+
+	w.handleEvent(
+		fsnotify.Event{Name: filepath.Join(dir, ".test.md.tmp"), Op: fsnotify.Create},
+		re,
+		debouncer,
+	)
+
+	select {
+	case <-w.MessageCh:
+		t.Fatal("reload signal sent before debounce settled")
+	case <-time.After(debounceDelay / 2):
+		// Success
+	}
+
+	err = os.WriteFile(filePath, []byte("updated"), 0o600)
+	assert.Nil(t, err)
+
+	w.handleEvent(
+		fsnotify.Event{Name: filePath, Op: fsnotify.Create},
+		re,
+		debouncer,
+	)
+
+	select {
+	case <-w.MessageCh:
+		content, readErr := os.ReadFile(filePath)
+		assert.Nil(t, readErr)
+		assert.Equal(t, string(content), "updated")
+	case <-time.After(1 * time.Second):
+		t.Fatal("timeout waiting for debounced reload event")
+	}
+}
+
+func TestHandleEvent_ExtendsDebounceAfterLaterEvents(t *testing.T) {
+	w := &Watcher{MessageCh: make(chan []byte, 1)}
+	re := regexp.MustCompile(ignorePattern)
+	debouncer := newReloadDebouncer(func(string) {
+		w.MessageCh <- ReloadMessage
+	})
+
+	w.handleEvent(
+		fsnotify.Event{Name: "dir", Op: fsnotify.Create},
+		re,
+		debouncer,
+	)
+
+	time.Sleep(debounceDelay / 2)
+
+	w.handleEvent(
+		fsnotify.Event{Name: filepath.Join("dir", "README.md"), Op: fsnotify.Create},
+		re,
+		debouncer,
+	)
+
+	select {
+	case <-w.MessageCh:
+		t.Fatal("reload signal sent before the later event settled")
+	case <-time.After((debounceDelay / 2) + (debounceDelay / 4)):
+		// Success
+	}
+
+	select {
+	case <-w.MessageCh:
+		// Success
+	case <-time.After(1 * time.Second):
+		t.Fatal("timeout waiting for trailing debounced reload event")
+	}
+}
+
+func TestWatch_ReaddsRecreatedDirectory(t *testing.T) {
+	dir, cleanup := setupTestDir(t)
+	defer cleanup()
+
+	subdir := filepath.Join(dir, "subdir")
+	err := os.Mkdir(subdir, 0o700)
+	assert.Nil(t, err)
+
+	w, err := Init(dir)
+	assert.Nil(t, err)
+
+	defer w.Close()
+
+	err = w.AddDirectory(subdir)
+	assert.Nil(t, err)
+
+	go w.Watch()
+
+	time.Sleep(50 * time.Millisecond)
+
+	err = os.RemoveAll(subdir)
+	assert.Nil(t, err)
+	drainReloadMessages(w.MessageCh)
+
+	err = os.Mkdir(subdir, 0o700)
+	assert.Nil(t, err)
+	drainReloadMessages(w.MessageCh)
+
+	err = w.AddDirectory(subdir)
+	assert.Nil(t, err)
+
+	filePath := filepath.Join(subdir, "test.md")
+	err = os.WriteFile(filePath, []byte("updated"), 0o600)
+	assert.Nil(t, err)
+
+	select {
+	case <-w.MessageCh:
+		// Success
+	case <-time.After(1 * time.Second):
+		t.Fatal("timeout waiting for recreated directory file write event")
+	}
+}
+
+func drainReloadMessages(ch <-chan []byte) {
+	timer := time.NewTimer(2 * debounceDelay)
+	defer timer.Stop()
+
+	for {
+		select {
+		case <-ch:
+		case <-timer.C:
+			return
+		}
+	}
+}
+
 func TestWatch_DebounceLogic(t *testing.T) {
 	dir, cleanup := setupTestDir(t)
 	defer cleanup()
@@ -100,7 +260,7 @@ func TestWatch_DebounceLogic(t *testing.T) {
 	filePath := filepath.Join(dir, "rapid.txt")
 
 	// Trigger multiple writes rapidly
-	// The watcher logic has a TryLock and a Sleep(lockTime) which is 100ms.
+	// The watcher logic has a TryLock and a debounce delay.
 	// If we write 5 times in 10ms, we should realistically only get 1 or 2 events processed.
 
 	var counter atomic.Uint32
@@ -127,11 +287,11 @@ func TestWatch_DebounceLogic(t *testing.T) {
 		time.Sleep(10 * time.Millisecond) // Fast, but distinct enough for fsnotify
 	}
 
-	// Wait longer than the lockTime (100ms) to let the debounce finish
+	// Wait longer than the debounce delay to let the debounce finish
 	time.Sleep(300 * time.Millisecond)
 	close(done)
 
-	// We expect fewer events than writes because of the lockTime logic
+	// We expect fewer events than writes because of the debounce logic.
 	assert.True(t, counter.Load() > 0)
 	assert.True(t, counter.Load() <= 5)
 }
