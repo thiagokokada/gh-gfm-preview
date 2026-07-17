@@ -337,33 +337,36 @@ func mdHandler(filename string, param *Param) http.Handler {
 			return
 		}
 
-		file := filename
-
-		// If the file is a directory, try to find a README file
-		if info, err := os.Stat(file); err == nil && info.IsDir() {
-			readme, err := app.FindReadmeFS(os.DirFS(file), ".")
-			if err == nil {
-				file = filepath.Join(file, readme)
-			}
-		}
-
-		title := getTitle(file)
-		markdown, err := getMarkdown(file, param)
-		if err != nil {
-			writeMarkdownJSONErrorResponse(w, err, title)
-
-			return
-		}
-
-		markdownView, err := renderMarkdownView(markdown, param)
-		if err != nil {
-			writeMarkdownJSONErrorResponse(w, err, title)
-
-			return
-		}
-
-		writeMarkdownJSONResponse(w, markdownView, title)
+		handleSingleFileMarkdownRequest(w, filename, param)
 	})
+}
+
+func handleSingleFileMarkdownRequest(w http.ResponseWriter, filename string, param *Param) {
+	// If the file is a directory, try to find a README file
+	if info, err := os.Stat(filename); err == nil && info.IsDir() {
+		readme, err := app.FindReadmeFS(os.DirFS(filename), ".")
+		if err == nil {
+			filename = filepath.Join(filename, readme)
+		}
+	}
+
+	title := getTitle(filename)
+
+	markdown, err := getMarkdown(filename, param)
+	if err != nil {
+		writeMarkdownJSONErrorResponse(w, err, title)
+
+		return
+	}
+
+	markdownView, err := renderMarkdownView(markdown, param)
+	if err != nil {
+		writeMarkdownJSONErrorResponse(w, err, title)
+
+		return
+	}
+
+	writeMarkdownJSONResponse(w, markdownView, title)
 }
 
 func mdResponseFromRoot(w http.ResponseWriter, pathParam string, param *Param) (markdownView, string, error) {

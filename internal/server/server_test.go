@@ -318,6 +318,7 @@ func TestMdHandlerReturnsJSONErrorForMissingSingleFile(t *testing.T) {
 	assert.Equal(t, res.Header.Get("Content-Type"), "application/json")
 
 	var payload mdResponseJSON
+
 	err = json.NewDecoder(res.Body).Decode(&payload)
 	assert.Nil(t, err)
 
