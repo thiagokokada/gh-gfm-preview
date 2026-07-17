@@ -14,6 +14,7 @@ type TemplateParam struct {
 	Reload           bool
 	Mode             string
 	ShowBrowseButton bool
+	IsDirectoryMode  bool
 	IsDirectoryIndex bool
 	HasReadme        bool
 	DirectoryTitle   string

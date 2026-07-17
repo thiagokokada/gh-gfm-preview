@@ -17,6 +17,7 @@
   const tickIcon = `<svg class="tick-icon" aria-hidden="true" fill="none" height="18" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="18" style="color: "currentColor";"><path d="M5 13l4 4L19 7"></path></svg>`;
   const expandIcon = `<svg class="expand-icon" aria-hidden="true" viewBox="0 0 1792 1792" width="14" height="14" fill="currentColor"><path d="M883 1056q0 13-10 23l-332 332 144 144q19 19 19 45t-19 45-45 19h-448q-26 0-45-19t-19-45v-448q0-26 19-45t45-19 45 19l144 144 332-332q10-10 23-10t23 10l114 114q10 10 10 23zm781-864v448q0 26-19 45t-45 19-45-19l-144-144-332 332q-10 10-23 10t-23-10l-114-114q-10-10-10-23t10-23l332-332-144-144q-19-19-19-45t19-45 45-19h448q26 0 45 19t19 45z"></path></svg>`;
   let diagramMediaQuery;
+  let loadMarkdownRequest = 0;
   let overlayCleanup;
   let overlayEl;
 
@@ -446,8 +447,18 @@
   }
 
   async function loadMarkdown() {
-    const response = await fetch(`/__/md?path=${window.location.pathname.slice(1)}`);
+    const requestId = loadMarkdownRequest + 1;
+    loadMarkdownRequest = requestId;
+
+    const response = await fetch(
+      `/__/md?path=${encodeURIComponent(window.location.pathname.slice(1))}`,
+      {cache: "no-store"}
+    );
     const result = await response.json();
+
+    if (requestId !== loadMarkdownRequest) {
+      return;
+    }
 
     const markdownBody = document.getElementById("markdown-body");
     markdownBody.innerHTML = result.html;
@@ -547,7 +558,7 @@
           console.log("Reload page!");
           // For directory index view, do a full page reload
           // For markdown view, reload just the markdown content
-          if (window.Param.isDirectoryIndex) {
+          if (window.Param.isDirectoryMode) {
             window.location.reload();
           } else {
             loadMarkdown();
