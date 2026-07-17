@@ -2,28 +2,27 @@
 
 A Go program to preview GitHub Flavored Markdown (GFM) :notebook:.
 
-The `gh-gfm-preview` command start a local web server to serve the markdown
-document. **gh gfm-preview** renders the HTML using
-[yuin/goldmark](https://github.com/yuin/goldmark) and some extensions and
-frontend tricks to have similar features and look to how GitHub renders a
-markdown.
+The `gh-gfm-preview` command starts a local web server that serves the Markdown
+document. **gh gfm-preview** renders HTML using
+[yuin/goldmark](https://github.com/yuin/goldmark), extensions, and frontend
+tricks to provide features and an appearance similar to GitHub's Markdown
+rendering.
 
 It may also be used as a [GitHub CLI](https://cli.github.com) extension.
 
 This is a hard fork of
 [yusukebe/gh-markdown-preview](https://github.com/yusukebe/gh-markdown-preview/),
-that uses the [GitHub Markdown API](https://docs.github.com/en/rest/markdown),
-but this means it doesn't work offline. The code of this repository tries to
-emulate the look of GitHub Markdown rendering as close as possible, but the
-original project will be even closer to the actual result if you don't need
-offline rendering.
+which uses the [GitHub Markdown API](https://docs.github.com/en/rest/markdown)
+and therefore does not work offline. This repository aims to emulate GitHub's
+Markdown rendering as closely as possible, but the original project produces a
+closer match when offline rendering is not required.
 
 ## Screenshots
 
 Open your browser:
 
-![Screenshot showing side-by-side a Markdown being editted on the left and being
-rendered with gh-gfm-markdown on the right](screenshot.png)
+![Screenshot showing a Markdown document being edited on the left and rendered
+with gh-gfm-preview on the right](screenshot.png)
 
 Live reloading:
 
@@ -32,39 +31,31 @@ https://github.com/user-attachments/assets/0219ac01-71d3-4568-bff4-c9de092ca4e3
 ## Highlights
 
 - **Works offline** - You don't need an internet connection.
-- **Fast** - Since it doesn't rely on external services it is really fast.
-- **No-dependencies** - You can just run the standalone binary (or optionally
+- **Fast** - Since it doesn't rely on external services, it is very fast.
+- **No dependencies** - You can just run the standalone binary (or optionally
   via `gh` as an extension).
 - **Zero-configuration** - You don't have to set the GitHub access token.
-- **Live reloading** - You don't need reload the browser.
+- **Live reloading** - You don't need to reload the browser.
 - **Auto open browser** - Your browser will be opened automatically.
-- **Auto find port** - You don't need find an available port if default is used.
+- **Automatic port selection** - You don't need to find an available port when
+  using the default.
 - **Graceful degradation** - Basic functionality works even without JavaScript.
 
 ## Supported GFM features
 
-- [x] : [Most (all?) of GitHub Flavored Markdown spec](https://github.github.com/gfm/)
-- [x] : [Emojis](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#using-emojis)
-  + not all of GitHub emojis are supported since a few of them are extensions
-    to the Unicode spec, but the majority of them works
-- [x] : [Alerts](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#alerts)
-- [x] : [Code blocks with syntax
-  highlighting](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks)
-  + highlighting is done via
-    [alecthomas/chroma](https://github.com/alecthomas/chroma); not all GitHub
-    languages are supported and there are slightly differences in highlighting
-- [x] : [Section links](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#section-links)
-- [x] : [Raw HTML](https://gist.github.com/seanh/13a93686bf4c2cb16e658b3cf96807f2)
-  + no filtering is done so you can pass any arbitrary HTML, different from
-    GitHub where only a subset of HTML is allowed
-- [x] : [MathJax](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/writing-mathematical-expressions)
-- [x] : [Mermaid diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams)
-- [x] : [GeoJSON/TopoJSON diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams)
-  + rendered with Leaflet and online map tiles, so this feature does not work offline
-  + the basemap will be OSM-style, not GitHub’s Azure/TomTom tiles, so it should be structurally similar rather than pixel-identical
-- [ ] : [STL 3D diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams)
-- [ ] : Mentioning people/Referencing issues and Pull Requests/Other features
-  that depends in GitHub access
+| Feature | Supported | Available Offline | Needs JavaScript | Notes |
+| --- | --- | --- | --- | --- |
+| [GitHub Flavored Markdown specification](https://github.github.com/gfm/) | Yes | Yes | No | Most of the specification should be supported, thanks to [yuin/goldmark](https://github.com/yuin/goldmark) and its extensions. |
+| [Emojis](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#using-emojis) | Yes | Yes | No | Not all GitHub emojis are supported because some are extensions to the Unicode specification, but most work. |
+| [Alerts](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#alerts) | Yes | Yes | No | Custom alert labels such as `[!UNKNOWN]` are supported but render differently from GitHub. |
+| [Code blocks with syntax highlighting](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks) | Yes | Yes | No | Highlighting uses [alecthomas/chroma](https://github.com/alecthomas/chroma). Not all GitHub languages are supported, and there are slight differences in highlighting. |
+| [Section links](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#section-links) | Yes | Yes | No | |
+| [Raw HTML](https://gist.github.com/seanh/13a93686bf4c2cb16e658b3cf96807f2) | Yes | Yes | No | No filtering is performed, so arbitrary HTML is allowed. GitHub allows only a subset of HTML. |
+| [MathJax](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/writing-mathematical-expressions) | Yes | Yes | Yes | |
+| [Mermaid diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams) | Yes | Yes | Yes | |
+| [GeoJSON/TopoJSON diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams) | Yes | No | Yes | Rendered with Leaflet and online map tiles. The basemap is OSM-style rather than GitHub’s Azure/TomTom tiles, so it is structurally similar rather than pixel-identical. |
+| [STL 3D diagrams](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams) | No | N/A | N/A | |
+| Mentioning people, referencing issues and pull requests, and other features that depend on GitHub access | No | N/A | N/A | Out of scope because they require GitHub API access. |
 
 ## Installation
 
@@ -100,19 +91,19 @@ nix run github:thiagokokada/gh-gfm-preview
 
 ## Usage
 
-The usage:
+To preview a file:
 
 ```console
 gh gfm-preview README.md
 ```
 
-Or this command will detect README file in the directory automatically.
+To automatically detect a README file in the current directory:
 
 ```console
 gh gfm-preview
 ```
 
-You can also preview Markdown from stdin by piping or using `-`:
+You can also preview Markdown from standard input by piping data or using `-`:
 
 ```
 echo "# Hello" | gh gfm-preview
@@ -120,8 +111,8 @@ cat README.md | gh gfm-preview
 gh gfm-preview - < README.md
 ```
 
-Then access the local web server such as `http://localhost:3333` with Chrome,
-Firefox, or Safari.
+Then open the local web server, for example at `http://localhost:3333`, in
+your default browser.
 
 Available options:
 
@@ -162,9 +153,9 @@ gh gfm-preview --directory-listing \
 
 ## Other usages
 
-Since the binary is static and it works offline, this is a good program to
-use to preview how a Markdown is looking in e.g.:
-[neovim](https://github.com/neovim/neovim/). For example, you can add this
+Because the binary is static and works offline, it is well suited to previewing
+how Markdown will look in applications such as
+[Neovim](https://github.com/neovim/neovim/). For example, you can add this
 in your `$HOME/.config/nvim/init.lua`:
 
 ```lua
@@ -174,10 +165,10 @@ local function preview_markdown()
     print("Markdown preview process exited with code:", out.code)
   end
   local process = vim.system(
-    -- assuming that the extension were installed using gh
-    -- the reason we are not using `gh gfm-preview` instead is because this
-    -- can cause an issue where the gh process is killed but not the
-    -- gh-gfm-preview, since the kill signal will not reach the child process
+    -- assuming that the extension was installed using gh
+    -- the reason we are not using `gh gfm-preview` is that this can cause an
+    -- issue where the gh process is killed but gh-gfm-preview is not, since
+    -- the kill signal does not reach the child process
     {vim.fn.expand("$HOME/.local/share/gh/extensions/gh-gfm-preview/gh-gfm-preview"), file},
     on_exit_cb
   )
@@ -211,7 +202,7 @@ You can run the following command to (re-)generate assets:
 go generate ./...
 ```
 
-And you can run the following command to build:
+And you can run the following command to build the project:
 
 ```console
 go build
