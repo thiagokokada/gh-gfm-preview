@@ -115,7 +115,10 @@ func (w *Watcher) Watch() {
 	}
 
 	re := regexp.MustCompile(ignorePattern)
-	mu := sync.Mutex{}
+	debouncer := newReloadDebouncer(func(path string) {
+		slog.Info("Change detected, refreshing", "path", path)
+		w.MessageCh <- ReloadMessage
+	})
 
 	for {
 		select {
@@ -124,7 +127,7 @@ func (w *Watcher) Watch() {
 				continue
 			}
 
-			w.handleEvent(event, re, &mu)
+			w.handleEvent(event, re, debouncer)
 		case err := <-w.watcher.Errors:
 			slog.Error("FS watcher error", "error", err)
 
@@ -135,7 +138,7 @@ func (w *Watcher) Watch() {
 	}
 }
 
-func (w *Watcher) handleEvent(event fsnotify.Event, re *regexp.Regexp, mu *sync.Mutex) {
+func (w *Watcher) handleEvent(event fsnotify.Event, re *regexp.Regexp, debouncer *reloadDebouncer) {
 	if !isReloadEvent(event) {
 		return
 	}
@@ -144,28 +147,19 @@ func (w *Watcher) handleEvent(event fsnotify.Event, re *regexp.Regexp, mu *sync.
 	op := event.Op
 	base := filepath.Base(path)
 
+	if event.Has(fsnotify.Remove) || event.Has(fsnotify.Rename) {
+		w.watchedDirs.Delete(path)
+	}
+
 	if re.MatchString(base) {
 		slog.Debug("FS event from ignored pattern", "op", op, "path", path)
 
 		return
 	}
 
-	if !mu.TryLock() {
-		slog.Debug("FS event debounced", "op", op, "path", path)
-
-		return
-	}
-
 	slog.Debug("FS event", "op", op, "path", path)
 
-	go func() {
-		defer mu.Unlock()
-
-		time.Sleep(debounceDelay)
-
-		slog.Info("Change detected, refreshing", "path", event.Name)
-		w.MessageCh <- ReloadMessage
-	}()
+	debouncer.Trigger(path)
 }
 
 func isReloadEvent(event fsnotify.Event) bool {
@@ -174,4 +168,47 @@ func isReloadEvent(event fsnotify.Event) bool {
 		event.Has(fsnotify.Chmod) ||
 		event.Has(fsnotify.Rename) ||
 		event.Has(fsnotify.Remove)
+}
+
+type reloadDebouncer struct {
+	delay  time.Duration
+	notify func(string)
+
+	mu         sync.Mutex
+	generation uint64
+	path       string
+}
+
+func newReloadDebouncer(notify func(string)) *reloadDebouncer {
+	return &reloadDebouncer{
+		delay:  debounceDelay,
+		notify: notify,
+	}
+}
+
+func (d *reloadDebouncer) Trigger(path string) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	d.generation++
+	generation := d.generation
+	d.path = path
+
+	time.AfterFunc(d.delay, func() {
+		d.fire(generation)
+	})
+}
+
+func (d *reloadDebouncer) fire(generation uint64) {
+	d.mu.Lock()
+	if generation != d.generation {
+		d.mu.Unlock()
+
+		return
+	}
+
+	path := d.path
+	d.mu.Unlock()
+
+	d.notify(path)
 }
