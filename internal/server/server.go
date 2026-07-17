@@ -530,7 +530,6 @@ func wrapHandler(wrappedHandler http.Handler) http.Handler {
 		wrappedHandler.ServeHTTP(lrw, r)
 
 		statusCode := lrw.statusCode
-		//nolint:gosec // Structured slog fields avoid string-built log injection here.
 		slog.Debug("HTTP request", "method", r.Method, "code", statusCode, "url", r.URL)
 	})
 }
