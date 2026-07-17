@@ -2,7 +2,7 @@
   description = "gh-gfm-preview";
 
   inputs = {
-    nixpkgs.url = "nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-compat.url = "github:edolstra/flake-compat";
   };
 
