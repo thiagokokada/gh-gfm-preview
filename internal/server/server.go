@@ -347,8 +347,20 @@ func mdHandler(filename string, param *Param) http.Handler {
 			}
 		}
 
-		markdownView := mdResponse(w, file, param)
 		title := getTitle(file)
+		markdown, err := getMarkdown(file, param)
+		if err != nil {
+			writeMarkdownJSONErrorResponse(w, err, title)
+
+			return
+		}
+
+		markdownView, err := renderMarkdownView(markdown, param)
+		if err != nil {
+			writeMarkdownJSONErrorResponse(w, err, title)
+
+			return
+		}
 
 		writeMarkdownJSONResponse(w, markdownView, title)
 	})

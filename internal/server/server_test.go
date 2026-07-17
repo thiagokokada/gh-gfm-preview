@@ -298,6 +298,35 @@ func TestMdHandlerDirectoryModeReturnsJSONErrorForMissingReloadPath(t *testing.T
 	assert.False(t, payload.HasHeadings)
 }
 
+func TestMdHandlerReturnsJSONErrorForMissingSingleFile(t *testing.T) {
+	filename := filepath.Join(t.TempDir(), "missing.md")
+	err := os.WriteFile(filename, []byte("# Temporary markdown"), 0o600)
+	assert.Nil(t, err)
+
+	err = os.Remove(filename)
+	assert.Nil(t, err)
+
+	req := httptest.NewRequest(http.MethodGet, "/__/md", nil)
+	rec := httptest.NewRecorder()
+
+	mdHandler(filename, &Param{}).ServeHTTP(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+
+	assert.Equal(t, res.StatusCode, http.StatusNotFound)
+	assert.Equal(t, res.Header.Get("Content-Type"), "application/json")
+
+	var payload mdResponseJSON
+	err = json.NewDecoder(res.Body).Decode(&payload)
+	assert.Nil(t, err)
+
+	assert.Equal(t, payload.Title, "missing.md")
+	assert.True(t, strings.Contains(payload.HTML, "get markdown error"))
+	assert.Equal(t, payload.HeadingsHTML, "")
+	assert.False(t, payload.HasHeadings)
+}
+
 func TestMdHandlerRendersMermaid(t *testing.T) {
 	filename := "../../testdata/mermaid.md"
 
