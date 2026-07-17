@@ -457,6 +457,7 @@
     const result = await response.json();
 
     if (requestId !== loadMarkdownRequest) {
+      console.log(`Skipping stale loadMarkdown request: current=${requestId} newest=${loadMarkdownRequest}`);
       return;
     }
 
