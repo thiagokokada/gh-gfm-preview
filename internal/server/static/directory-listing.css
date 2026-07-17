@@ -72,7 +72,7 @@
   border: 1px solid #30363d;
   border-radius: 6px;
   box-shadow: 0 8px 24px rgba(1, 4, 9, 0.8);
-  z-index: 999;
+  z-index: 1001;
   overflow: hidden;
 }
 
@@ -86,7 +86,7 @@
   border: 1px solid #30363d;
   border-radius: 6px;
   box-shadow: 0 8px 24px rgba(1, 4, 9, 0.8);
-  z-index: 999;
+  z-index: 1001;
   overflow: hidden;
 }
 
