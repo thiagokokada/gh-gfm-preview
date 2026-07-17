@@ -14,7 +14,7 @@ import (
 
 const (
 	ignorePattern = `\.swp$|~$|^\.DS_Store$|^4913$`
-	lockTime      = 100 * time.Millisecond
+	debounceDelay = 100 * time.Millisecond
 )
 
 var (
@@ -136,7 +136,7 @@ func (w *Watcher) Watch() {
 }
 
 func (w *Watcher) handleEvent(event fsnotify.Event, re *regexp.Regexp, mu *sync.Mutex) {
-	if !event.Has(fsnotify.Write) && !event.Has(fsnotify.Create) {
+	if !isReloadEvent(event) {
 		return
 	}
 
@@ -161,10 +161,17 @@ func (w *Watcher) handleEvent(event fsnotify.Event, re *regexp.Regexp, mu *sync.
 	go func() {
 		defer mu.Unlock()
 
+		time.Sleep(debounceDelay)
+
 		slog.Info("Change detected, refreshing", "path", event.Name)
-
 		w.MessageCh <- ReloadMessage
-
-		time.Sleep(lockTime)
 	}()
+}
+
+func isReloadEvent(event fsnotify.Event) bool {
+	return event.Has(fsnotify.Write) ||
+		event.Has(fsnotify.Create) ||
+		event.Has(fsnotify.Chmod) ||
+		event.Has(fsnotify.Rename) ||
+		event.Has(fsnotify.Remove)
 }
