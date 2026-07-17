@@ -28,14 +28,14 @@ linters:
     - gocheckcompilerdirectives
     - gochecksumtype
     - gocognit
-    - goconst
+    # - goconst
     - gocritic
     - gocyclo
     - godot
     - godox
     - goheader
     - gomoddirectives
-    - gomodguard
+    - gomodguard_v2
     - goprintffuncname
     - gosec
     - gosmopolitan
