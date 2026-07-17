@@ -205,6 +205,7 @@ func TestWatch_ReaddsRecreatedDirectory(t *testing.T) {
 	assert.Nil(t, err)
 
 	go w.Watch()
+
 	time.Sleep(50 * time.Millisecond)
 
 	err = os.RemoveAll(subdir)

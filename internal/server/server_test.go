@@ -59,7 +59,7 @@ func TestMdHandler(t *testing.T) {
 	defer res.Body.Close()
 
 	assert.Equal(t, res.StatusCode, http.StatusOK)
-	assert.Equal(t, res.Header.Get("Content-Type"), "text/html; charset=utf-8")
+	assert.Equal(t, res.Header.Get("Content-Type"), "application/json")
 
 	body, err := io.ReadAll(res.Body)
 	assert.Nil(t, err)
@@ -115,7 +115,7 @@ func TestMdHandlerRendersFootnotesInGFMMode(t *testing.T) {
 	defer res.Body.Close()
 
 	assert.Equal(t, res.StatusCode, http.StatusOK)
-	assert.Equal(t, res.Header.Get("Content-Type"), "text/html; charset=utf-8")
+	assert.Equal(t, res.Header.Get("Content-Type"), "application/json")
 
 	body, err := io.ReadAll(res.Body)
 	assert.Nil(t, err)
@@ -211,7 +211,7 @@ func TestMdHandlerDirectoryModeUsesReadmeForTrailingSlashPath(t *testing.T) {
 	defer res.Body.Close()
 
 	assert.Equal(t, res.StatusCode, http.StatusOK)
-	assert.Equal(t, res.Header.Get("Content-Type"), "text/html; charset=utf-8")
+	assert.Equal(t, res.Header.Get("Content-Type"), "application/json")
 
 	body, err := io.ReadAll(res.Body)
 	assert.Nil(t, err)
@@ -252,9 +252,50 @@ func TestMdHandlerDirectoryModeRejectsEscapingPaths(t *testing.T) {
 			defer res.Body.Close()
 
 			assert.Equal(t, res.StatusCode, http.StatusNotFound)
-			assert.Equal(t, res.Header.Get("Content-Type"), "text/plain; charset=utf-8")
+			assert.Equal(t, res.Header.Get("Content-Type"), "application/json")
 		})
 	}
+}
+
+func TestMdHandlerDirectoryModeReturnsJSONErrorForMissingReloadPath(t *testing.T) {
+	root, err := os.OpenRoot("../../testdata")
+	assert.Nil(t, err)
+
+	defer root.Close()
+
+	param := &Param{
+		DirectoryListing:               true,
+		DirectoryListingShowExtensions: ".md",
+		DirectoryListingTextExtensions: ".md,.txt",
+		IsDirectoryMode:                true,
+		DirectoryPath:                  "../../testdata",
+		DirectoryRoot:                  root,
+		Reload:                         false,
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/__/md?path=missing.md", nil)
+	rec := httptest.NewRecorder()
+
+	mdHandler("", param).ServeHTTP(rec, req)
+
+	res := rec.Result()
+	defer res.Body.Close()
+
+	assert.Equal(t, res.StatusCode, http.StatusNotFound)
+	assert.Equal(t, res.Header.Get("Content-Type"), "application/json")
+
+	body, err := io.ReadAll(res.Body)
+	assert.Nil(t, err)
+
+	var payload mdResponseJSON
+
+	err = json.Unmarshal(body, &payload)
+	assert.Nil(t, err)
+
+	assert.Equal(t, payload.Title, "missing.md")
+	assert.True(t, strings.Contains(payload.HTML, "file not found"))
+	assert.Equal(t, payload.HeadingsHTML, "")
+	assert.False(t, payload.HasHeadings)
 }
 
 func TestMdHandlerRendersMermaid(t *testing.T) {

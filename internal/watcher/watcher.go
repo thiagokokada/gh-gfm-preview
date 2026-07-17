@@ -117,6 +117,7 @@ func (w *Watcher) Watch() {
 	re := regexp.MustCompile(ignorePattern)
 	debouncer := newReloadDebouncer(func(path string) {
 		slog.Info("Change detected, refreshing", "path", path)
+
 		w.MessageCh <- ReloadMessage
 	})
 
