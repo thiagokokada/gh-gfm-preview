@@ -148,7 +148,7 @@ func (w *Watcher) handleEvent(event fsnotify.Event, re *regexp.Regexp, debouncer
 	op := event.Op
 	base := filepath.Base(path)
 
-	if event.Has(fsnotify.Remove) || event.Has(fsnotify.Rename) {
+	if event.Has(fsnotify.Remove | fsnotify.Rename) {
 		w.watchedDirs.Delete(path)
 	}
 
@@ -164,11 +164,13 @@ func (w *Watcher) handleEvent(event fsnotify.Event, re *regexp.Regexp, debouncer
 }
 
 func isReloadEvent(event fsnotify.Event) bool {
-	return event.Has(fsnotify.Write) ||
-		event.Has(fsnotify.Create) ||
-		event.Has(fsnotify.Chmod) ||
-		event.Has(fsnotify.Rename) ||
-		event.Has(fsnotify.Remove)
+	const reloadOps = fsnotify.Write |
+		fsnotify.Create |
+		fsnotify.Chmod |
+		fsnotify.Rename |
+		fsnotify.Remove
+
+	return event.Has(reloadOps)
 }
 
 type reloadDebouncer struct {
