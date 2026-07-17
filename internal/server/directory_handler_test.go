@@ -378,3 +378,30 @@ func TestFileBrowserButtonDisabledState(t *testing.T) {
 	assert.True(t, strings.Contains(indexBodyStr, `summary class="btn-headings" aria-disabled="true" tabindex="-1"`))
 	assert.False(t, strings.Contains(indexBodyStr, `popover-details hidden`))
 }
+
+func TestDirectoryMarkdownViewMarksDirectoryModeForReload(t *testing.T) {
+	testDir := testDataDir
+	param := newDirectoryModeParam(t)
+
+	watcher, err := watcher.Init(testDir)
+	assert.Nil(t, err)
+
+	defer watcher.Close()
+
+	ts := httptest.NewServer(handler("", param, http.FileServer(http.Dir(testDir)), watcher))
+	defer ts.Close()
+
+	res, err := http.Get(ts.URL + "/markdown-demo.md")
+	assert.Nil(t, err)
+
+	defer res.Body.Close()
+
+	assert.Equal(t, res.StatusCode, http.StatusOK)
+
+	body, err := io.ReadAll(res.Body)
+	assert.Nil(t, err)
+
+	bodyStr := string(body)
+	assert.True(t, strings.Contains(bodyStr, "isDirectoryMode: true"))
+	assert.True(t, strings.Contains(bodyStr, "isDirectoryIndex: false"))
+}
