@@ -30,7 +30,8 @@ https://github.com/user-attachments/assets/0219ac01-71d3-4568-bff4-c9de092ca4e3
 
 ## Highlights
 
-- **Works offline** - You don't need an internet connection.
+- **Works offline** - You don't need an internet connection to use most
+  features.
 - **Fast** - Since it doesn't rely on external services, it is very fast.
 - **No dependencies** - You can just run the standalone binary (or optionally
   via `gh` as an extension).
@@ -83,7 +84,8 @@ go install github.com/thiagokokada/gh-gfm-preview@latest
 
 ### Nix
 
-Assuming that you have [Flakes](https://wiki.nixos.org/wiki/Flakes) enabled:
+Assuming that you have [Nix flakes](https://wiki.nixos.org/wiki/Flakes)
+enabled:
 
 ```console
 nix run github:thiagokokada/gh-gfm-preview
