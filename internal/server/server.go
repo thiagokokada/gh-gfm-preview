@@ -32,7 +32,21 @@ var htmlTemplate string
 
 //go:embed static/*
 var staticDir embed.FS
+// templateFuncs provides custom functions available in the HTML template.
 var templateFuncs = template.FuncMap{
+	// urlPathEscape percent-encodes each path segment of p (split on "/")
+	// using url.PathEscape, then re-joins them with "/".
+	//
+	// Splitting before encoding is necessary because url.PathEscape treats
+	// "/" as a character that must be encoded (%2F), which would break
+	// multi-segment paths. By encoding each segment independently we
+	// preserve the slash separators while safely encoding non-ASCII
+	// characters (e.g. 日本語 → %E6%97%A5%E6%9C%AC%E8%AA%9E) and
+	// special characters such as "#" and "&" that would otherwise be
+	// misinterpreted by browsers as URL fragments or query delimiters.
+	//
+	// The return type is template.URL so that html/template marks the value
+	// as a safe URL and does not double-escape the percent signs.
 	"urlPathEscape": func(p string) template.URL {
 		segments := strings.Split(p, "/")
 		for i, s := range segments {
