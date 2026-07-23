@@ -85,6 +85,7 @@ func TestMdHandlerNonASCIIPath(t *testing.T) {
 			assert.Nil(t, err)
 
 			var payload mdResponseJSON
+
 			err = json.Unmarshal(body, &payload)
 			assert.Nil(t, err)
 

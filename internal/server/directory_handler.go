@@ -107,8 +107,8 @@ func renderFileTemplate(w http.ResponseWriter, r *http.Request, param *Param, cu
 
 	templateParam := TemplateParam{
 		Title:            title,
-		Body:             template.HTML(markdownView.HTML),
-		HeadingsHTML:     template.HTML(markdownView.HeadingsHTML),
+		Body:             template.HTML(markdownView.HTML),         //nolint:gosec // G203: rendered Markdown is intentionally raw HTML
+		HeadingsHTML:     template.HTML(markdownView.HeadingsHTML), //nolint:gosec // G203: rendered Markdown is intentionally raw HTML
 		HasHeadings:      markdownView.HasHeadings,
 		Host:             r.Host,
 		Reload:           param.Reload,
@@ -188,8 +188,8 @@ func renderReadmeTemplate(w http.ResponseWriter, r *http.Request, param *Param, 
 
 	templateParam := TemplateParam{
 		Title:            title,
-		Body:             template.HTML(markdownView.HTML),
-		HeadingsHTML:     template.HTML(markdownView.HeadingsHTML),
+		Body:             template.HTML(markdownView.HTML),         //nolint:gosec // G203: rendered Markdown is intentionally raw HTML
+		HeadingsHTML:     template.HTML(markdownView.HeadingsHTML), //nolint:gosec // G203: rendered Markdown is intentionally raw HTML
 		HasHeadings:      markdownView.HasHeadings,
 		Host:             r.Host,
 		Reload:           param.Reload,

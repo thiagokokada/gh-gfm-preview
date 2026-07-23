@@ -32,6 +32,7 @@ var htmlTemplate string
 
 //go:embed static/*
 var staticDir embed.FS
+
 // templateFuncs provides custom functions available in the HTML template.
 var templateFuncs = template.FuncMap{
 	// urlPathEscape percent-encodes each path segment of p (split on "/")
@@ -53,7 +54,7 @@ var templateFuncs = template.FuncMap{
 			segments[i] = url.PathEscape(s)
 		}
 
-		return template.URL(strings.Join(segments, "/"))
+		return template.URL(strings.Join(segments, "/")) //nolint:gosec // G203: URL is constructed from path-escaped segments
 	},
 }
 
@@ -231,8 +232,8 @@ func handler(filename string, param *Param, handler http.Handler, watcher *watch
 
 			templateParam := TemplateParam{
 				Title:        getTitle(filename),
-				Body:         template.HTML(markdownView.HTML),
-				HeadingsHTML: template.HTML(markdownView.HeadingsHTML),
+				Body:         template.HTML(markdownView.HTML),         //nolint:gosec // G203: rendered Markdown is intentionally raw HTML
+				HeadingsHTML: template.HTML(markdownView.HeadingsHTML), //nolint:gosec // G203: rendered Markdown is intentionally raw HTML
 				HasHeadings:  markdownView.HasHeadings,
 				Host:         r.Host,
 				Reload:       param.Reload,
