@@ -6,15 +6,16 @@ import (
 	"errors"
 	"fmt"
 	"html"
+	"html/template"
 	"io/fs"
 	"log/slog"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
-	"text/template"
 	"time"
 
 	"github.com/andybalholm/crlf"
@@ -31,7 +32,18 @@ var htmlTemplate string
 
 //go:embed static/*
 var staticDir embed.FS
-var tmpl = template.Must(template.New("HTML Template").Parse(htmlTemplate))
+var templateFuncs = template.FuncMap{
+	"urlPathEscape": func(p string) template.URL {
+		segments := strings.Split(p, "/")
+		for i, s := range segments {
+			segments[i] = url.PathEscape(s)
+		}
+
+		return template.URL(strings.Join(segments, "/"))
+	},
+}
+
+var tmpl = template.Must(template.New("HTML Template").Funcs(templateFuncs).Parse(htmlTemplate))
 
 const defaultPort = 3333
 
@@ -205,8 +217,8 @@ func handler(filename string, param *Param, handler http.Handler, watcher *watch
 
 			templateParam := TemplateParam{
 				Title:        getTitle(filename),
-				Body:         markdownView.HTML,
-				HeadingsHTML: markdownView.HeadingsHTML,
+				Body:         template.HTML(markdownView.HTML),
+				HeadingsHTML: template.HTML(markdownView.HeadingsHTML),
 				HasHeadings:  markdownView.HasHeadings,
 				Host:         r.Host,
 				Reload:       param.Reload,

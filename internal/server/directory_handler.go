@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"html/template"
 	"log/slog"
 	"net/http"
 	"os"
@@ -106,8 +107,8 @@ func renderFileTemplate(w http.ResponseWriter, r *http.Request, param *Param, cu
 
 	templateParam := TemplateParam{
 		Title:            title,
-		Body:             markdownView.HTML,
-		HeadingsHTML:     markdownView.HeadingsHTML,
+		Body:             template.HTML(markdownView.HTML),
+		HeadingsHTML:     template.HTML(markdownView.HeadingsHTML),
 		HasHeadings:      markdownView.HasHeadings,
 		Host:             r.Host,
 		Reload:           param.Reload,
@@ -187,8 +188,8 @@ func renderReadmeTemplate(w http.ResponseWriter, r *http.Request, param *Param, 
 
 	templateParam := TemplateParam{
 		Title:            title,
-		Body:             markdownView.HTML,
-		HeadingsHTML:     markdownView.HeadingsHTML,
+		Body:             template.HTML(markdownView.HTML),
+		HeadingsHTML:     template.HTML(markdownView.HeadingsHTML),
 		HasHeadings:      markdownView.HasHeadings,
 		Host:             r.Host,
 		Reload:           param.Reload,
@@ -340,7 +341,7 @@ func appendCurrentItem(items []BreadcrumbItem, currentPath, currentName string) 
 func render404Error(w http.ResponseWriter, r *http.Request, param *Param, currentURLPath string) {
 	w.WriteHeader(http.StatusNotFound)
 
-	errorMessage := "<h1>404 - Not Found</h1><p>The requested path does not exist.</p>"
+	errorMessage := template.HTML("<h1>404 - Not Found</h1><p>The requested path does not exist.</p>")
 
 	extensions := app.ParseExtensions(param.DirectoryListingShowExtensions)
 	parentPath := getParentPath(currentURLPath)

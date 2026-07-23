@@ -1,14 +1,15 @@
 package server
 
 import (
+	"html/template"
 	"net/http"
 	"os"
 )
 
 type TemplateParam struct {
 	Title            string
-	Body             string
-	HeadingsHTML     string
+	Body             template.HTML
+	HeadingsHTML     template.HTML
 	HasHeadings      bool
 	Host             string
 	Reload           bool
