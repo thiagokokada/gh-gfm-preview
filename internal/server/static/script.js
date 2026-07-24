@@ -451,7 +451,7 @@
     loadMarkdownRequest = requestId;
 
     const response = await fetch(
-      `/__/md?path=${encodeURIComponent(window.location.pathname.slice(1))}`,
+      `/__/md?path=${encodeURIComponent(decodeURIComponent(window.location.pathname.slice(1)))}`,
       {cache: "no-store"}
     );
     const result = await response.json();

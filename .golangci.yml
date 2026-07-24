@@ -101,6 +101,9 @@ linters:
       - linters:
           - noctx
         path: _test\.go
+      - linters:
+          - gosmopolitan
+        path: _test\.go
     paths:
       - third_party$
       - builtin$

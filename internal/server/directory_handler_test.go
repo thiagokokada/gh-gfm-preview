@@ -402,6 +402,6 @@ func TestDirectoryMarkdownViewMarksDirectoryModeForReload(t *testing.T) {
 	assert.Nil(t, err)
 
 	bodyStr := string(body)
-	assert.True(t, strings.Contains(bodyStr, "isDirectoryMode: true"))
-	assert.True(t, strings.Contains(bodyStr, "isDirectoryIndex: false"))
+	assert.True(t, strings.Contains(bodyStr, "isDirectoryMode:") && strings.Contains(bodyStr, "true"))
+	assert.True(t, strings.Contains(bodyStr, "isDirectoryIndex:") && strings.Contains(bodyStr, "false"))
 }

@@ -6,15 +6,16 @@ import (
 	"errors"
 	"fmt"
 	"html"
+	"html/template"
 	"io/fs"
 	"log/slog"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
-	"text/template"
 	"time"
 
 	"github.com/andybalholm/crlf"
@@ -31,7 +32,21 @@ var htmlTemplate string
 
 //go:embed static/*
 var staticDir embed.FS
-var tmpl = template.Must(template.New("HTML Template").Parse(htmlTemplate))
+
+// templateFuncs provides custom functions available in the HTML template.
+var templateFuncs = template.FuncMap{
+	// urlPathEscape percent-encodes p as a URL path. EscapedPath preserves
+	// slash separators while encoding non-ASCII characters and URL-special
+	// characters such as "#" and "&".
+	//
+	// The return type is template.URL so that html/template marks the value
+	// as a safe URL and does not double-escape the percent signs.
+	"urlPathEscape": func(p string) template.URL {
+		return template.URL((&url.URL{Path: p}).EscapedPath()) //nolint:gosec // G203: URL is constructed from an escaped path
+	},
+}
+
+var tmpl = template.Must(template.New("HTML Template").Funcs(templateFuncs).Parse(htmlTemplate))
 
 const defaultPort = 3333
 
@@ -205,8 +220,8 @@ func handler(filename string, param *Param, handler http.Handler, watcher *watch
 
 			templateParam := TemplateParam{
 				Title:        getTitle(filename),
-				Body:         markdownView.HTML,
-				HeadingsHTML: markdownView.HeadingsHTML,
+				Body:         template.HTML(markdownView.HTML),         //nolint:gosec // G203: rendered Markdown is intentionally raw HTML
+				HeadingsHTML: template.HTML(markdownView.HeadingsHTML), //nolint:gosec // G203: rendered Markdown is intentionally raw HTML
 				HasHeadings:  markdownView.HasHeadings,
 				Host:         r.Host,
 				Reload:       param.Reload,
