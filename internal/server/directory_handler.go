@@ -31,6 +31,10 @@ func handleDirectoryMode(w http.ResponseWriter, r *http.Request, param *Param, w
 		return
 	}
 
+	if redirectToCanonicalPath(w, r, info.IsDir()) {
+		return
+	}
+
 	var currentHostPath string
 	if info.IsDir() {
 		currentHostPath = directoryHostPath(param.DirectoryPath, currentURLPath)
@@ -52,6 +56,41 @@ func handleDirectoryMode(w http.ResponseWriter, r *http.Request, param *Param, w
 	}
 
 	handleDirectoryRequest(w, r, param, currentURLPath, extensions)
+}
+
+// redirectToCanonicalPath makes directory URLs end with "/" and file URLs not,
+// so relative links in rendered Markdown resolve identically however the user
+// typed the URL. It reports whether a redirect was sent.
+func redirectToCanonicalPath(w http.ResponseWriter, r *http.Request, isDir bool) bool {
+	escaped := r.URL.EscapedPath()
+	if escaped == "" || escaped == "/" {
+		return false
+	}
+
+	hasSlash := strings.HasSuffix(escaped, "/")
+
+	var target string
+
+	switch {
+	case isDir && !hasSlash:
+		target = escaped + "/"
+	case !isDir && hasSlash:
+		target = strings.TrimRight(escaped, "/")
+	default:
+		return false
+	}
+
+	// Collapse leading slashes so the target can never be a protocol-relative
+	// URL such as "//host/path".
+	target = "/" + strings.TrimLeft(target, "/")
+
+	if r.URL.RawQuery != "" {
+		target += "?" + r.URL.RawQuery
+	}
+
+	http.Redirect(w, r, target, http.StatusMovedPermanently) //nolint:gosec // G710: target is a normalized same-origin path
+
+	return true
 }
 
 func statDirectoryTarget(param *Param, currentURLPath string) (os.FileInfo, error) {
