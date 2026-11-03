@@ -27,6 +27,10 @@ func TestDirectoryModeCanonicalTrailingSlash(t *testing.T) {
 		{"file with slash", "/normal.md/", http.StatusMovedPermanently, "/normal.md"},
 		{"file without slash", "/normal.md", http.StatusOK, ""},
 		{"root", "/", http.StatusOK, ""},
+		{"dir with encoded slash is already canonical", "/sub%2F", http.StatusOK, ""},
+		{"dir with encoded slash and slash", "/sub%2F/", http.StatusMovedPermanently, "/sub/"},
+		{"dir with repeated slashes", "/sub//", http.StatusMovedPermanently, "/sub/"},
+		{"non-ASCII file with slash", "/%E6%97%A5%E6%9C%AC%E8%AA%9E.md/", http.StatusMovedPermanently, "/%E6%97%A5%E6%9C%AC%E8%AA%9E.md"},
 	}
 
 	for _, tt := range tests {

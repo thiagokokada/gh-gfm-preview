@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -62,33 +63,21 @@ func handleDirectoryMode(w http.ResponseWriter, r *http.Request, param *Param, w
 // so relative links in rendered Markdown resolve identically however the user
 // typed the URL. It reports whether a redirect was sent.
 func redirectToCanonicalPath(w http.ResponseWriter, r *http.Request, isDir bool) bool {
-	escaped := r.URL.EscapedPath()
-	if escaped == "" || escaped == "/" {
+	// Work on the decoded path so that encoded separators such as "%2F" are
+	// treated the same as literal ones. Collapsing the leading slashes also
+	// guarantees the target is never a protocol-relative URL ("//host/path").
+	canonical := "/" + strings.Trim(r.URL.Path, "/")
+	if isDir && canonical != "/" {
+		canonical += "/"
+	}
+
+	if canonical == r.URL.Path {
 		return false
 	}
 
-	hasSlash := strings.HasSuffix(escaped, "/")
+	target := url.URL{Path: canonical, RawQuery: r.URL.RawQuery}
 
-	var target string
-
-	switch {
-	case isDir && !hasSlash:
-		target = escaped + "/"
-	case !isDir && hasSlash:
-		target = strings.TrimRight(escaped, "/")
-	default:
-		return false
-	}
-
-	// Collapse leading slashes so the target can never be a protocol-relative
-	// URL such as "//host/path".
-	target = "/" + strings.TrimLeft(target, "/")
-
-	if r.URL.RawQuery != "" {
-		target += "?" + r.URL.RawQuery
-	}
-
-	http.Redirect(w, r, target, http.StatusMovedPermanently) //nolint:gosec // G710: target is a normalized same-origin path
+	http.Redirect(w, r, target.String(), http.StatusMovedPermanently)
 
 	return true
 }
