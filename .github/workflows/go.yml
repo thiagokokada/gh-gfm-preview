@@ -34,7 +34,3 @@ jobs:
 
     - name: Test (with -race)
       run: go test -v -race ./...
-
-    - name: Run JSLint
-      run: |
-        ./jslint.sh internal/server/static/script.js

@@ -41,6 +41,7 @@
           default = pkgs.mkShell {
             packages = with pkgs; [
               golangci-lint
+              nodejs
             ];
             inputsFrom = [ self.packages.${system}.default ];
           };
