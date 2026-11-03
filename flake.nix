@@ -40,8 +40,6 @@
         {
           default = pkgs.mkShell {
             packages = with pkgs; [
-              # ideally this would be the same version as used in CI,
-              # but this works for now
               golangci-lint
             ];
             inputsFrom = [ self.packages.${system}.default ];

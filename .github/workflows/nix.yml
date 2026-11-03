@@ -21,5 +21,8 @@ jobs:
     - name: Check Flake
       run: nix flake check
 
+    - name: golangci-lint
+      run: nix develop --command golangci-lint run
+
     - name: Build
       run: nix build
