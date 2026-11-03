@@ -1,7 +1,6 @@
 package server
 
 import (
-	"errors"
 	"log/slog"
 	"net"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 )
 
 const (
+	writeWait         = 10 * time.Second
 	defaultPongWait   = 60 * time.Second
 	defaultPingPeriod = (defaultPongWait * 9) / 10 // must be less than pong wait
 )
@@ -69,6 +69,8 @@ func (c *wsClient) readPump(doneCh chan<- struct{}) {
 }
 
 func (c *wsClient) writePump() {
+	defer c.conn.Close()
+
 	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
 
@@ -81,8 +83,8 @@ func (c *wsClient) writePump() {
 				return
 			}
 
-			if msg.err != nil {
-				slog.Debug("Error received from broker", "remote_addr", c.remoteAddr(), "error", msg.err)
+			if err := c.conn.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+				slog.Debug("WS set write deadline error", "remote_addr", c.remoteAddr(), "error", err)
 
 				return
 			}
@@ -94,8 +96,7 @@ func (c *wsClient) writePump() {
 			}
 
 		case <-ticker.C:
-			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				// do nothing
+			if err := c.conn.WriteControl(websocket.PingMessage, nil, time.Now().Add(writeWait)); err != nil {
 				slog.Debug("WS ping error", "remote_addr", c.remoteAddr(), "error", err)
 
 				return
@@ -115,7 +116,10 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 			case message := <-watcher.MessageCh:
 				broker.broadcast <- wsMessage{message: message}
 			case err := <-watcher.ErrorCh:
-				broker.broadcast <- wsMessage{err: err}
+				// Watcher errors are logged by Watch; keep clients connected.
+				slog.Debug("Continuing live reload after watcher error", "error", err)
+			case <-watcher.DoneCh:
+				return
 			}
 		}
 	}()
@@ -125,19 +129,7 @@ func wsHandler(watcher *watcher.Watcher) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			if errors.Is(err, websocket.HandshakeError{}) {
-				slog.Error(
-					"WS handshake error",
-					"remote_addr", conn.UnderlyingConn().RemoteAddr(),
-					"error", err,
-				)
-			} else {
-				slog.Debug(
-					"WS connection upgrade error",
-					"remote_addr", conn.UnderlyingConn().RemoteAddr(),
-					"error", err,
-				)
-			}
+			slog.Debug("WS connection upgrade error", "remote_addr", r.RemoteAddr, "error", err)
 
 			return
 		}

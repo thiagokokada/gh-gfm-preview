@@ -303,3 +303,37 @@ func TestInit_ReturnsErrorForMissingPath(t *testing.T) {
 	assert.Nil(t, w)
 	assert.True(t, err != nil)
 }
+
+func TestWatch_ReturnsWhenChannelsClose(t *testing.T) {
+	for _, channel := range []string{"events", "errors"} {
+		t.Run(channel, func(t *testing.T) {
+			events := make(chan fsnotify.Event)
+			errors := make(chan error)
+			w := &Watcher{
+				watcher: &fsnotify.Watcher{Events: events, Errors: errors},
+				DoneCh:  make(chan struct{}),
+			}
+
+			t.Cleanup(func() { close(w.DoneCh) })
+
+			if channel == "events" {
+				close(events)
+			} else {
+				close(errors)
+			}
+
+			stopped := make(chan struct{})
+			go func() {
+				defer close(stopped)
+
+				w.Watch()
+			}()
+
+			select {
+			case <-stopped:
+			case <-time.After(time.Second):
+				t.Fatal("watcher did not stop after its input channel closed")
+			}
+		})
+	}
+}
