@@ -20,13 +20,16 @@ func TestWriter(t *testing.T) {
 	testFile, err := os.CreateTemp(t.TempDir(), "markdown-preview-test")
 	assert.Nil(t, err)
 
-	defer os.Remove(testFile.Name())
+	defer testFile.Close()
 
 	_, _ = testFile.WriteString("BEFORE.\n")
 	dir := filepath.Dir(testFile.Name())
 
 	w, err := watcher.Init(dir)
 	assert.Nil(t, err)
+
+	defer w.Close()
+	defer close(w.DoneCh)
 
 	s := httptest.NewServer(wsHandler(w))
 
@@ -44,6 +47,10 @@ func TestWriter(t *testing.T) {
 	_, err = testFile.WriteString("AFTER.\n")
 	assert.Nil(t, err)
 
+	// Flush the write so Windows reports the change before the file closes.
+	assert.Nil(t, testFile.Sync())
+	assert.Nil(t, ws.SetReadDeadline(time.Now().Add(10*time.Second)))
+
 	_, actual, err := ws.ReadMessage()
 	assert.Nil(t, err)
 	assert.Equal(t, string(actual), expectedReloadMsg)
@@ -53,13 +60,16 @@ func TestConcurrentWrites(t *testing.T) {
 	testFile, err := os.CreateTemp(t.TempDir(), "markdown-preview-test")
 	assert.Nil(t, err)
 
-	defer os.Remove(testFile.Name())
+	defer testFile.Close()
 
 	_, _ = testFile.WriteString("INITIAL.\n")
 	dir := filepath.Dir(testFile.Name())
 
 	watcher, err := watcher.Init(dir)
 	assert.Nil(t, err)
+
+	defer watcher.Close()
+	defer close(watcher.DoneCh)
 
 	s := httptest.NewServer(wsHandler(watcher))
 	defer s.Close()
@@ -77,6 +87,7 @@ func TestConcurrentWrites(t *testing.T) {
 	errorChan := startConcurrentWrites(t, testFile, 100)
 
 	waitForConcurrentWrites(t, errorChan)
+	assert.Nil(t, testFile.Sync())
 	assertReloadMessage(t, ws)
 }
 
@@ -141,7 +152,7 @@ func TestConcurrentWritesStress(t *testing.T) {
 	testFile, err := os.CreateTemp(t.TempDir(), "markdown-preview-test")
 	assert.Nil(t, err)
 
-	defer os.Remove(testFile.Name())
+	defer testFile.Close()
 
 	_, err = testFile.WriteString("INITIAL.\n")
 	assert.Nil(t, err)
@@ -150,6 +161,9 @@ func TestConcurrentWritesStress(t *testing.T) {
 
 	watcher, err := watcher.Init(dir)
 	assert.Nil(t, err)
+
+	defer watcher.Close()
+	defer close(watcher.DoneCh)
 
 	s := httptest.NewServer(wsHandler(watcher))
 	defer s.Close()

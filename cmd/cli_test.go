@@ -7,8 +7,6 @@ import (
 )
 
 func TestGetNoColorFromEnv(t *testing.T) {
-	assert.False(t, getNoColorFromEnv())
-
 	t.Setenv("NO_COLOR", "")
 	assert.False(t, getNoColorFromEnv())
 

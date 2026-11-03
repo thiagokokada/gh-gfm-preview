@@ -6,10 +6,18 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+
 jobs:
 
   build:
-    runs-on: ubuntu-latest
+    name: build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
     - uses: actions/checkout@v7
 
@@ -19,6 +27,7 @@ jobs:
         go-version-file: go.mod
 
     - name: Generate
+      if: runner.os == 'Linux'
       run: |
         # delete the generated files and re-generate to make sure that
         # the contents are reproducible
@@ -27,10 +36,14 @@ jobs:
         git diff --exit-code
 
     - name: Build
-      run: go build -v -o /dev/null ./...
+      run: go build -v ./...
+
+    - name: Vet
+      run: go vet ./...
 
     - name: Test
-      run: go test -v ./...
+      run: go test -v -timeout 5m ./...
 
     - name: Test (with -race)
-      run: go test -v -race ./...
+      if: runner.os == 'Linux'
+      run: go test -v -race -timeout 5m ./...

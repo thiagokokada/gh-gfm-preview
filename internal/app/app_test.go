@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
@@ -18,7 +19,7 @@ func TestTargetFile(t *testing.T) {
 	}{
 		{"../../testdata/markdown-demo.md", "../../testdata/markdown-demo.md"},
 		{"../../testdata/subdir/README.md", "../../testdata/subdir/README.md"},
-		{"../../testdata/subdir", "../../testdata/subdir/README.md"},
+		{"../../testdata/subdir", filepath.Join("..", "..", "testdata", "subdir", "README.md")},
 	}
 	for _, tt := range tests {
 		actual, err := TargetFile(tt.input)
