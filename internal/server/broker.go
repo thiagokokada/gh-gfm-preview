@@ -8,7 +8,6 @@ import (
 
 type wsMessage struct {
 	message []byte
-	err     error
 }
 
 // wsBroker handles registering/unregistering clients and broadcasting messages to them.
@@ -66,7 +65,6 @@ func (b *wsBroker) run() {
 					"Sending message to client",
 					"remote_addr", c.conn.UnderlyingConn().RemoteAddr(),
 					"message", string(msg.message),
-					"error", msg.err,
 				)
 
 				select {

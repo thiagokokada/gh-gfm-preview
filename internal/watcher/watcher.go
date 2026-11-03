@@ -125,11 +125,15 @@ func (w *Watcher) Watch() {
 		select {
 		case event, ok := <-w.watcher.Events:
 			if !ok {
-				continue
+				return
 			}
 
 			w.handleEvent(event, re, debouncer)
-		case err := <-w.watcher.Errors:
+		case err, ok := <-w.watcher.Errors:
+			if !ok {
+				return
+			}
+
 			slog.Error("FS watcher error", "error", err)
 
 			w.ErrorCh <- err
