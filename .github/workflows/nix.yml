@@ -21,5 +21,11 @@ jobs:
     - name: Check Flake
       run: nix flake check
 
+    - name: golangci-lint
+      run: nix develop --command golangci-lint run
+
+    - name: Run JSLint
+      run: nix develop --command ./jslint.sh internal/server/static/script.js
+
     - name: Build
       run: nix build
